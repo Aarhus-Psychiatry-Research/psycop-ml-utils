@@ -15,7 +15,9 @@ def get_max_value_from_list_of_events(
     Returns:
         float: The max value.
     """
-    return max([event[1] for event in list_of_events])
+    max_val = max([event[1] for event in list_of_events])
+
+    return max_val
 
 
 def get_min_value_from_list_of_events(
