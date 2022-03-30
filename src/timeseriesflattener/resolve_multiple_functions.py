@@ -60,7 +60,7 @@ def get_latest_value_from_list_of_events(
             Shaped like [[timestamp1: val1], [timestamp2: val2]]
 
     Returns:
-        float: The value for the earliest timestamp.
+        float: The value for the latest timestamp.
     """
     list_of_events.sort(key=lambda event: event[0], reverse=True)
 

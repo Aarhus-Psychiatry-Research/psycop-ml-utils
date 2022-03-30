@@ -1,4 +1,5 @@
 from timeseriesflattener.flattened_dataset import *
+from timeseriesflattener.resolve_multiple_functions import *
 from utils_for_testing import *
 import pandas as pd
 
@@ -17,6 +18,8 @@ def test_event_after_prediction_time():
     assert_flattened_outcome_vals_as_expected(
         prediction_times_str=prediction_times_str,
         event_times_str=event_times_str,
+        lookahead_days=2,
+        resolve_multiple=get_max_value_from_list_of_events,
         expected_flattened_vals=[1],
     )
 
@@ -32,6 +35,8 @@ def test_event_before_prediction():
     assert_flattened_outcome_vals_as_expected(
         prediction_times_str=prediction_times_str,
         event_times_str=event_times_str,
+        lookahead_days=2,
+        resolve_multiple=get_max_value_from_list_of_events,
         expected_flattened_vals=[0],
     )
 
@@ -53,5 +58,7 @@ def test_multiple_citizens():
     assert_flattened_outcome_vals_as_expected(
         prediction_times_str=prediction_times_str,
         event_times_str=event_times_str,
+        lookahead_days=2,
+        resolve_multiple=get_max_value_from_list_of_events,
         expected_flattened_vals=[1, 0, 1, 0],
     )

@@ -32,11 +32,11 @@ def convert_cols_with_matching_colnames_to_datetime(
 
 
 def assert_flattened_outcome_vals_as_expected(
+    lookahead_days: float,
     prediction_times_str: str,
+    resolve_multiple: Callable,
     event_times_str: str,
-    expected_flattened_vals: List,  # Generalise and expand with more arguments as we expand functionality
-    resolve_multiple: Callable = get_max_value_from_list_of_events,
-    lookahead_days: float = 2,
+    expected_flattened_vals: List,
     values_colname: str = "val",
     fallback: List = 0,
 ):
