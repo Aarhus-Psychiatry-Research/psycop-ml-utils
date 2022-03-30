@@ -271,6 +271,6 @@ def is_within_n_days(
     elif direction == "behind":
         is_in_interval = difference_in_days >= -interval_days and difference_in_days < 0
     else:
-        return ValueError("direction can only be 'ahead' or 'behind'")
+        raise ValueError("direction can only be 'ahead' or 'behind'")
 
     return is_in_interval
