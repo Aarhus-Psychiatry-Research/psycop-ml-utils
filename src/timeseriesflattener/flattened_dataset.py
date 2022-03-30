@@ -10,7 +10,7 @@ class FlattenedDataset:
         timestamp_colname: str = "timestamp",
         id_colname: str = "dw_ek_borger",
     ):
-        """Class containing a time-series flattened.
+        """Class containing a time-series, flattened.
 
         Args:
             prediction_times_df (DataFrame): Dataframe with prediction times.
@@ -27,9 +27,9 @@ class FlattenedDataset:
         self,
         outcome_df: DataFrame,
         lookahead_days: float,
-        resolve_multiple: str,
-        fallback: List[str],
-        values_colname: str = "values",
+        resolve_multiple: Callable,
+        fallback: float,
+        source_values_colname: str = "val",
         new_col_name: str = None,
     ):
         """Adds an outcome-column to the dataset
@@ -37,26 +37,84 @@ class FlattenedDataset:
         Args:
             outcome_df (DataFrame): Cols: dw_ek_borger, datotid, value if relevant.
             lookahead_days (float): How far ahead to look for an outcome in days. If none found, use fallback.
-            resolve_multiple (str): What to do with more than one value within the lookahead.
-                Suggestions: earliest, latest, mean, max, min.
-            fallback (List[str]): What to do if no value within the lookahead.
-                Suggestions: latest, mean_of_patient, mean_of_population, hardcode (qualified guess)
-            values_colname (str): Colname for outcome values in outcome_df
+            resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
+            fallback (float): What to do if no value within the lookahead.
+            source_values_colname (str): Colname for outcome values in outcome_df. Defaults to "val".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
-                Defaults to using values_colname.
         """
 
-        outcome_dict = self._events_to_dict_by_patient(
-            df=outcome_df,
-            values_colname=values_colname,
+        self._add_col(
+            values_df=outcome_df,
+            direction="ahead",
+            interval_days=lookahead_days,
+            resolve_multiple=resolve_multiple,
+            fallback=fallback,
+            new_col_name=new_col_name,
+            source_values_colname=source_values_colname,
+        )
+
+    def add_predictor(
+        self,
+        predictor_df: DataFrame,
+        lookbehind_days: float,
+        resolve_multiple: str,
+        fallback: float,
+        source_values_colname: str = "val",
+        new_col_name: str = None,
+    ):
+        """Adds a predictor-column to the dataset
+
+        Args:
+            predictor_df (DataFrame): Cols: dw_ek_borger, datotid, value if relevant.
+            lookbehind_days (float): How far behind to look for a predictor value in days. If none found, use fallback.
+            resolve_multiple (Callable): How to handle multiple values within the lookbehind window. Takes a a function that takes a list as an argument and returns a float.
+            fallback (List[str]): What to do if no value within the lookahead.
+            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+        """
+
+        self._add_col(
+            values_df=predictor_df,
+            direction="behind",
+            interval_days=lookbehind_days,
+            resolve_multiple=resolve_multiple,
+            fallback=fallback,
+            new_col_name=new_col_name,
+            source_values_colname=source_values_colname,
+        )
+
+    def _add_col(
+        self,
+        values_df: DataFrame,
+        direction: str,
+        interval_days: float,
+        resolve_multiple: str,
+        fallback: float,
+        new_col_name: str,
+        source_values_colname: str = "val",
+    ):
+        """Adds a value-column to the dataset
+
+        Args:
+            values_df (DataFrame): Cols: dw_ek_borger, datotid, value.
+            direction (str): Whether to look "ahead" or "behind".
+            interval_days (float): How far to look in direction.
+            resolve_multiple (Callable): How to handle multiple values within the lookbehind window. Takes a a function that takes a list as an argument and returns a float.
+            fallback (List[str]): What to do if no value within the lookahead.
+            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            source_values_colname (str, optional): Values colname in the values_df. Defaults to "values".
+        """
+
+        values_dict = self._events_to_dict_by_patient(
+            df=values_df,
+            values_colname=source_values_colname,
         )
 
         new_col = self.df_prediction_times.apply(
             lambda row: self._flatten_events_for_prediction_time(
-                direction="ahead",
+                direction=direction,
                 prediction_timestamp=row[self.timestamp_colname],
-                val_dict=outcome_dict,
-                interval_days=lookahead_days,
+                val_dict=values_dict,
+                interval_days=interval_days,
                 id=row[self.id_colname],
                 resolve_multiple=resolve_multiple,
                 fallback=fallback,
@@ -65,31 +123,9 @@ class FlattenedDataset:
         )
 
         if new_col_name is None:
-            new_col_name = values_colname
+            new_col_name = source_values_colname
 
-        self.df[f"{new_col_name}_within_{lookahead_days}_days"] = new_col
-
-    def add_predictor(
-        self,
-        predictor_df: DataFrame,
-        lookbehind_days: float,
-        resolve_multiple: str,
-        fallback: List[str],
-        outcome_colname: str,
-    ):
-        """Adds a predictor-column to the dataset
-
-        Args:
-            predictor_df (DataFrame): Cols: dw_ek_borger, datotid, value if relevant.
-            lookahead_days (float): How far ahead to look for an outcome in days. If none found, use fallback.
-            resolve_multiple (str): What to do with more than one value within the lookahead.
-                Suggestions: earliest, latest, mean, max, min.
-            fallback (List[str]): What to do if no value within the lookahead.
-                Suggestions: latest, mean_of_patient, mean_of_population, hardcode (qualified guess)
-            outcome_colname (str): What to name the column
-        """
-
-        raise NotImplementedError
+        self.df[f"{new_col_name}_within_{interval_days}_days"] = new_col
 
     def _events_to_dict_by_patient(
         self,
@@ -230,7 +266,7 @@ def is_within_n_days(
     if direction == "ahead":
         is_in_interval = difference_in_days <= interval_days and difference_in_days > 0
     elif direction == "behind":
-        is_in_interval = difference_in_days >= interval_days and difference_in_days < 0
+        is_in_interval = difference_in_days >= -interval_days and difference_in_days < 0
     else:
         return ValueError("direction can only be 'ahead' or 'behind'")
 
