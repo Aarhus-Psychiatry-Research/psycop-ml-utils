@@ -96,7 +96,8 @@ def run_tests_from_df_strings(
 
     dataset = FlattenedDataset(
         prediction_times_df=df_prediction_times,
-        prediction_timestamp_colname="timestamp",
+        timestamp_colname="timestamp",
+        id_colname="dw_ek_borger",
     )
 
     dataset.add_outcome(
@@ -105,7 +106,6 @@ def run_tests_from_df_strings(
         resolve_multiple="max",
         fallback=0,
         values_colname="val",
-        timestamp_colname="timestamp",
     )
 
     expected_values = pd.DataFrame({"val_within_2_days": expected_values})
