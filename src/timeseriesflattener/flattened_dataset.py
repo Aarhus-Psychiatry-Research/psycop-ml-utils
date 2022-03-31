@@ -329,12 +329,3 @@ def is_within_n_days(
         raise ValueError("direction can only be 'ahead' or 'behind'")
 
     return is_in_interval
-
-
-def get_first_key(dict: dict):
-    """Gets the first key from a dictionary
-
-    Args:
-        dict (dict): Dictionary to get the key from
-    """
-    return list(dict.keys())[0]
