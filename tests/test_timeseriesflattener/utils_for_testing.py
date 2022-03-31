@@ -156,8 +156,8 @@ def assert_flattened_vals_as_expected(
 
     dataset = FlattenedDataset(
         prediction_times_df=df_prediction_times,
-        timestamp_colname="timestamp",
-        id_colname="dw_ek_borger",
+        timestamp_col_name="timestamp",
+        id_col_name="dw_ek_borger",
     )
 
     if direction == "behind":
