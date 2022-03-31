@@ -7,13 +7,32 @@ class FlattenedDataset:
     def __init__(
         self,
         prediction_times_df: DataFrame,
-        timestamp_col_name: str = "timestamp",
         id_col_name: str = "dw_ek_borger",
+        timestamp_col_name: str = "timestamp",
     ):
-        """Class containing a time-series, flattened.
+        """Class containing a time-series, flattened. A 'flattened' version is a tabular representation for each prediction time.
+        A prediction time is every timestamp where you want your model to issue a prediction.
+
+        E.g if you have a prediction_times_df:
+
+        id_col_name | timestamp_col_name
+        1           | 2022-01-10
+        1           | 2022-01-12
+        1           | 2022-01-15
+
+        And a time-series of blood-pressure values as an outcome:
+        id_col_name | timestamp_col_name | blood_pressure_value
+        1           | 2022-01-09         | 120
+        1           | 2022-01-14         | 140
+
+        Then you can "flatten" the outcome into a new df, with a row for each of your prediction times:
+        id_col_name | timestamp_col_name | latest_blood_pressure_within_24h
+        1           | 2022-01-10         | 120
+        1           | 2022-01-12         | NA
+        1           | 2022-01-15         | 140
 
         Args:
-            prediction_times_df (DataFrame): Dataframe with prediction times.
+            prediction_times_df (DataFrame): Dataframe with prediction times, required cols: patient_id, .
             timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
             id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
         """
