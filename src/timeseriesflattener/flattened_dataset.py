@@ -42,6 +42,41 @@ class FlattenedDataset:
 
         self.df = self.df_prediction_times
 
+    def add_predictors_from_dict(
+        self,
+        predictor_dict: Dict[
+            DataFrame, Dict[str, Dict[str, Union[Callable, float, str]]]
+        ],
+        predictor_dfs: Dict[str, DataFrame],
+    ):
+        """Add predictors to the flattened dataframe from a dictionary
+
+        Args:
+            predictor_dict (Dict[DataFrame, Dict[str, Dict[str, Union[Callable, float, str]]]]): A dictionary describing
+                the prediction_features you'd like to generate.
+
+        Example:
+            >>> predictor_dict = {
+            >>>     "prediction_times_df": {
+            >>>         "val1": {
+            >>>             "lookbehind_days": 1,
+            >>>             "resolve_multiple": get_max_value_from_list_of_events,
+            >>>             "fallback": 0,
+            >>>             "source_values_col_name": "val",
+            >>>         }
+            >>>     }
+            >>> }
+            >>> dataset.add_predictors_from_dict(predictor_dict)
+        """
+
+        for dataset_name in predictor_dict:
+            dataset = predictor_dfs[dataset_name]
+
+            for predictor in predictor_dict[dataset_name]:
+                kwargs = predictor_dict[dataset_name][predictor]
+
+                self.add_predictor(predictor_df=dataset, **kwargs)
+
     def add_outcome(
         self,
         outcome_df: DataFrame,
@@ -294,3 +329,12 @@ def is_within_n_days(
         raise ValueError("direction can only be 'ahead' or 'behind'")
 
     return is_in_interval
+
+
+def get_first_key(dict: dict):
+    """Gets the first key from a dictionary
+
+    Args:
+        dict (dict): Dictionary to get the key from
+    """
+    return list(dict.keys())[0]
