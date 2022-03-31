@@ -7,19 +7,19 @@ class FlattenedDataset:
     def __init__(
         self,
         prediction_times_df: DataFrame,
-        timestamp_colname: str = "timestamp",
-        id_colname: str = "dw_ek_borger",
+        timestamp_col_name: str = "timestamp",
+        id_col_name: str = "dw_ek_borger",
     ):
         """Class containing a time-series, flattened.
 
         Args:
             prediction_times_df (DataFrame): Dataframe with prediction times.
-            timestamp_colname (str, optional): Colname for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
-            id_colname (str, optional): Colname for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
+            timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
+            id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
         """
         self.df_prediction_times = prediction_times_df
-        self.timestamp_colname = timestamp_colname
-        self.id_colname = id_colname
+        self.timestamp_col_name = timestamp_col_name
+        self.id_col_name = id_col_name
 
         self.df = self.df_prediction_times
 
@@ -29,28 +29,28 @@ class FlattenedDataset:
         lookahead_days: float,
         resolve_multiple: Callable,
         fallback: float,
-        source_values_colname: str = "val",
+        outcome_df_values_col_name: str = "val",
         new_col_name: str = None,
     ):
         """Adds an outcome-column to the dataset
 
         Args:
-            outcome_df (DataFrame): Cols: dw_ek_borger, datotid, value if relevant.
+            outcome_df (DataFrame): Required columns: patient_id, timestamp, outcome_value.
             lookahead_days (float): How far ahead to look for an outcome in days. If none found, use fallback.
             resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
             fallback (float): What to do if no value within the lookahead.
-            source_values_colname (str): Colname for outcome values in outcome_df. Defaults to "val".
+            outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "val".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
 
-        self._add_col(
+        self._add_col_to_flattened_dataset(
             values_df=outcome_df,
             direction="ahead",
             interval_days=lookahead_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
             new_col_name=new_col_name,
-            source_values_colname=source_values_colname,
+            source_values_col_name=outcome_df_values_col_name,
         )
 
     def add_predictor(
@@ -59,30 +59,31 @@ class FlattenedDataset:
         lookbehind_days: float,
         resolve_multiple: str,
         fallback: float,
-        source_values_colname: str = "val",
+        source_values_col_name: str = "val",
         new_col_name: str = None,
     ):
-        """Adds a predictor-column to the dataset
+        """Adds a column with predictor values to the flattened dataset (e.g. "average value of bloodsample within n days")
 
         Args:
-            predictor_df (DataFrame): Cols: dw_ek_borger, datotid, value if relevant.
+            predictor_df (DataFrame): Required columns: patient_id, timestamp, outcome_value.
             lookbehind_days (float): How far behind to look for a predictor value in days. If none found, use fallback.
             resolve_multiple (Callable): How to handle multiple values within the lookbehind window. Takes a a function that takes a list as an argument and returns a float.
             fallback (List[str]): What to do if no value within the lookahead.
+            source_values_col_name (str): Column name for the predictor values in predictor_df, e.g. the patient's most recent blood-sample value. Defaults to "val".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
 
-        self._add_col(
+        self._add_col_to_flattened_dataset(
             values_df=predictor_df,
             direction="behind",
             interval_days=lookbehind_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
             new_col_name=new_col_name,
-            source_values_colname=source_values_colname,
+            source_values_col_name=source_values_col_name,
         )
 
-    def _add_col(
+    def _add_col_to_flattened_dataset(
         self,
         values_df: DataFrame,
         direction: str,
@@ -90,32 +91,32 @@ class FlattenedDataset:
         resolve_multiple: str,
         fallback: float,
         new_col_name: str,
-        source_values_colname: str = "val",
+        source_values_col_name: str = "val",
     ):
-        """Adds a value-column to the dataset
+        """Adds a column to the dataset (either predictor or outcome depending on the value of "direction")
 
         Args:
-            values_df (DataFrame): Cols: dw_ek_borger, datotid, value.
+            values_df (DataFrame): Required columns: patient_id, timestamp, outcome_value.
             direction (str): Whether to look "ahead" or "behind".
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable): How to handle multiple values within the lookbehind window. Takes a a function that takes a list as an argument and returns a float.
             fallback (List[str]): What to do if no value within the lookahead.
-            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
-            source_values_colname (str, optional): Values colname in the values_df. Defaults to "values".
+            new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
 
         values_dict = self._events_to_dict_by_patient(
             df=values_df,
-            values_colname=source_values_colname,
+            values_col_name=source_values_col_name,
         )
 
         new_col = self.df_prediction_times.apply(
             lambda row: self._flatten_events_for_prediction_time(
                 direction=direction,
-                prediction_timestamp=row[self.timestamp_colname],
+                prediction_timestamp=row[self.timestamp_col_name],
                 val_dict=values_dict,
                 interval_days=interval_days,
-                id=row[self.id_colname],
+                id=row[self.id_col_name],
                 resolve_multiple=resolve_multiple,
                 fallback=fallback,
             ),
@@ -123,21 +124,21 @@ class FlattenedDataset:
         )
 
         if new_col_name is None:
-            new_col_name = source_values_colname
+            new_col_name = source_values_col_name
 
         self.df[f"{new_col_name}_within_{interval_days}_days"] = new_col
 
     def _events_to_dict_by_patient(
         self,
         df: DataFrame,
-        values_colname: str,
+        values_col_name: str,
     ) -> Dict[str, List[Tuple[Union[datetime, float]]]]:
         """
         Generate a dict of events grouped by patient_id
 
         Args:
             df (DataFrame): Dataframe to come from
-            values_colname (str): Column name for event values
+            values_col_name (str): Column name for event values
 
         Returns:
             Dict[str, List[Tuple[Union[datetime, float]]]]:
@@ -148,13 +149,13 @@ class FlattenedDataset:
         """
 
         return (
-            df.groupby(self.id_colname)
+            df.groupby(self.id_col_name)
             .apply(
                 lambda row: tuple(
                     [
                         list(event)
                         for event in zip(
-                            row[self.timestamp_colname], row[values_colname]
+                            row[self.timestamp_col_name], row[values_col_name]
                         )
                     ]
                 )
