@@ -3,6 +3,7 @@ black>=22.3.0
 
 # Data-wrangling
 pandas>=1.2.3,<1.5.0
+swifter>=1.1.2
 
 # SQL
 sqlalchemy>=1.4.32,<1.5.0

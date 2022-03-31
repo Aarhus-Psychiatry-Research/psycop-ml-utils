@@ -1,6 +1,7 @@
 from typing import Callable, Dict, List, Union, Tuple
 from pandas import DataFrame
 from datetime import datetime
+import swifter
 
 
 class FlattenedDataset:
@@ -109,7 +110,7 @@ class FlattenedDataset:
             values_colname=source_values_colname,
         )
 
-        new_col = self.df_prediction_times.apply(
+        new_col = self.df_prediction_times.swifter.apply(
             lambda row: self._flatten_events_for_prediction_time(
                 direction=direction,
                 prediction_timestamp=row[self.timestamp_colname],
