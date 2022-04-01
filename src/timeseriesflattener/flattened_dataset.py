@@ -55,17 +55,22 @@ class FlattenedDataset:
                 the prediction_features you'd like to generate.
 
         Example:
-            >>> predictor_dict = {
-            >>>     "prediction_times_df": {
-            >>>         "val1": {
-            >>>             "lookbehind_days": 1,
-            >>>             "resolve_multiple": get_max_value_from_list_of_events,
-            >>>             "fallback": 0,
-            >>>             "source_values_col_name": "val",
-            >>>         }
+            >>> predictor_list = [
+            >>>     {
+            >>>         "predictor_df": "df_name"
+            >>>         "lookbehind_days": 1,
+            >>>         "resolve_multiple": "resolve_multiple_func_name",
+            >>>         "fallback": 0,
+            >>>         "source_values_col_name": "val",
             >>>     }
-            >>> }
-            >>> dataset.add_predictors_from_dict(predictor_dict)
+            >>> ]
+            >>> predictor_dfs = {"df_name": df_object}
+            >>> resolve_multiple_strategies = {"resolve_multiple_func_name": resolve_multiple_func}
+            >>> dataset.add_predictors_from_list(
+            >>>     predictor_list=predictor_list,
+            >>>     predictor_dfs=predictor_dfs,
+            >>>     resolve_multiple_strategies=resolve_multiple_strategies,
+            >>> )
         """
 
         for arg_list in predictor_list:
