@@ -42,7 +42,7 @@ class FlattenedDataset:
 
         self.df = self.df_prediction_times
 
-    def add_predictors_from_list(
+    def add_predictors_from_list_of_argument_dictionaries(
         self,
         predictor_list: List[Dict[str, str]],
         predictor_dfs: Dict[str, DataFrame],
@@ -51,13 +51,14 @@ class FlattenedDataset:
         """Add predictors to the flattened dataframe from a list
 
         Args:
-            predictor_dict (Dict[DataFrame, Dict[str, Dict[str, Union[Callable, float, str]]]]): A dictionary describing
-                the prediction_features you'd like to generate.
+            predictor_list (List[Dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
+            predictor_dfs (Dict[str, DataFrame]): A dictionary mapping the predictor_df in predictor_list to DataFrame objects
+            resolve_multiple_strategies (Dict[str, Callable]): A dictionary mapping the resolve_multiple to a function objects
 
         Example:
             >>> predictor_list = [
             >>>     {
-            >>>         "predictor_df": "df_name"
+            >>>         "predictor_df": "df_name",
             >>>         "lookbehind_days": 1,
             >>>         "resolve_multiple": "resolve_multiple_func_name",
             >>>         "fallback": 0,

@@ -50,7 +50,6 @@ def create_feature_combinations(
         >>>         "fallback": 0,
         >>>     }
         >>> ]
-        >>>
         >>> print(create_feature_combinations(arg_sets=input))
         >>> [
         >>>     {
