@@ -42,14 +42,13 @@ class FlattenedDataset:
 
         self.df = self.df_prediction_times
 
-    def add_predictors_from_dict(
+    def add_predictors_from_list(
         self,
-        predictor_dict: Dict[
-            DataFrame, Dict[str, Dict[str, Union[Callable, float, str]]]
-        ],
+        predictor_list: List[Dict[str, str]],
         predictor_dfs: Dict[str, DataFrame],
+        resolve_multiple_strategies: Dict[str, Callable],
     ):
-        """Add predictors to the flattened dataframe from a dictionary
+        """Add predictors to the flattened dataframe from a list
 
         Args:
             predictor_dict (Dict[DataFrame, Dict[str, Dict[str, Union[Callable, float, str]]]]): A dictionary describing
@@ -69,13 +68,13 @@ class FlattenedDataset:
             >>> dataset.add_predictors_from_dict(predictor_dict)
         """
 
-        for dataset_name in predictor_dict:
-            dataset = predictor_dfs[dataset_name]
+        for arg_list in predictor_list:
+            arg_list["predictor_df"] = predictor_dfs[arg_list["predictor_df"]]
+            arg_list["resolve_multiple"] = resolve_multiple_strategies[
+                arg_list["resolve_multiple"]
+            ]
 
-            for predictor in predictor_dict[dataset_name]:
-                kwargs = predictor_dict[dataset_name][predictor]
-
-                self.add_predictor(predictor_df=dataset, **kwargs)
+            self.add_predictor(**arg_list)
 
     def add_outcome(
         self,

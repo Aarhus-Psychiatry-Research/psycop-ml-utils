@@ -31,25 +31,29 @@ def test_generate_two_features_from_dict():
         id_col_name="dw_ek_borger",
     )
 
-    predictor_dict = {
-        "event_times_df": {
-            "val1": {
-                "lookbehind_days": 1,
-                "resolve_multiple": get_max_value_from_list_of_events,
-                "fallback": 0,
-                "source_values_col_name": "val",
-            },
-            "val2": {
-                "lookbehind_days": 2,
-                "resolve_multiple": get_max_value_from_list_of_events,
-                "fallback": 0,
-                "source_values_col_name": "val",
-            },
-        }
-    }
+    predictor_list = [
+        {
+            "predictor_df": "event_times_df",
+            "lookbehind_days": 1,
+            "resolve_multiple": "get_max_value_from_list_of_events",
+            "fallback": 0,
+            "source_values_col_name": "val",
+        },
+        {
+            "predictor_df": "event_times_df",
+            "lookbehind_days": 2,
+            "resolve_multiple": "get_max_value_from_list_of_events",
+            "fallback": 0,
+            "source_values_col_name": "val",
+        },
+    ]
 
-    flattened_dataset.add_predictors_from_dict(
-        predictor_dict=predictor_dict, predictor_dfs={"event_times_df": event_times_df}
+    flattened_dataset.add_predictors_from_list(
+        predictor_list=predictor_list,
+        predictor_dfs={"event_times_df": event_times_df},
+        resolve_multiple_strategies={
+            "get_max_value_from_list_of_events": get_max_value_from_list_of_events
+        },
     )
 
     assert flattened_dataset.df.equals(expected_df)
