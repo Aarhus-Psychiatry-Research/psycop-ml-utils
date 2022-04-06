@@ -51,7 +51,7 @@ def test_generate_two_features_from_dict():
     flattened_dataset.add_predictors_from_list_of_argument_dictionaries(
         predictor_list=predictor_list,
         predictor_dfs={"event_times_df": event_times_df},
-        resolve_multiple_strategies={
+        resolve_multiple_fn_dict={
             "get_max_value_from_list_of_events": get_max_value_from_list_of_events
         },
     )

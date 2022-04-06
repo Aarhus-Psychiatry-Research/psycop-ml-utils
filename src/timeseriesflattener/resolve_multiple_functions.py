@@ -1,9 +1,9 @@
 from typing import List, Union, Tuple
 from datetime import datetime
-from timeseriesflattener.flattened_dataset import resolve_strategies
+from timeseriesflattener.flattened_dataset import resolve_fns
 
 
-@resolve_strategies.register("max")
+@resolve_fns.register("max")
 def get_max_value_from_list_of_events(
     list_of_events: List[Tuple[Union[datetime, float]]]
 ) -> float:
@@ -21,7 +21,7 @@ def get_max_value_from_list_of_events(
     return max_val
 
 
-@resolve_strategies.register("min")
+@resolve_fns.register("min")
 def get_min_value_from_list_of_events(
     list_of_events: List[Tuple[Union[datetime, float]]]
 ) -> float:
@@ -37,7 +37,7 @@ def get_min_value_from_list_of_events(
     return min([event[1] for event in list_of_events])
 
 
-@resolve_strategies.register("average")
+@resolve_fns.register("average")
 def get_avg_value_from_list_of_events(
     list_of_events: List[Tuple[Union[datetime, float]]]
 ) -> float:
@@ -55,7 +55,7 @@ def get_avg_value_from_list_of_events(
     return sum(vals) / len(vals)
 
 
-@resolve_strategies.register("latest")
+@resolve_fns.register("latest")
 def get_latest_value_from_list_of_events(
     list_of_events: List[Tuple[Union[datetime, float]]]
 ) -> float:
@@ -73,7 +73,7 @@ def get_latest_value_from_list_of_events(
     return list_of_events[0][1]
 
 
-@resolve_strategies.register("earliest")
+@resolve_fns.register("earliest")
 def get_earliest_value_from_list_of_events(
     list_of_events: List[Tuple[Union[datetime, float]]]
 ) -> float:
