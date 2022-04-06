@@ -1,7 +1,7 @@
 from timeseriesflattener.create_feature_combinations import *
 
 
-def test_skip_if_no_need_to_process():
+def test_skip_all_if_no_need_to_process():
     input = [
         {
             "predictor_df": "prediction_times_df",
@@ -13,6 +13,44 @@ def test_skip_if_no_need_to_process():
     ]
 
     assert create_feature_combinations(input) == input
+
+
+def test_skip_one_if_no_need_to_process():
+    input = [
+        {
+            "predictor_df": "prediction_times_df",
+            "source_values_col_name": "val",
+            "lookbehind_days": 1,
+            "resolve_multiple": "get_max_value_from_list_of_events",
+            "fallback": 0,
+        },
+        {
+            "predictor_df": "prediction_times_df",
+            "source_values_col_name": "val",
+            "lookbehind_days": [1],
+            "resolve_multiple": "get_max_value_from_list_of_events",
+            "fallback": 0,
+        },
+    ]
+
+    expected_output = [
+        {
+            "predictor_df": "prediction_times_df",
+            "source_values_col_name": "val",
+            "lookbehind_days": 1,
+            "resolve_multiple": "get_max_value_from_list_of_events",
+            "fallback": 0,
+        },
+        {
+            "predictor_df": "prediction_times_df",
+            "source_values_col_name": "val",
+            "lookbehind_days": 1,
+            "resolve_multiple": "get_max_value_from_list_of_events",
+            "fallback": 0,
+        },
+    ]
+
+    assert create_feature_combinations(input) == expected_output
 
 
 def test_list_has_dict_with_list_as_val():
