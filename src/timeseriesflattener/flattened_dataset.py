@@ -1,6 +1,9 @@
 from typing import Callable, Dict, List, Union, Tuple
 from pandas import DataFrame
 from datetime import datetime
+import catalogue
+
+resolve_strategies = catalogue.create("timeseriesflattener", "resolve_strategies")
 
 
 class FlattenedDataset:
@@ -86,7 +89,7 @@ class FlattenedDataset:
         self,
         outcome_df: DataFrame,
         lookahead_days: float,
-        resolve_multiple: Callable,
+        resolve_multiple: Union[Callable, str],
         fallback: float,
         outcome_df_values_col_name: str = "val",
         new_col_name: str = None,
@@ -265,7 +268,7 @@ class FlattenedDataset:
         prediction_timestamp: str,
         val_dict: Dict[str, List[Tuple[Union[datetime, float]]]],
         interval_days: float,
-        resolve_multiple: Callable,
+        resolve_multiple: Union[Callable, str],
         fallback: list,
         id: int,
     ) -> float:
@@ -299,7 +302,11 @@ class FlattenedDataset:
             event_val = events[0][1]
             return event_val
         elif len(events) > 1:
-            return resolve_multiple(events)
+            if isinstance(resolve_multiple, Callable):
+                return resolve_multiple(events)
+            else:
+                resolve_strategy = resolve_strategies.get(resolve_multiple)
+                return resolve_strategy(events)
 
 
 def is_within_n_days(
