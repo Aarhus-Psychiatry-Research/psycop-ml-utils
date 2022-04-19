@@ -1,8 +1,7 @@
 from typing import Callable, Dict, List, Union, Tuple, Optional
 from pandas import DataFrame
-from datetime import datetime
+import pandas as pd
 import catalogue
-import swifter
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
 
@@ -42,13 +41,17 @@ class FlattenedDataset:
             timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
             id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
         """
-        self.df_prediction_times = prediction_times_df
         self.timestamp_col_name = timestamp_col_name
         self.id_col_name = id_col_name
-        
+
+        self.df_prediction_times = prediction_times_df
+        self.pred_time_uuid_colname = "prediction_time_uuid"
+
         for col_name in [self.timestamp_col_name, self.id_col_name]:
             if col_name not in self.df_prediction_times:
-                raise ValueError(f"{col_name} does not exist in df_prediction_times, change the df or set another argument")
+                raise ValueError(
+                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
+                )
 
         self.df = self.df_prediction_times
 
@@ -56,7 +59,7 @@ class FlattenedDataset:
         self,
         predictor_list: List[Dict[str, str]],
         predictor_dfs: Dict[str, DataFrame],
-        resolve_multiple_fn_dict: Optional[Dict[str, Callable]],
+        resolve_multiple_fn_dict: Optional[Dict[str, Callable]] = None,
     ):
         """Add predictors to the flattened dataframe from a list
 
@@ -185,179 +188,93 @@ class FlattenedDataset:
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
+        self.df[self.pred_time_uuid_colname] = self.df[self.id_col_name].astype(
+            str
+        ) + self.df[self.timestamp_col_name].dt.strftime("-%Y-%m-%d-%H-%M-%S")
 
-        values_dict = self._events_to_dict_by_patient(
-            df=values_df,
-            values_col_name=source_values_col_name,
+        df = pd.merge(
+            self.df_prediction_times,
+            values_df,
+            how="left",
+            on=self.id_col_name,
+            suffixes=("_pred", "_val"),
+        ).drop("dw_ek_borger", axis=1)
+
+        df = self.filter_df_by_dates(
+            df,
+            direction=direction,
+            interval_days=interval_days,
+            timestamp_pred_colname="timestamp_pred",
+            timestamp_val_colname="timestamp_val",
         )
 
-        new_col = self.df_prediction_times.swifter.apply(
-            lambda row: self._flatten_events_for_prediction_time(
-                direction=direction,
-                prediction_timestamp=row[self.timestamp_col_name],
-                val_dict=values_dict,
-                interval_days=interval_days,
-                id=row[self.id_col_name],
-                resolve_multiple=resolve_multiple,
-                fallback=fallback,
-            ),
-            axis=1,
-        )
-
+        # Rename column
         if new_col_name is None:
             new_col_name = source_values_col_name
 
-        self.df[f"{new_col_name}_within_{interval_days}_days"] = new_col
-
-    def _events_to_dict_by_patient(
-        self,
-        df: DataFrame,
-        values_col_name: str,
-    ) -> Dict[str, List[Tuple[Union[datetime, float]]]]:
-        """
-        Generate a dict of events grouped by patient_id
-
-        Args:
-            df (DataFrame): Dataframe to come from
-            values_col_name (str): Column name for event values
-
-        Returns:
-            Dict[str, List[Tuple[Union[datetime, float]]]]:
-                                    {
-                                        patientid1: [(timestamp11, val11), (timestamp12, val12)],
-                                        patientid2: [(timestamp21, val21), (timestamp22, val22)]
-                                    }
-        """
-
-        return (
-            df.groupby(self.id_col_name)
-            .apply(
-                lambda row: tuple(
-                    [
-                        list(event)
-                        for event in zip(
-                            row[self.timestamp_col_name], row[values_col_name]
-                        )
-                    ]
-                )
-            )
-            .to_dict()
+        df.rename(
+            {"val": f"{new_col_name}_within_{interval_days}_days"}, axis=1, inplace=True
         )
 
-    def _get_events_within_n_days(
+        # Merge results on uuid, use fallback if no match
+        df = (
+            pd.merge(self.df, df, how="left", on=self.pred_time_uuid_colname)
+            .drop(["timestamp_pred", "timestamp_val"], axis=1)
+            .fillna(fallback)
+        )
+
+        # Sort by timestamp_pred in case resolve_multiple needs dates
+        df = df.sort_values(by=self.timestamp_col_name).groupby(
+            self.pred_time_uuid_colname
+        )
+
+        if isinstance(resolve_multiple, Callable):
+            df = resolve_multiple(df)
+        else:
+            resolve_strategy = resolve_fns.get(resolve_multiple)
+            df = resolve_strategy(df)
+
+        self.df = df.reset_index().drop([self.pred_time_uuid_colname], axis=1)
+
+    def filter_df_by_dates(
         self,
+        df: DataFrame,
         direction: str,
-        prediction_timestamp: datetime,
-        val_dict: Dict[str, List[Tuple[Union[datetime, float]]]],
         interval_days: float,
-        id: int,
-    ) -> List:
-        """Gets a list of values that are within interval_days in direction from prediction_timestamp for id.
+        timestamp_pred_colname: str,
+        timestamp_val_colname: str,
+    ) -> DataFrame:
+        """Keeps only rows where timestamp_val is within interval_days in direction of timestamp_pred.
 
         Args:
             direction (str): Whether to look ahead or behind.
-            prediction_timestamp (timestamp):
-            val_dict (Dict[str, List[Tuple[Union[datetime, float]]]]): A dict containing the timestamps and vals for the events.
-                Shaped like {patient_id: [(timestamp1: val1), (timestamp2: val2)]}
-            interval_days (int): How far to look in direction.
-            id (int): Patient id
+            interval_days (float): How far to look
+            df (DataFrame): Source dataframe
+            timestamp_pred_colname (str):
+            timestamp_val_colname (str):
+
+        Raises:
+            ValueError: If direction is niether ahead nor behind.
 
         Returns:
-            list: [datetime, value]
+            DataFrame
         """
 
-        events_within_n_days = []
+        df["time_from_pred_to_val_in_days"] = (
+            df[timestamp_val_colname] - df[timestamp_pred_colname]
+        ).dt.total_seconds() / 86400
 
-        if id in val_dict:
-            for event in val_dict[id]:
-                event_timestamp = event[0]
+        if direction == "ahead":
+            df["is_in_interval"] = (
+                df["time_from_pred_to_val_in_days"] <= interval_days
+            ) & (df["time_from_pred_to_val_in_days"] > 0)
+        elif direction == "behind":
+            df["is_in_interval"] = (
+                df["time_from_pred_to_val_in_days"] >= -interval_days
+            ) & (df["time_from_pred_to_val_in_days"] < 0)
+        else:
+            raise ValueError("direction can only be 'ahead' or 'behind'")
 
-                if is_within_n_days(
-                    direction=direction,
-                    prediction_timestamp=prediction_timestamp,
-                    event_timestamp=event_timestamp,
-                    interval_days=interval_days,
-                ):
-                    events_within_n_days.append(event)
-
-        return events_within_n_days
-
-    def _flatten_events_for_prediction_time(
-        self,
-        direction: str,
-        prediction_timestamp: str,
-        val_dict: Dict[str, List[Tuple[Union[datetime, float]]]],
-        interval_days: float,
-        resolve_multiple: Union[Callable, str],
-        fallback: list,
-        id: int,
-    ) -> float:
-        """Takes a list of events and turns them into a single value for a prediction_time
-        given a set of conditions.
-
-        Args:
-            direction (str): Whether to look ahead or behind from the prediction time.
-            prediction_timestamp (str): The timestamp to anchor on.
-            val_dict (Dict[str, List[Tuple[Union[datetime, float]]]]): A dict containing the timestamps and vals for the events.
-                Shaped like {patient_id: [(timestamp1: val1), (timestamp2: val2)]}
-            interval_days (float): How many days to look in direction for events.
-            resolve_multiple (str): How to handle multiple events within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-            fallback (list): How to handle no events within interval_days.
-            id (int): Which patient ID to flatten events for.
-
-        Returns:
-            float: Value for each prediction_time.
-        """
-        events = self._get_events_within_n_days(
-            direction=direction,
-            prediction_timestamp=prediction_timestamp,
-            val_dict=val_dict,
-            interval_days=interval_days,
-            id=id,
+        return df[df["is_in_interval"] == True].drop(
+            ["is_in_interval", "time_from_pred_to_val_in_days"], axis=1
         )
-
-        if len(events) == 0:
-            return fallback
-        elif len(events) == 1:
-            event_val = events[0][1]
-            return event_val
-        elif len(events) > 1:
-            if isinstance(resolve_multiple, Callable):
-                return resolve_multiple(events)
-            else:
-                resolve_strategy = resolve_fns.get(resolve_multiple)
-                return resolve_strategy(events)
-
-
-def is_within_n_days(
-    direction: str,
-    prediction_timestamp: datetime,
-    event_timestamp: datetime,
-    interval_days: float,
-) -> bool:
-    """Looks interval_days in direction from prediction_timestamp.
-    Returns true if event_timestamp is within interval_days.
-
-    Args:
-        direction: Whether to look ahead or behind
-        prediction_timestamp (timestamp): timestamp for prediction
-        event_timestamp (timestamp): timestamp for event
-        interval_days (int): How far to look in direction
-
-    Returns:
-        boolean
-    """
-
-    difference_in_days = (
-        event_timestamp - prediction_timestamp
-    ).total_seconds() / 86400
-    # Use .seconds instead of .days to get fractions of a day
-
-    if direction == "ahead":
-        is_in_interval = difference_in_days <= interval_days and difference_in_days > 0
-    elif direction == "behind":
-        is_in_interval = difference_in_days >= -interval_days and difference_in_days < 0
-    else:
-        raise ValueError("direction can only be 'ahead' or 'behind'")
-
-    return is_in_interval
