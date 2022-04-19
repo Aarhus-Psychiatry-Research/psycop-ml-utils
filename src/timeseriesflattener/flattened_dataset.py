@@ -44,16 +44,28 @@ class FlattenedDataset:
         self.timestamp_col_name = timestamp_col_name
         self.id_col_name = id_col_name
 
-        self.df_prediction_times = prediction_times_df
         self.pred_time_uuid_colname = "prediction_time_uuid"
+        self.pred_times_with_uuid = prediction_times_df
+        self.pred_times_with_uuid[
+            self.pred_time_uuid_colname
+        ] = self.pred_times_with_uuid[self.id_col_name].astype(
+            str
+        ) + self.pred_times_with_uuid[
+            self.timestamp_col_name
+        ].dt.strftime(
+            "-%Y-%m-%d-%H-%M-%S"
+        )
 
         for col_name in [self.timestamp_col_name, self.id_col_name]:
-            if col_name not in self.df_prediction_times:
+            if col_name not in self.pred_times_with_uuid:
                 raise ValueError(
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
                 )
 
-        self.df = self.df_prediction_times
+        # Having a df_aggregating separate from df allows to only generate the UUID once, while not presenting it
+        # in self.df
+        self.df_aggregating = self.pred_times_with_uuid
+        self.df = self.pred_times_with_uuid
 
     def add_predictors_from_list_of_argument_dictionaries(
         self,
@@ -188,12 +200,9 @@ class FlattenedDataset:
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
-        self.df[self.pred_time_uuid_colname] = self.df[self.id_col_name].astype(
-            str
-        ) + self.df[self.timestamp_col_name].dt.strftime("-%Y-%m-%d-%H-%M-%S")
 
         df = pd.merge(
-            self.df_prediction_times,
+            self.pred_times_with_uuid,
             values_df,
             how="left",
             on=self.id_col_name,
@@ -208,17 +217,15 @@ class FlattenedDataset:
             timestamp_val_colname="timestamp_val",
         )
 
-        # Rename column
-        if new_col_name is None:
-            new_col_name = source_values_col_name
-
-        df.rename(
-            {"val": f"{new_col_name}_within_{interval_days}_days"}, axis=1, inplace=True
-        )
-
         # Merge results on uuid, use fallback if no match
         df = (
-            pd.merge(self.df, df, how="left", on=self.pred_time_uuid_colname)
+            pd.merge(
+                self.pred_times_with_uuid,
+                df,
+                how="left",
+                on=self.pred_time_uuid_colname,
+                suffixes=("", ""),
+            )
             .drop(["timestamp_pred", "timestamp_val"], axis=1)
             .fillna(fallback)
         )
@@ -229,12 +236,28 @@ class FlattenedDataset:
         )
 
         if isinstance(resolve_multiple, Callable):
-            df = resolve_multiple(df)
+            df = resolve_multiple(df).reset_index()
         else:
             resolve_strategy = resolve_fns.get(resolve_multiple)
-            df = resolve_strategy(df)
+            df = resolve_strategy(df).reset_index()
 
-        self.df = df.reset_index().drop([self.pred_time_uuid_colname], axis=1)
+        # Rename column
+        if new_col_name is None:
+            new_col_name = source_values_col_name
+
+        full_col_str = f"{new_col_name}_within_{interval_days}_days"
+        df.rename({"val": full_col_str}, axis=1, inplace=True)
+
+        # Assign to instance
+        self.df_aggregating = pd.merge(
+            self.df_aggregating,
+            df[[self.pred_time_uuid_colname, full_col_str]],
+            how="left",
+            on=self.pred_time_uuid_colname,
+            suffixes=("", ""),
+        )
+
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
 
     def filter_df_by_dates(
         self,
