@@ -201,6 +201,7 @@ class FlattenedDataset:
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
 
+        # Generate df with one row for each prediction time x event time combination
         df = pd.merge(
             self.pred_times_with_uuid,
             values_df,
@@ -209,6 +210,7 @@ class FlattenedDataset:
             suffixes=("_pred", "_val"),
         ).drop("dw_ek_borger", axis=1)
 
+        # Drop prediction times without event times within interval days
         df = self.filter_df_by_dates(
             df,
             direction=direction,
@@ -217,7 +219,8 @@ class FlattenedDataset:
             timestamp_val_colname="timestamp_val",
         )
 
-        # Merge results on uuid, use fallback if no match
+        # Merge results on uuid to generate NAs for prediction_times without events
+        # Use fallback if no match
         df = (
             pd.merge(
                 self.pred_times_with_uuid,
