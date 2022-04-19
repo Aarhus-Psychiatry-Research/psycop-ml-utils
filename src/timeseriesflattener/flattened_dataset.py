@@ -1,6 +1,7 @@
 from typing import Callable, Dict, List, Union, Tuple, Optional
 from pandas import DataFrame
 from datetime import datetime
+import dask.dataframe as dd
 import catalogue
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
@@ -49,7 +50,7 @@ class FlattenedDataset:
         self,
         predictor_list: List[Dict[str, str]],
         predictor_dfs: Dict[str, DataFrame],
-        resolve_multiple_fn_dict: Optional[Dict[str, Callable]],
+        resolve_multiple_fn_dict: Optional[Dict[str, Callable]] = None,
     ):
         """Add predictors to the flattened dataframe from a list
 
@@ -184,7 +185,13 @@ class FlattenedDataset:
             values_col_name=source_values_col_name,
         )
 
-        new_col = self.df_prediction_times.apply(
+        ddf = (
+            dd.from_pandas(self.df_prediction_times, npartitions=80)
+            .set_index("dw_ek_borger", drop=False)
+            .persist()
+        )
+
+        new_col = ddf.apply(
             lambda row: self._flatten_events_for_prediction_time(
                 direction=direction,
                 prediction_timestamp=row[self.timestamp_col_name],
@@ -195,6 +202,7 @@ class FlattenedDataset:
                 fallback=fallback,
             ),
             axis=1,
+            meta=float,
         )
 
         if new_col_name is None:

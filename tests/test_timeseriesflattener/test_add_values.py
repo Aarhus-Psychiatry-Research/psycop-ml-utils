@@ -51,6 +51,7 @@ def test_multiple_citizens_predictor():
                         1,2022-01-01 00:00:00, 1
                         5,2022-01-01 00:00:00, 0
                         5,2022-01-04 00:00:01, 2
+                        5,2022-01-04 00:00:02, 3
                         """
 
     assert_flattened_predictor_as_expected(
@@ -58,7 +59,7 @@ def test_multiple_citizens_predictor():
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
         resolve_multiple=get_max_value_from_list_of_events,
-        expected_flattened_vals=[0, 1, 0, 2],
+        expected_flattened_vals=[0, 1, 0, 3],
         fallback=-1,
     )
 
