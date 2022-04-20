@@ -3,6 +3,7 @@ from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import catalogue
 import pandas as pd
+from numpy import full
 from pandas import DataFrame
 from wasabi import msg
 
@@ -159,8 +160,23 @@ class FlattenedDataset:
             self.create_flattened_df_with_kwargs, processed_arg_dicts
         )
 
-        for val_df in flattened_predictor_dfs:
-            self.assign_val_df_to_instance(val_df)
+        concatenated_dfs = pd.concat(
+            [
+                df.set_index(self.pred_time_uuid_col_name)
+                for df in flattened_predictor_dfs
+            ],
+            axis=1,
+        ).reset_index()
+
+        self.df_aggregating = pd.merge(
+            self.df_aggregating,
+            concatenated_dfs,
+            how="left",
+            on=self.pred_time_uuid_col_name,
+            suffixes=("", ""),
+        )
+
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
 
     def create_flattened_df_with_kwargs(self, kwargs_dict):
         return self.create_flattened_df_for_val(
@@ -316,6 +332,12 @@ class FlattenedDataset:
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
                 )
 
+        # Rename column
+        if new_col_name is None:
+            new_col_name = source_values_col_name
+
+        full_col_str = f"{new_col_name}_within_{interval_days}_days"
+
         # Generate df with one row for each prediction time x event time combination
         # Drop dw_ek_borger for faster merge
 
@@ -327,7 +349,7 @@ class FlattenedDataset:
             suffixes=("_pred", "_val"),
         ).drop("dw_ek_borger", axis=1)
 
-        msg.info(f"Flattening dataframe from {source_values_col_name}")
+        msg.info(f"Flattening dataframe for {full_col_str}")
 
         # Drop prediction times without event times within interval days
         df = FlattenedDataset.drop_records_outside_interval_days(
@@ -350,11 +372,6 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         )
 
-        # Rename column
-        if new_col_name is None:
-            new_col_name = source_values_col_name
-
-        full_col_str = f"{new_col_name}_within_{interval_days}_days"
         df.rename({"val": full_col_str}, axis=1, inplace=True)
 
         msg.good(f"Returning flattened dataframe with {full_col_str}")
