@@ -1,6 +1,3 @@
-from tokenize import group
-from typing import List, Union, Tuple
-from datetime import datetime
 from pandas import DataFrame
 from timeseriesflattener.flattened_dataset import resolve_fns
 
@@ -35,6 +32,14 @@ def get_latest_val_in_group(grouped_df: DataFrame) -> DataFrame:
 
 @resolve_fns.register("earliest")
 def get_earliest_val_in_group(grouped_df: DataFrame) -> DataFrame:
+    """Get the earliest value.
+
+    Args:
+        grouped_df (DataFrame): A dataframe sorted by descending timestamp, grouped by citizen.
+
+    Returns:
+        DataFrame: Dataframe with only the earliest value in each group.
+    """
     return grouped_df.first()
 
 

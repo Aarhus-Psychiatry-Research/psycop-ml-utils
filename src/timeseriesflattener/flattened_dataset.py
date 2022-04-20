@@ -1,3 +1,4 @@
+from ast import Call
 from typing import Callable, Dict, List, Union, Tuple, Optional
 from pandas import DataFrame
 import pandas as pd
@@ -240,7 +241,15 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
 
-    def add_back_prediction_times_without_value(self, df):
+    def add_back_prediction_times_without_value(self, df: DataFrame) -> DataFrame:
+        """Ensures all prediction times are represented in the returned dataframe.
+
+        Args:
+            df (DataFrame):
+
+        Returns:
+            DataFrame:
+        """
         return pd.merge(
             self.pred_times_with_uuid,
             df,
@@ -249,7 +258,18 @@ class FlattenedDataset:
             suffixes=("", ""),
         ).drop(["timestamp_pred", "timestamp_val"], axis=1)
 
-    def resolve_multiple_values_within_interval_days(self, resolve_multiple, df):
+    def resolve_multiple_values_within_interval_days(
+        self, resolve_multiple: Callable, df: DataFrame
+    ) -> DataFrame:
+        """Apply the resolve_multiple function to prediction_times where there are multiple values within the interval_days lookahead
+
+        Args:
+            resolve_multiple (Callable): Takes a grouped df and collapses each group to one record (e.g. sum, count etc.).
+            df (DataFrame): Source dataframe with all prediction time x val combinations.
+
+        Returns:
+            DataFrame: DataFrame with one row pr. prediction time.
+        """
         # Sort by timestamp_pred in case resolve_multiple needs dates
         df = df.sort_values(by=self.timestamp_col_name).groupby(
             self.pred_time_uuid_colname
