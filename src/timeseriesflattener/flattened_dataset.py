@@ -327,7 +327,7 @@ class FlattenedDataset:
             suffixes=("_pred", "_val"),
         ).drop("dw_ek_borger", axis=1)
 
-        msg.info(f"Flattening dataframe from {df.columns}")
+        msg.info(f"Flattening dataframe from {source_values_col_name}")
 
         # Drop prediction times without event times within interval days
         df = FlattenedDataset.drop_records_outside_interval_days(
