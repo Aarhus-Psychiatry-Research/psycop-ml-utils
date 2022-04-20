@@ -113,7 +113,6 @@ class FlattenedDataset:
             >>>     resolve_multiple_fn_dict=resolve_multiple_strategies,
             >>> )
         """
-        preprocessed_arg_dicts = []
         processed_arg_dicts = []
 
         # Replace strings with objects as relevant
@@ -133,10 +132,13 @@ class FlattenedDataset:
             arg_dict["interval_days"] = arg_dict["lookbehind_days"]
             arg_dict["direction"] = "behind"
 
-            preprocessed_arg_dicts.append(
-                select_and_order_keys(
+            if "new_col_name" not in arg_dict.keys():
+                arg_dict["new_col_name"] = None
+
+            processed_arg_dicts.append(
+                select_and_assert_keys(
                     dictionary=arg_dict,
-                    key_order=[
+                    key_list=[
                         "values_df",
                         "direction",
                         "interval_days",
@@ -148,19 +150,17 @@ class FlattenedDataset:
                 )
             )
 
-        # Unpack dicts to iterables
-        for arg_dict in preprocessed_arg_dicts:
-            processed_arg_dicts.append([arg_dict[key] for key in arg_dict.keys()])
-
         pool = Pool(self.n_workers)
 
-        flattened_predictor_dfs = pool.starmap(
-            self.create_flattened_df_for_val,
-            processed_arg_dicts,
+        flattened_predictor_dfs = pool.map(
+            self.create_flattened_df_with_kwargs, processed_arg_dicts
         )
 
         for val_df in flattened_predictor_dfs:
             self.assign_val_df_to_instance(val_df)
+
+    def create_flattened_df_with_kwargs(self, kwargs_dict):
+        return self.create_flattened_df_for_val(**kwargs_dict)
 
     def add_outcome(
         self,
@@ -421,7 +421,7 @@ class FlattenedDataset:
         )
 
 
-def select_and_order_keys(dictionary: Dict, key_order: List[str]) -> Dict:
+def select_and_assert_keys(dictionary: Dict, key_list: List[str]) -> Dict:
     """Keeps only the keys in the dictionary that are in key_order, and orders them as in the lsit
 
     Args:
@@ -431,4 +431,7 @@ def select_and_order_keys(dictionary: Dict, key_order: List[str]) -> Dict:
     Returns:
         Dict: Dict with only the selected keys
     """
-    return {key: dictionary[key] for key in key_order if key in dictionary}
+    for key in key_list:
+        assert key in dictionary
+
+    return {key: dictionary[key] for key in key_list if key in dictionary}

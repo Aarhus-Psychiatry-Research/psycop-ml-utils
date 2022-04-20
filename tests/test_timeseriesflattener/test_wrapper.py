@@ -1,3 +1,4 @@
+from timeseriesflattener.create_feature_combinations import create_feature_combinations
 from timeseriesflattener.flattened_dataset import FlattenedDataset
 from timeseriesflattener.resolve_multiple_functions import get_max_in_group
 
@@ -16,8 +17,8 @@ def test_generate_two_features_from_dict():
                         1,2021-12-29 00:00:02, 2
                         """
 
-    expected_df_str = """dw_ek_borger,timestamp,val_within_1_days,val_within_2_days
-                        1,2021-12-31 00:00:00,1,2                      
+    expected_df_str = """dw_ek_borger,timestamp,val_within_1_days,val_within_2_days,val_within_3_days,val_within_4_days
+                        1,2021-12-31 00:00:00,1,2,2,2                      
     """
 
     prediction_times_df = str_to_df(prediction_times_str)
@@ -31,22 +32,17 @@ def test_generate_two_features_from_dict():
         n_workers=4,
     )
 
-    predictor_list = [
-        {
-            "predictor_df": "event_times_df",
-            "lookbehind_days": 1,
-            "resolve_multiple": "max",
-            "fallback": 0,
-            "source_values_col_name": "val",
-        },
-        {
-            "predictor_df": "event_times_df",
-            "lookbehind_days": 2,
-            "resolve_multiple": "max",
-            "fallback": 0,
-            "source_values_col_name": "val",
-        },
-    ]
+    predictor_list = create_feature_combinations(
+        [
+            {
+                "predictor_df": "event_times_df",
+                "lookbehind_days": [1, 2, 3, 4],
+                "resolve_multiple": "max",
+                "fallback": 0,
+                "source_values_col_name": "val",
+            },
+        ]
+    )
 
     flattened_dataset.add_predictors_from_list_of_argument_dictionaries(
         predictor_list=predictor_list,
