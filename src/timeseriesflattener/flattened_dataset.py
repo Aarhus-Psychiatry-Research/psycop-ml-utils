@@ -47,6 +47,13 @@ class FlattenedDataset:
 
         self.pred_time_uuid_colname = "prediction_time_uuid"
         self.pred_times_with_uuid = prediction_times_df
+
+        for col_name in [self.timestamp_col_name, self.id_col_name]:
+            if col_name not in self.pred_times_with_uuid.columns:
+                raise ValueError(
+                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
+                )
+
         self.pred_times_with_uuid[
             self.pred_time_uuid_colname
         ] = self.pred_times_with_uuid[self.id_col_name].astype(
@@ -56,12 +63,6 @@ class FlattenedDataset:
         ].dt.strftime(
             "-%Y-%m-%d-%H-%M-%S"
         )
-
-        for col_name in [self.timestamp_col_name, self.id_col_name]:
-            if col_name not in self.pred_times_with_uuid:
-                raise ValueError(
-                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
-                )
 
         # Having a df_aggregating separate from df allows to only generate the UUID once, while not presenting it
         # in self.df
@@ -201,6 +202,12 @@ class FlattenedDataset:
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
+
+        for col_name in [self.timestamp_col_name, self.id_col_name]:
+            if col_name not in values_df.columns:
+                raise ValueError(
+                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
+                )
 
         # Generate df with one row for each prediction time x event time combination
         df = pd.merge(
