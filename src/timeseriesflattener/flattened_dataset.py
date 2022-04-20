@@ -1,8 +1,11 @@
+from itertools import repeat
+from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import catalogue
 import pandas as pd
 from pandas import DataFrame
+from py import process
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
 
@@ -15,6 +18,7 @@ class FlattenedDataset:
         prediction_times_df: DataFrame,
         id_col_name: str = "dw_ek_borger",
         timestamp_col_name: str = "timestamp",
+        n_workers: int = 60,
     ):
         """Class containing a time-series, flattened. A 'flattened' version is a tabular representation for each prediction time.
         A prediction time is every timestamp where you want your model to issue a prediction.
@@ -42,6 +46,8 @@ class FlattenedDataset:
             timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
             id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
         """
+        self.n_workers = n_workers
+
         self.timestamp_col_name = timestamp_col_name
         self.id_col_name = id_col_name
 
@@ -108,18 +114,54 @@ class FlattenedDataset:
             >>>     resolve_multiple_fn_dict=resolve_multiple_strategies,
             >>> )
         """
+        preprocessed_arg_dicts = []
+        processed_arg_dicts = []
 
-        for arg_list in predictor_list:
-            arg_list["predictor_df"] = predictor_dfs[arg_list["predictor_df"]]
+        # Replace strings with objects as relevant
+        for arg_dict in predictor_list:
+            arg_dict["predictor_df"] = predictor_dfs[arg_dict["predictor_df"]]
+
             if (
                 resolve_multiple_fn_dict is not None
-                and arg_list["resolve_multiple"] in resolve_multiple_fn_dict
+                and arg_dict["resolve_multiple"] in resolve_multiple_fn_dict
             ):
-                arg_list["resolve_multiple"] = resolve_multiple_fn_dict[
-                    arg_list["resolve_multiple"]
+                arg_dict["resolve_multiple"] = resolve_multiple_fn_dict[
+                    arg_dict["resolve_multiple"]
                 ]
 
-            self.add_predictor(**arg_list)
+            # Rename arguments for create_flattened_df_for_val
+            arg_dict["values_df"] = arg_dict["predictor_df"]
+            arg_dict["interval_days"] = arg_dict["lookbehind_days"]
+            arg_dict["direction"] = "behind"
+
+            preprocessed_arg_dicts.append(
+                select_and_order_keys(
+                    dictionary=arg_dict,
+                    key_order=[
+                        "values_df",
+                        "direction",
+                        "interval_days",
+                        "resolve_multiple",
+                        "fallback",
+                        "new_col_name",
+                        "source_values_col_name",
+                    ],
+                )
+            )
+
+        # Unpack dicts to iterables
+        for arg_dict in preprocessed_arg_dicts:
+            processed_arg_dicts.append([arg_dict[key] for key in arg_dict.keys()])
+
+        pool = Pool(self.n_workers)
+
+        flattened_predictor_dfs = pool.starmap(
+            self.create_flattened_df_for_val,
+            processed_arg_dicts,
+        )
+
+        for val_df in flattened_predictor_dfs:
+            self.assign_val_df_to_instance(val_df)
 
     def add_outcome(
         self,
@@ -188,7 +230,7 @@ class FlattenedDataset:
         interval_days: float,
         resolve_multiple: Union[Callable, str],
         fallback: float,
-        new_col_name: str,
+        new_col_name: Optional[str] = None,
         source_values_col_name: str = "val",
     ):
         """Adds a column to the dataset (either predictor or outcome depending on the value of "direction")
@@ -203,6 +245,54 @@ class FlattenedDataset:
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
 
+        df = self.create_flattened_df_for_val(
+            values_df,
+            direction,
+            interval_days,
+            resolve_multiple,
+            fallback,
+            new_col_name,
+            source_values_col_name,
+        )
+
+        self.assign_val_df_to_instance(df)
+
+    def assign_val_df_to_instance(self, df):
+        self.df_aggregating = pd.merge(
+            self.df_aggregating,
+            df,
+            how="left",
+            on=self.pred_time_uuid_colname,
+            suffixes=("", ""),
+        )
+
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
+
+    def create_flattened_df_for_val(
+        self,
+        values_df: DataFrame,
+        direction: str,
+        interval_days: float,
+        resolve_multiple: Union[Callable, str],
+        fallback: float,
+        new_col_name: Optional[str] = None,
+        source_values_col_name: str = "val",
+    ) -> DataFrame:
+        """Creates a dataframe with flattened values (either predictor or outcome depending on the value of "direction")
+
+        Args:
+            values_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
+            direction (str): Whether to look "ahead" or "behind".
+            interval_days (float): How far to look in direction.
+            resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
+            fallback (List[str]): What to do if no value within the lookahead.
+            new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
+
+        Returns:
+            DataFrame: One row pr. prediction time, flattened according to arguments
+        """
+
         for col_name in [self.timestamp_col_name, self.id_col_name]:
             if col_name not in values_df.columns:
                 raise ValueError(
@@ -210,6 +300,8 @@ class FlattenedDataset:
                 )
 
         # Generate df with one row for each prediction time x event time combination
+        # Drop dw_ek_borger for faster merge
+
         df = pd.merge(
             self.pred_times_with_uuid,
             values_df,
@@ -237,16 +329,7 @@ class FlattenedDataset:
         full_col_str = f"{new_col_name}_within_{interval_days}_days"
         df.rename({"val": full_col_str}, axis=1, inplace=True)
 
-        # Assign to instance
-        self.df_aggregating = pd.merge(
-            self.df_aggregating,
-            df[[self.pred_time_uuid_colname, full_col_str]],
-            how="left",
-            on=self.pred_time_uuid_colname,
-            suffixes=("", ""),
-        )
-
-        self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
+        return df[[self.pred_time_uuid_colname, full_col_str]]
 
     def add_back_prediction_times_without_value(self, df: DataFrame) -> DataFrame:
         """Ensures all prediction times are represented in the returned dataframe.
@@ -333,3 +416,16 @@ class FlattenedDataset:
         return df[df["is_in_interval"] == True].drop(
             ["is_in_interval", "time_from_pred_to_val_in_days"], axis=1
         )
+
+
+def select_and_order_keys(dictionary: Dict, key_order: List[str]) -> Dict:
+    """Keeps only the keys in the dictionary that are in key_order, and orders them as in the lsit
+
+    Args:
+        dict (Dict): Dictionary to process
+        keys_to_keep (List[str]): List of keys to keep
+
+    Returns:
+        Dict: Dict with only the selected keys
+    """
+    return {key: dictionary[key] for key in key_order if key in dictionary}

@@ -1,8 +1,7 @@
-from utils_for_testing import *
 from timeseriesflattener.flattened_dataset import FlattenedDataset
-from timeseriesflattener.resolve_multiple_functions import (
-    get_max_in_group,
-)
+from timeseriesflattener.resolve_multiple_functions import get_max_in_group
+
+from utils_for_testing import *
 
 
 def test_generate_two_features_from_dict():
@@ -29,6 +28,7 @@ def test_generate_two_features_from_dict():
         prediction_times_df=prediction_times_df,
         timestamp_col_name="timestamp",
         id_col_name="dw_ek_borger",
+        n_workers=4,
     )
 
     predictor_list = [
