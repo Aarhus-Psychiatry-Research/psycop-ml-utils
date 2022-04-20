@@ -1,8 +1,8 @@
-from ast import Call
-from typing import Callable, Dict, List, Union, Tuple, Optional
-from pandas import DataFrame
-import pandas as pd
+from typing import Callable, Dict, List, Optional, Tuple, Union
+
 import catalogue
+import pandas as pd
+from pandas import DataFrame
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
 
@@ -316,7 +316,8 @@ class FlattenedDataset:
 
         df["time_from_pred_to_val_in_days"] = (
             df[timestamp_val_colname] - df[timestamp_pred_colname]
-        ).dt.total_seconds() / 86400
+        ).dt.total_seconds() / 86_400
+        # Divide by 86.400 seconds/day
 
         if direction == "ahead":
             df["is_in_interval"] = (

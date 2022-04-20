@@ -1,8 +1,6 @@
-from sqlalchemy import false
+import pandas as pd
 from timeseriesflattener.flattened_dataset import *
 from timeseriesflattener.resolve_multiple_functions import *
-
-import pandas as pd
 
 
 def str_to_df(str) -> DataFrame:
