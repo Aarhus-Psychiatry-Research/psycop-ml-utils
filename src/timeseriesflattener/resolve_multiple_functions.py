@@ -1,5 +1,19 @@
 from pandas import DataFrame
+
 from timeseriesflattener.flattened_dataset import resolve_fns
+
+
+@resolve_fns.register("latest")
+def get_latest_val_in_group(grouped_df: DataFrame) -> DataFrame:
+    """Get the latest value.
+
+    Args:
+        grouped_df (DataFrame): A dataframe sorted by descending timestamp, grouped by citizen.
+
+    Returns:
+        DataFrame: Dataframe with only the latest value.
+    """
+    return grouped_df.last()
 
 
 @resolve_fns.register("max")
@@ -15,19 +29,6 @@ def get_min_in_group(grouped_df: DataFrame) -> DataFrame:
 @resolve_fns.register("average")
 def get_mean_in_group(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.mean()
-
-
-@resolve_fns.register("latest")
-def get_latest_val_in_group(grouped_df: DataFrame) -> DataFrame:
-    """Get the latest value.
-
-    Args:
-        grouped_df (DataFrame): A dataframe sorted by descending timestamp, grouped by citizen.
-
-    Returns:
-        DataFrame: Dataframe with only the latest value.
-    """
-    return grouped_df.last()
 
 
 @resolve_fns.register("earliest")
