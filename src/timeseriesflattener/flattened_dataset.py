@@ -211,7 +211,7 @@ class FlattenedDataset:
         ).drop("dw_ek_borger", axis=1)
 
         # Drop prediction times without event times within interval days
-        df = self.filter_df_by_dates(
+        df = self.drop_records_outside_interval_days(
             df,
             direction=direction,
             interval_days=interval_days,
@@ -219,30 +219,8 @@ class FlattenedDataset:
             timestamp_val_colname="timestamp_val",
         )
 
-        # Merge results on uuid to generate NAs for prediction_times without events
-        # Use fallback if no match
-        df = (
-            pd.merge(
-                self.pred_times_with_uuid,
-                df,
-                how="left",
-                on=self.pred_time_uuid_colname,
-                suffixes=("", ""),
-            )
-            .drop(["timestamp_pred", "timestamp_val"], axis=1)
-            .fillna(fallback)
-        )
-
-        # Sort by timestamp_pred in case resolve_multiple needs dates
-        df = df.sort_values(by=self.timestamp_col_name).groupby(
-            self.pred_time_uuid_colname
-        )
-
-        if isinstance(resolve_multiple, Callable):
-            df = resolve_multiple(df).reset_index()
-        else:
-            resolve_strategy = resolve_fns.get(resolve_multiple)
-            df = resolve_strategy(df).reset_index()
+        df = self.add_back_prediction_times_without_value(df).fillna(fallback)
+        df = self.resolve_multiple_values_within_interval_days(resolve_multiple, df)
 
         # Rename column
         if new_col_name is None:
@@ -262,7 +240,30 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
 
-    def filter_df_by_dates(
+    def add_back_prediction_times_without_value(self, df):
+        return pd.merge(
+            self.pred_times_with_uuid,
+            df,
+            how="left",
+            on=self.pred_time_uuid_colname,
+            suffixes=("", ""),
+        ).drop(["timestamp_pred", "timestamp_val"], axis=1)
+
+    def resolve_multiple_values_within_interval_days(self, resolve_multiple, df):
+        # Sort by timestamp_pred in case resolve_multiple needs dates
+        df = df.sort_values(by=self.timestamp_col_name).groupby(
+            self.pred_time_uuid_colname
+        )
+
+        if isinstance(resolve_multiple, Callable):
+            df = resolve_multiple(df).reset_index()
+        else:
+            resolve_strategy = resolve_fns.get(resolve_multiple)
+            df = resolve_strategy(df).reset_index()
+
+        return df
+
+    def drop_records_outside_interval_days(
         self,
         df: DataFrame,
         direction: str,
