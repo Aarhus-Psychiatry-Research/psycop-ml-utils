@@ -50,7 +50,7 @@ class FlattenedDataset:
         self.timestamp_col_name = timestamp_col_name
         self.id_col_name = id_col_name
 
-        self.pred_time_uuid_colname = "prediction_time_uuid"
+        self.pred_time_uuid_col_name = "prediction_time_uuid"
         self.pred_times_with_uuid = prediction_times_df
 
         for col_name in [self.timestamp_col_name, self.id_col_name]:
@@ -60,7 +60,7 @@ class FlattenedDataset:
                 )
 
         self.pred_times_with_uuid[
-            self.pred_time_uuid_colname
+            self.pred_time_uuid_col_name
         ] = self.pred_times_with_uuid[self.id_col_name].astype(
             str
         ) + self.pred_times_with_uuid[
@@ -131,6 +131,9 @@ class FlattenedDataset:
             arg_dict["values_df"] = arg_dict["predictor_df"]
             arg_dict["interval_days"] = arg_dict["lookbehind_days"]
             arg_dict["direction"] = "behind"
+            arg_dict["id_col_name"] = self.id_col_name
+            arg_dict["timestamp_col_name"] = self.timestamp_col_name
+            arg_dict["pred_time_uuid_col_name"] = self.pred_time_uuid_col_name
 
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = None
@@ -160,7 +163,13 @@ class FlattenedDataset:
             self.assign_val_df_to_instance(val_df)
 
     def create_flattened_df_with_kwargs(self, kwargs_dict):
-        return self.create_flattened_df_for_val(**kwargs_dict)
+        return self.create_flattened_df_for_val(
+            prediction_times_with_uuid_df=self.pred_times_with_uuid,
+            id_col_name=self.id_col_name,
+            timestamp_col_name=self.timestamp_col_name,
+            pred_time_uuid_col_name=self.pred_time_uuid_col_name,
+            **kwargs_dict,
+        )
 
     def add_outcome(
         self,
@@ -244,14 +253,18 @@ class FlattenedDataset:
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
 
-        df = self.create_flattened_df_for_val(
-            values_df,
-            direction,
-            interval_days,
-            resolve_multiple,
-            fallback,
-            new_col_name,
-            source_values_col_name,
+        df = FlattenedDataset.create_flattened_df_for_val(
+            prediction_times_with_uuid_df=self.pred_times_with_uuid,
+            values_df=values_df,
+            direction=direction,
+            interval_days=interval_days,
+            resolve_multiple=resolve_multiple,
+            fallback=fallback,
+            id_col_name=self.id_col_name,
+            timestamp_col_name=self.timestamp_col_name,
+            pred_time_uuid_col_name=self.pred_time_uuid_col_name,
+            new_col_name=new_col_name,
+            source_values_col_name=source_values_col_name,
         )
 
         self.assign_val_df_to_instance(df)
@@ -261,21 +274,25 @@ class FlattenedDataset:
             self.df_aggregating,
             df,
             how="left",
-            on=self.pred_time_uuid_colname,
+            on=self.pred_time_uuid_col_name,
             suffixes=("", ""),
         )
 
-        self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
 
         msg.good(f"Assigned df with columns {df.columns} to instance")
 
+    @staticmethod
     def create_flattened_df_for_val(
-        self,
+        prediction_times_with_uuid_df: DataFrame,
         values_df: DataFrame,
         direction: str,
         interval_days: float,
         resolve_multiple: Union[Callable, str],
         fallback: float,
+        id_col_name: str,
+        timestamp_col_name: str,
+        pred_time_uuid_col_name: str,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "val",
     ) -> DataFrame:
@@ -293,7 +310,7 @@ class FlattenedDataset:
         Returns:
             DataFrame: One row pr. prediction time, flattened according to arguments
         """
-        for col_name in [self.timestamp_col_name, self.id_col_name]:
+        for col_name in [timestamp_col_name, id_col_name]:
             if col_name not in values_df.columns:
                 raise ValueError(
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
@@ -303,17 +320,17 @@ class FlattenedDataset:
         # Drop dw_ek_borger for faster merge
 
         df = pd.merge(
-            self.pred_times_with_uuid,
+            prediction_times_with_uuid_df,
             values_df,
             how="left",
-            on=self.id_col_name,
+            on=id_col_name,
             suffixes=("_pred", "_val"),
         ).drop("dw_ek_borger", axis=1)
 
         msg.info(f"Flattening dataframe from {df.columns}")
 
         # Drop prediction times without event times within interval days
-        df = self.drop_records_outside_interval_days(
+        df = FlattenedDataset.drop_records_outside_interval_days(
             df,
             direction=direction,
             interval_days=interval_days,
@@ -321,8 +338,17 @@ class FlattenedDataset:
             timestamp_val_colname="timestamp_val",
         )
 
-        df = self.add_back_prediction_times_without_value(df).fillna(fallback)
-        df = self.resolve_multiple_values_within_interval_days(resolve_multiple, df)
+        df = FlattenedDataset.add_back_prediction_times_without_value(
+            df=df,
+            pred_times_with_uuid=prediction_times_with_uuid_df,
+            pred_time_uuid_colname=pred_time_uuid_col_name,
+        ).fillna(fallback)
+        df = FlattenedDataset.resolve_multiple_values_within_interval_days(
+            resolve_multiple=resolve_multiple,
+            df=df,
+            timestamp_col_name=timestamp_col_name,
+            pred_time_uuid_colname=pred_time_uuid_col_name,
+        )
 
         # Rename column
         if new_col_name is None:
@@ -332,9 +358,14 @@ class FlattenedDataset:
         df.rename({"val": full_col_str}, axis=1, inplace=True)
 
         msg.good(f"Returning flattened dataframe with {full_col_str}")
-        return df[[self.pred_time_uuid_colname, full_col_str]]
+        return df[[pred_time_uuid_col_name, full_col_str]]
 
-    def add_back_prediction_times_without_value(self, df: DataFrame) -> DataFrame:
+    @staticmethod
+    def add_back_prediction_times_without_value(
+        df: DataFrame,
+        pred_times_with_uuid: DataFrame,
+        pred_time_uuid_colname: str,
+    ) -> DataFrame:
         """Ensures all prediction times are represented in the returned dataframe.
 
         Args:
@@ -344,15 +375,19 @@ class FlattenedDataset:
             DataFrame:
         """
         return pd.merge(
-            self.pred_times_with_uuid,
+            pred_times_with_uuid,
             df,
             how="left",
-            on=self.pred_time_uuid_colname,
+            on=pred_time_uuid_colname,
             suffixes=("", ""),
         ).drop(["timestamp_pred", "timestamp_val"], axis=1)
 
+    @staticmethod
     def resolve_multiple_values_within_interval_days(
-        self, resolve_multiple: Callable, df: DataFrame
+        resolve_multiple: Callable,
+        df: DataFrame,
+        timestamp_col_name: str,
+        pred_time_uuid_colname: str,
     ) -> DataFrame:
         """Apply the resolve_multiple function to prediction_times where there are multiple values within the interval_days lookahead
 
@@ -364,9 +399,7 @@ class FlattenedDataset:
             DataFrame: DataFrame with one row pr. prediction time.
         """
         # Sort by timestamp_pred in case resolve_multiple needs dates
-        df = df.sort_values(by=self.timestamp_col_name).groupby(
-            self.pred_time_uuid_colname
-        )
+        df = df.sort_values(by=timestamp_col_name).groupby(pred_time_uuid_colname)
 
         if isinstance(resolve_multiple, Callable):
             df = resolve_multiple(df).reset_index()
@@ -376,8 +409,8 @@ class FlattenedDataset:
 
         return df
 
+    @staticmethod
     def drop_records_outside_interval_days(
-        self,
         df: DataFrame,
         direction: str,
         interval_days: float,
