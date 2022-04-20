@@ -280,7 +280,7 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
 
-        msg.good(f"Assigned df with columns {df.columns[1]} to instance")
+        msg.good(f"Assigned {df.columns[1]} to instance")
 
     @staticmethod
     def create_flattened_df_for_val(
