@@ -1,11 +1,10 @@
-from itertools import repeat
 from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import catalogue
 import pandas as pd
 from pandas import DataFrame
-from py import process
+from wasabi import msg
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
 
@@ -268,6 +267,8 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_colname, axis=1)
 
+        msg.good(f"Assigned df with columns {df.columns} to instance")
+
     def create_flattened_df_for_val(
         self,
         values_df: DataFrame,
@@ -286,13 +287,12 @@ class FlattenedDataset:
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (List[str]): What to do if no value within the lookahead.
-            new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            new_col_name (str, optional): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
 
         Returns:
             DataFrame: One row pr. prediction time, flattened according to arguments
         """
-
         for col_name in [self.timestamp_col_name, self.id_col_name]:
             if col_name not in values_df.columns:
                 raise ValueError(
@@ -309,6 +309,8 @@ class FlattenedDataset:
             on=self.id_col_name,
             suffixes=("_pred", "_val"),
         ).drop("dw_ek_borger", axis=1)
+
+        msg.info(f"Flattening dataframe from {df.columns}")
 
         # Drop prediction times without event times within interval days
         df = self.drop_records_outside_interval_days(
@@ -329,6 +331,7 @@ class FlattenedDataset:
         full_col_str = f"{new_col_name}_within_{interval_days}_days"
         df.rename({"val": full_col_str}, axis=1, inplace=True)
 
+        msg.good(f"Returning flattened dataframe with {full_col_str}")
         return df[[self.pred_time_uuid_colname, full_col_str]]
 
     def add_back_prediction_times_without_value(self, df: DataFrame) -> DataFrame:
