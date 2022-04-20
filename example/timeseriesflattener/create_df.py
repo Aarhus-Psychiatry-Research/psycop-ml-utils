@@ -1,10 +1,10 @@
 import time
 
-from timeseriesflattener.create_feature_combinations import create_feature_combinations
-from timeseriesflattener.flattened_dataset import FlattenedDataset
 from wasabi import msg
 
 from load_data import LoadData
+from timeseriesflattener.create_feature_combinations import create_feature_combinations
+from timeseriesflattener.flattened_dataset import FlattenedDataset
 
 if __name__ == "__main__":
     PREDICTOR_LIST = create_feature_combinations(
