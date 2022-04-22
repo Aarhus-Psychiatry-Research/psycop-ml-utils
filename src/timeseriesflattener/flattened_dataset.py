@@ -80,16 +80,15 @@ class FlattenedDataset:
     def add_predictors_from_list_of_argument_dictionaries(
         self,
         predictor_list: List[Dict[str, str]],
-        predictor_dfs: Dict[str, DataFrame],
+        predictor_dfs_dict: Dict[str, DataFrame],
         resolve_multiple_fn_dict: Optional[Dict[str, Callable]] = None,
-        undescribed_arg: Optional[str] = None,
     ):
         """Add predictors to the flattened dataframe from a list.
 
         Args:
             predictor_list (List[Dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
-            predictor_dfs (Dict[str, DataFrame]): A dictionary mapping the predictor_df in predictor_list to DataFrame objects
-            resolve_multiple_fn_dict (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies (i.e. ones that aren't in resolve_fns), requires a dictionary mapping the resolve_multiple string to a Callable object
+            predictor_dfs (Dict[str, DataFrame]): A dictionary mapping the predictor_df in predictor_list to DataFrame objects.
+            resolve_multiple_fn_dict (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies (i.e. ones that aren't in resolve_fns), requires a dictionary mapping the resolve_multiple string to a Callable object.
 
         Example:
             >>> predictor_list = [
@@ -121,7 +120,7 @@ class FlattenedDataset:
 
         # Replace strings with objects as relevant
         for arg_dict in predictor_list:
-            arg_dict["predictor_df"] = predictor_dfs[arg_dict["predictor_df"]]
+            arg_dict["predictor_df"] = predictor_dfs_dict[arg_dict["predictor_df"]]
 
             if (
                 resolve_multiple_fn_dict is not None

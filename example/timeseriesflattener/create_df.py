@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     flattened_df.add_predictors_from_list_of_argument_dictionaries(
         predictor_list=PREDICTOR_LIST,
-        predictor_dfs=predictor_dfs,
+        predictor_dfs_dict=predictor_dfs,
     )
 
     end_time = time.time()
