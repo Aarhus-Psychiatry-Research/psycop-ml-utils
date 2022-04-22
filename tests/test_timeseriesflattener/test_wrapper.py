@@ -20,7 +20,6 @@ def test_generate_two_features_from_dict():
     expected_df_str = """dw_ek_borger,timestamp,val_within_1_days,val_within_2_days,val_within_3_days,val_within_4_days
                         1,2021-12-31 00:00:00,1,2,2,2                      
     """
-
     prediction_times_df = str_to_df(prediction_times_str)
     event_times_df = str_to_df(event_times_str)
     expected_df = str_to_df(expected_df_str)

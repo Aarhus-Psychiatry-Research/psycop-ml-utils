@@ -1,9 +1,8 @@
 from multiprocessing import Pool
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import catalogue
 import pandas as pd
-from numpy import full
 from pandas import DataFrame
 from wasabi import msg
 
@@ -13,6 +12,8 @@ from timeseriesflattener.resolve_multiple_functions import *
 
 
 class FlattenedDataset:
+    """Turn a set of time-series into tabular prediction-time data."""
+
     def __init__(
         self,
         prediction_times_df: DataFrame,
@@ -21,6 +22,7 @@ class FlattenedDataset:
         n_workers: int = 60,
     ):
         """Class containing a time-series, flattened. A 'flattened' version is a tabular representation for each prediction time.
+
         A prediction time is every timestamp where you want your model to issue a prediction.
 
         E.g if you have a prediction_times_df:
@@ -80,8 +82,9 @@ class FlattenedDataset:
         predictor_list: List[Dict[str, str]],
         predictor_dfs: Dict[str, DataFrame],
         resolve_multiple_fn_dict: Optional[Dict[str, Callable]] = None,
+        undescribed_arg: Optional[str] = None,
     ):
-        """Add predictors to the flattened dataframe from a list
+        """Add predictors to the flattened dataframe from a list.
 
         Args:
             predictor_list (List[Dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
@@ -178,7 +181,15 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
 
-    def create_flattened_df_with_kwargs(self, kwargs_dict):
+    def create_flattened_df_with_kwargs(self, kwargs_dict: Dict) -> DataFrame:
+        """Wrap create_flattened_df with kwargs for multithreading pool.
+
+        Args:
+            kwargs_dict (Dict): Dictionary of kwargs
+
+        Returns:
+            DataFrame: DataFrame generates with create_flattened_df
+        """
         return self.create_flattened_df_for_val(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
             id_col_name=self.id_col_name,
@@ -196,7 +207,7 @@ class FlattenedDataset:
         outcome_df_values_col_name: str = "val",
         new_col_name: str = None,
     ):
-        """Adds an outcome-column to the dataset
+        """Add an outcome-column to the dataset.
 
         Args:
             outcome_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
@@ -206,7 +217,6 @@ class FlattenedDataset:
             outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "val".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
-
         self.add_col_to_flattened_dataset(
             values_df=outcome_df,
             direction="ahead",
@@ -226,7 +236,7 @@ class FlattenedDataset:
         source_values_col_name: str = "val",
         new_col_name: str = None,
     ):
-        """Adds a column with predictor values to the flattened dataset (e.g. "average value of bloodsample within n days")
+        """Add a column with predictor values to the flattened dataset (e.g. "average value of bloodsample within n days").
 
         Args:
             predictor_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
@@ -236,7 +246,6 @@ class FlattenedDataset:
             source_values_col_name (str): Column name for the predictor values in predictor_df, e.g. the patient's most recent blood-sample value. Defaults to "val".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
-
         self.add_col_to_flattened_dataset(
             values_df=predictor_df,
             direction="behind",
@@ -257,7 +266,7 @@ class FlattenedDataset:
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "val",
     ):
-        """Adds a column to the dataset (either predictor or outcome depending on the value of "direction")
+        """Add a column to the dataset (either predictor or outcome depending on the value of "direction").
 
         Args:
             values_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
@@ -268,7 +277,6 @@ class FlattenedDataset:
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
-
         df = FlattenedDataset.create_flattened_df_for_val(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
             values_df=values_df,
@@ -285,7 +293,13 @@ class FlattenedDataset:
 
         self.assign_val_df_to_instance(df)
 
-    def assign_val_df_to_instance(self, df):
+    def assign_val_df_to_instance(self, df: DataFrame):
+        """Assign a single value_df (already processed) to the current instance of the class.
+
+        Args:
+            df (DataFrame): The DataFrame to assign
+
+        """
         self.df_aggregating = pd.merge(
             self.df_aggregating,
             df,
@@ -312,7 +326,7 @@ class FlattenedDataset:
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "val",
     ) -> DataFrame:
-        """Creates a dataframe with flattened values (either predictor or outcome depending on the value of "direction")
+        """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 
         Args:
             values_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
@@ -383,7 +397,7 @@ class FlattenedDataset:
         pred_times_with_uuid: DataFrame,
         pred_time_uuid_colname: str,
     ) -> DataFrame:
-        """Ensures all prediction times are represented in the returned dataframe.
+        """Ensure all prediction times are represented in the returned dataframe.
 
         Args:
             df (DataFrame):
@@ -406,7 +420,7 @@ class FlattenedDataset:
         timestamp_col_name: str,
         pred_time_uuid_colname: str,
     ) -> DataFrame:
-        """Apply the resolve_multiple function to prediction_times where there are multiple values within the interval_days lookahead
+        """Apply the resolve_multiple function to prediction_times where there are multiple values within the interval_days lookahead.
 
         Args:
             resolve_multiple (Callable): Takes a grouped df and collapses each group to one record (e.g. sum, count etc.).
@@ -434,7 +448,7 @@ class FlattenedDataset:
         timestamp_pred_colname: str,
         timestamp_val_colname: str,
     ) -> DataFrame:
-        """Keeps only rows where timestamp_val is within interval_days in direction of timestamp_pred.
+        """Keep only rows where timestamp_val is within interval_days in direction of timestamp_pred.
 
         Args:
             direction (str): Whether to look ahead or behind.
@@ -449,7 +463,6 @@ class FlattenedDataset:
         Returns:
             DataFrame
         """
-
         df["time_from_pred_to_val_in_days"] = (
             df[timestamp_val_colname] - df[timestamp_pred_colname]
         ).dt.total_seconds() / 86_400
@@ -472,7 +485,7 @@ class FlattenedDataset:
 
 
 def select_and_assert_keys(dictionary: Dict, key_list: List[str]) -> Dict:
-    """Keeps only the keys in the dictionary that are in key_order, and orders them as in the lsit
+    """Keep only the keys in the dictionary that are in key_order, and orders them as in the lsit.
 
     Args:
         dict (Dict): Dictionary to process
