@@ -3,7 +3,7 @@ from timeseriesflattener.create_feature_combinations import create_feature_combi
 from timeseriesflattener.flattened_dataset import FlattenedDataset
 from timeseriesflattener.resolve_multiple_functions import get_max_in_group
 
-from utils_for_testing import *
+from utils_for_testing import str_to_df
 
 
 def test_generate_two_features_from_dict():

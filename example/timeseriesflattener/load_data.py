@@ -1,11 +1,11 @@
 import pandas as pd
+from loaders import sql_load
 from wasabi import msg
 
 
 class LoadData:
     def physical_visits(frac=None):
         msg.info("Loading physical visits")
-        from loaders import sql_load
 
         view = "[FOR_besoeg_fysiske_fremmoeder_inkl_2021_feb2022]"
         sql = f"SELECT dw_ek_borger, datotid_start FROM [fct].{view} WHERE besoeg=1"
@@ -25,7 +25,6 @@ class LoadData:
         from pathlib import Path
 
         msg.info("Loading t2d event times")
-        import pandas as pd
 
         full_csv_path = Path(
             r"C:\Users\adminmanber\Desktop\manber-t2d\csv\first_t2d_diagnosis.csv"
@@ -44,7 +43,6 @@ class LoadData:
 
     def hba1c_vals():
         msg.info("Loading hba1c")
-        from loaders import sql_load
 
         view = "[FOR_LABKA_NPU27300_HbA1c_inkl_2021]"
         sql = f"SELECT dw_ek_borger, datotid_proevemodtagelse, numerisksvar FROM [fct].{view}"

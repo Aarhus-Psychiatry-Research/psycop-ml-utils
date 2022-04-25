@@ -159,7 +159,7 @@ class FlattenedDataset:
         pool = Pool(self.n_workers)
 
         flattened_predictor_dfs = pool.map(
-            self.create_flattened_df_with_kwargs, processed_arg_dicts
+            self._create_flattened_df_wrapper, processed_arg_dicts
         )
 
         concatenated_dfs = pd.concat(
@@ -180,7 +180,7 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
 
-    def create_flattened_df_with_kwargs(self, kwargs_dict: Dict) -> DataFrame:
+    def _create_flattened_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
         """Wrap create_flattened_df with kwargs for multithreading pool.
 
         Args:
@@ -290,9 +290,9 @@ class FlattenedDataset:
             source_values_col_name=source_values_col_name,
         )
 
-        self.assign_val_df_to_instance(df)
+        self.assign_val_df(df)
 
-    def assign_val_df_to_instance(self, df: DataFrame):
+    def assign_val_df(self, df: DataFrame):
         """Assign a single value_df (already processed) to the current instance of the class.
 
         Args:
