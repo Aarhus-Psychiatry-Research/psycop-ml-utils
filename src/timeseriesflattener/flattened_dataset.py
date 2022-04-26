@@ -159,11 +159,12 @@ class FlattenedDataset:
             self._create_flattened_df_wrapper, processed_arg_dicts
         )
 
+        flattened_predictor_dfs = [
+            df.set_index(self.pred_time_uuid_col_name) for df in flattened_predictor_dfs
+        ]
+
         concatenated_dfs = pd.concat(
-            [
-                df.set_index(self.pred_time_uuid_col_name)
-                for df in flattened_predictor_dfs
-            ],
+            flattened_predictor_dfs,
             axis=1,
         ).reset_index()
 
