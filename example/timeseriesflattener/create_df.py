@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     prediction_times = LoadData.physical_visits()
     # event_times = LoadData.event_times()
-    hba1c_vals = LoadData.hba1c_vals()
+    hba1c_vals = LoadData.hba1c()
 
     msg.info("Initialising flattened dataset")
     flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=32)
