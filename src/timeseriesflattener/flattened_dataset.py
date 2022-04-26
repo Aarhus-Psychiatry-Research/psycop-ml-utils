@@ -1,14 +1,11 @@
 from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Union
 
-import catalogue
 import pandas as pd
 from pandas import DataFrame
 from wasabi import msg
 
-resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
-
-from timeseriesflattener.resolve_multiple_functions import *
+from timeseriesflattener.resolve_multiple_functions import resolve_fns
 
 
 class FlattenedDataset:
@@ -59,7 +56,7 @@ class FlattenedDataset:
         for col_name in [self.timestamp_col_name, self.id_col_name]:
             if col_name not in self.pred_times_with_uuid.columns:
                 raise ValueError(
-                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
+                    f"{col_name} does not exist in prediction_times_df, change the df or set another argument"
                 )
 
         self.pred_times_with_uuid[
@@ -353,7 +350,6 @@ class FlattenedDataset:
 
         # Generate df with one row for each prediction time x event time combination
         # Drop dw_ek_borger for faster merge
-
         df = pd.merge(
             prediction_times_with_uuid_df,
             values_df,
@@ -378,6 +374,7 @@ class FlattenedDataset:
             pred_times_with_uuid=prediction_times_with_uuid_df,
             pred_time_uuid_colname=pred_time_uuid_col_name,
         ).fillna(fallback)
+
         df = FlattenedDataset.resolve_multiple_values_within_interval_days(
             resolve_multiple=resolve_multiple,
             df=df,

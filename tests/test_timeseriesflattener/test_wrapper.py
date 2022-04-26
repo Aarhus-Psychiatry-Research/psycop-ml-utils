@@ -1,7 +1,6 @@
 from pandas.testing import assert_frame_equal
 from timeseriesflattener.create_feature_combinations import create_feature_combinations
 from timeseriesflattener.flattened_dataset import FlattenedDataset
-from timeseriesflattener.resolve_multiple_functions import get_max_in_group
 
 from utils_for_testing import str_to_df
 
@@ -48,7 +47,6 @@ def test_generate_two_features_from_dict():
     flattened_dataset.add_predictors_from_list_of_argument_dictionaries(
         predictor_list=predictor_list,
         predictor_dfs_dict={"event_times_df": event_times_df},
-        resolve_multiple_fn_dict={"max": get_max_in_group},
     )
 
     assert flattened_dataset.df.equals(expected_df)
