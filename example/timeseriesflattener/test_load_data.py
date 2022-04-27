@@ -1,8 +1,8 @@
-from loaders.medications import LoadMedications
+from loaders.diagnoses import LoadDiagnoses
 from wasabi import msg
 
 if __name__ == "__main__":
-    df = LoadMedications.medication(atc_str="A10", depth=4)
+    df = LoadDiagnoses.diagnoses_from_physical_visits(icd_str="F20", depth=3)
 
     msg.info(f"Columns: {df.columns}")
 
