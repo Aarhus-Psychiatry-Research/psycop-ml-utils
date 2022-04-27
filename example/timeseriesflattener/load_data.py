@@ -17,7 +17,6 @@ class LoadData:
             df = df.sample(frac=frac)
 
         df.rename(columns={"datotid_start": "timestamp"}, inplace=True)
-        df["timestamp"] = pd.to_datetime(df["timestamp"], format="%Y-%m-%d %H:%M:%S")
 
         msg.good("Loaded physical visits")
         return df.reset_index(drop=True)
@@ -36,8 +35,6 @@ class LoadData:
         df["val"] = 1
 
         df.rename(columns={"datotid_first_t2d_diagnosis": "timestamp"}, inplace=True)
-
-        df["timestamp"] = pd.to_datetime(df["timestamp"], format="%Y-%m-%dT%H:%M:%SZ")
 
         msg.good("Finished loading t2d event times")
         return df.reset_index(drop=True)
