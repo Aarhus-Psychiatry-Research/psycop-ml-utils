@@ -1,6 +1,8 @@
+from venv import create
 from numpy import source
 import pandas as pd
 from loaders.sql_load import sql_load
+from loaders.str_utils import create_cols_for_unique_vals_at_depth
 from wasabi import msg
 
 
@@ -96,20 +98,11 @@ class LoadMedications:
         if depth is None:
             df[new_col_str] = 1
         else:
-            df["atc_substr"] = df["atc"].str[:depth]
-
-            categories = df["atc_substr"].unique().tolist()
-            categories.sort()
-
-            msg.info(
-                f"Generating new columns for {categories} from {atc_str} in {view}"
+            df = create_cols_for_unique_vals_at_depth(
+                df=df, source_col_name="atc", depth=depth
             )
 
-            for category in categories:
-                df[category] = df["atc_substr"].map({category: 1})
-                df[category].fillna(0, inplace=True)
-
-        df.drop(["atc", "atc_substr"], axis="columns", inplace=True)
+        df.drop(["atc"], axis="columns", inplace=True)
 
         return df.rename(
             columns={
