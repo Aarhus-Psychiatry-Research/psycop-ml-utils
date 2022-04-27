@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     print(PREDICTOR_LIST)
 
-    prediction_times = LoadData.physical_visits()
+    prediction_times = LoadData.physical_visits_to_psychiatry()
     # event_times = LoadData.event_times()
     hba1c_vals = LoadData.hba1c()
 
