@@ -1,5 +1,5 @@
 import pandas as pd
-from loaders import sql_load
+from loaders.sql_load import sql_load
 from wasabi import msg
 
 
