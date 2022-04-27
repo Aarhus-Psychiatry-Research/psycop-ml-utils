@@ -9,6 +9,16 @@ class LoadDiagnoses:
         icd_str: str,
         depth: int = None,
     ) -> pd.DataFrame:
+        """Load diagnoses from all physical visits
+
+        Args:
+            icd_str (str): Substring to match diagnoses for. Matches any diagnoses, whether a-, b-, z- etc.
+            depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000,
+                whereas depth = 4 would result in two different columns.
+
+        Returns:
+            pd.DataFrame: _description_
+        """
 
         print_str = f"diagnoses matching NPU-code {icd_str}"
         msg.info(f"Loading {print_str}")
@@ -46,7 +56,7 @@ class LoadDiagnoses:
         depth: int = None,
     ) -> pd.DataFrame:
         """Load the visits that have diagnoses that match icd_str from the beginning of their adiagnosekode string.
-        Aggregates all that match. Beware that data is incomplete prior to sep. 2016.
+        Aggregates all that match.
 
         Args:
             icd_str (str): ICD string to match on.
