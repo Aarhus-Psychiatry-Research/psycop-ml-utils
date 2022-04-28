@@ -191,4 +191,3 @@ class LoadDiagnoses:
             icd_str="G479",
             wildcard_icd_10_end=False,
         )
-    
