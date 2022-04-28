@@ -8,6 +8,7 @@ class LoadDiagnoses:
     def diagnoses_from_physical_visits(
         icd_str: str,
         depth: int = None,
+        wildcard_end: bool = True,
     ) -> pd.DataFrame:
         """Load diagnoses from all physical visits
 
@@ -23,7 +24,7 @@ class LoadDiagnoses:
         print_str = f"diagnoses matching NPU-code {icd_str}"
         msg.info(f"Loading {print_str}")
 
-        tables = {
+        diagnoses_source_table_info = {
             "lpr3": {
                 "fct": "FOR_LPR3kontakter_psyk_somatik_inkl_2021",
                 "source_timestamp_col_name": "datotid_lpr3kontaktstart",
@@ -39,8 +40,10 @@ class LoadDiagnoses:
         }
 
         dfs = [
-            LoadDiagnoses._load_diagnoses(icd_str=icd_str, depth=depth, **kwargs)
-            for source_name, kwargs in tables.items()
+            LoadDiagnoses._load_diagnoses(
+                icd_str=icd_str, depth=depth, wildcard_icd_10_end=wildcard_end, **kwargs
+            )
+            for source_name, kwargs in diagnoses_source_table_info.items()
         ]
 
         df = pd.concat(dfs)
@@ -54,6 +57,7 @@ class LoadDiagnoses:
         fct: str,
         new_col_str: str = None,
         depth: int = None,
+        wildcard_icd_10_end: bool = True,
     ) -> pd.DataFrame:
         """Load the visits that have diagnoses that match icd_str from the beginning of their adiagnosekode string.
         Aggregates all that match.
@@ -65,12 +69,17 @@ class LoadDiagnoses:
             new_col_str (str, optional): Name of new column string. Defaults to None.
             depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000,
                 whereas depth = 4 would result in two different columns.
+            wildcard_icd_10_end (bool, optional): Whether to match on icd_str*. Defaults to true.
 
         Returns:
             pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and new_col_str = 1
         """
         fct = f"[{fct}]"
-        sql = f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng FROM [fct].{fct} WHERE (lower(diagnosegruppestreng)) LIKE lower('%{icd_str}%')"
+
+        # Add a % at the end of the SQL match as a wildcard, so e.g. F20 matches F200.
+        sql_ending = "%" if wildcard_icd_10_end else ""
+
+        sql = f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng FROM [fct].{fct} WHERE (lower(diagnosegruppestreng)) LIKE lower('%{icd_str}{sql_ending}')"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
@@ -116,3 +125,13 @@ class LoadDiagnoses:
 
         msg.good("Finished loading t2d event times")
         return df.reset_index(drop=True)
+
+    def essential_hypertension():
+        return LoadDiagnoses.diagnoses_from_physical_visits(
+            icd_str="I109", wildcard_end=False
+        )
+
+    def essential_hypertension():
+        return LoadDiagnoses.diagnoses_from_physical_visits(
+            icd_str="I109", wildcard_end=False
+        )
