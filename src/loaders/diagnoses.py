@@ -19,10 +19,7 @@ class LoadDiagnoses:
         Args:
             icd_str (Union[List[str], str]): Substring(s) to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
             new_col_str (str, optional): Name of new column string. Defaults to None.
-            depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000,
-                whereas depth = 4 would result in two different columns.
-            depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000,
-                whereas depth = 4 would result in two different columns.
+            depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000, whereas depth = 4 would result in two different columns.
 
         Returns:
             pd.DataFrame: _description_
