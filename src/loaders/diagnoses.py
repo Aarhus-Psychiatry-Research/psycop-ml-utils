@@ -1,3 +1,4 @@
+from typing import List, Union
 import pandas as pd
 from loaders.sql_load import sql_load
 from loaders.str_utils import create_cols_for_unique_vals_at_depth
@@ -6,20 +7,30 @@ from wasabi import msg
 
 class LoadDiagnoses:
     def diagnoses_from_physical_visits(
-        icd_str: str,
+        icd_str: Union[List[str], str],
+        new_col_str: str = None,
         depth: int = None,
-        wildcard_end: bool = True,
+        wildcard_icd_10_end: bool = False,
     ) -> pd.DataFrame:
         """Load diagnoses from all physical visits
 
         Args:
-            icd_str (str): Substring to match diagnoses for. Matches any diagnoses, whether a-, b-, z- etc.
+            icd_str (Union[List[str], str]): Substring(s) to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
+            new_col_str (str, optional): Name of new column string. Defaults to None.
+            depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000,
+                whereas depth = 4 would result in two different columns.
             depth (int, optional): At which level to generate combinations. E.g. if depth = 3, A0004 and A0001 will both be A000,
                 whereas depth = 4 would result in two different columns.
 
         Returns:
             pd.DataFrame: _description_
         """
+
+        if isinstance(icd_str, list):
+            if new_col_str is None:
+                raise ValueError(
+                    "new_col_str is None while icd_str is a list. Must specify a name for the new column when aggregating multiple diagnoses."
+                )
 
         print_str = f"diagnoses matching NPU-code {icd_str}"
         msg.info(f"Loading {print_str}")
@@ -41,7 +52,11 @@ class LoadDiagnoses:
 
         dfs = [
             LoadDiagnoses._load_diagnoses(
-                icd_str=icd_str, depth=depth, wildcard_icd_10_end=wildcard_end, **kwargs
+                icd_str=icd_str,
+                depth=depth,
+                new_col_str=new_col_str,
+                wildcard_icd_10_end=wildcard_icd_10_end,
+                **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
         ]
@@ -52,7 +67,7 @@ class LoadDiagnoses:
         return df.reset_index(drop=True)
 
     def _load_diagnoses(
-        icd_str: str,
+        icd_str: Union[List[str], str],
         source_timestamp_col_name: str,
         fct: str,
         new_col_str: str = None,
@@ -63,7 +78,7 @@ class LoadDiagnoses:
         Aggregates all that match.
 
         Args:
-            icd_str (str): ICD string to match on.
+            icd_str (Union[List[str], str]): Substring(s) to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
             source_timestamp_col_name (str): Name of the timestamp column in the SQL table.
             view (str): Which view to use, e.g. "FOR_Medicin_ordineret_inkl_2021_feb2022"
             new_col_str (str, optional): Name of new column string. Defaults to None.
@@ -79,7 +94,19 @@ class LoadDiagnoses:
         # Add a % at the end of the SQL match as a wildcard, so e.g. F20 matches F200.
         sql_ending = "%" if wildcard_icd_10_end else ""
 
-        sql = f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng FROM [fct].{fct} WHERE (lower(diagnosegruppestreng)) LIKE lower('%{icd_str}{sql_ending}')"
+        if isinstance(icd_str, list):
+            match_col_sql_strings = [
+                f"lower(diagnosegruppestreng) LIKE lower('%{diag_str}{sql_ending}')"
+                for diag_str in icd_str
+            ]
+
+            match_col_sql_str = " OR ".join(match_col_sql_strings)
+        else:
+            match_col_sql_str = (
+                f"lower(diagnosegruppestreng) LIKE lower('%{icd_str}{sql_ending})'"
+            )
+
+        sql = f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng FROM [fct].{fct} WHERE ({match_col_sql_str})"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
@@ -128,10 +155,40 @@ class LoadDiagnoses:
 
     def essential_hypertension():
         return LoadDiagnoses.diagnoses_from_physical_visits(
-            icd_str="I109", wildcard_end=False
+            icd_str="I109", wildcard_icd_10_end=False
         )
 
-    def essential_hypertension():
+    def hyperlipidemia():
         return LoadDiagnoses.diagnoses_from_physical_visits(
-            icd_str="I109", wildcard_end=False
+            icd_str=[
+                "E780",
+                "E785",
+            ],  # Only these two, as the others are exceedingly rare
+            new_col_str="hyperlipidemia",
+            wildcard_icd_10_end=False,
         )
+
+    def liverdisease_uns():
+        return LoadDiagnoses.diagnoses_from_physical_visits(
+            icd_str="K769",
+            wildcard_icd_10_end=False,
+        )
+
+    def polycystic_overian_syndrom():
+        return LoadDiagnoses.diagnoses_from_physical_visits(
+            icd_str="E282",
+            wildcard_icd_10_end=False,
+        )
+
+    def sleep_apnea():
+        return LoadDiagnoses.diagnoses_from_physical_visits(
+            icd_str=["G473", "G4732"],
+            wildcard_icd_10_end=False,
+        )
+
+    def sleep_problems_unspecified():
+        return LoadDiagnoses.diagnoses_from_physical_visits(
+            icd_str="G479",
+            wildcard_icd_10_end=False,
+        )
+    
