@@ -36,12 +36,12 @@ class LoadMedications:
 
         Args:
             atc_code (str): ATC-code prefix to load. Matches atc_code_prefix*. Aggregates all.
-            output_col_name (str, optional): Name of output_col_name. Contains 1 if atc_code matches atc_code_prefix, 0 if not.Defaults to {atc_code_prefix}_val.
+            output_col_name (str, optional): Name of output_col_name. Contains 1 if atc_code matches atc_code_prefix, 0 if not.Defaults to {atc_code_prefix}_value.
             load_prescribed (bool, optional): Whether to load prescriptions. Defaults to True. Beware incomplete until sep 2016.
             load_administered (bool, optional): Whether to load administrations. Defaults to True.
 
         Returns:
-            pd.DataFrame: Cols: dw_ek_borger, timestamp, {atc_code_prefix}_val = 1
+            pd.DataFrame: Cols: dw_ek_borger, timestamp, {atc_code_prefix}_value = 1
         """
         print_str = f"medications matching NPU-code {atc_code}"
         msg.info(f"Loading {print_str}")
@@ -76,7 +76,7 @@ class LoadMedications:
 
         df.rename(
             columns={
-                atc_code: f"{output_col_name}_val",
+                atc_code: f"{output_col_name}_value",
             },
             inplace=True,
         )

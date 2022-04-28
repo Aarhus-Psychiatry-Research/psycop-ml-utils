@@ -5,7 +5,6 @@ import pandas as pd
 from wasabi import msg
 
 from loaders.sql_load import sql_load
-from loaders.str_utils import create_cols_for_unique_vals_at_depth
 
 
 class LoadDiagnoses:
@@ -169,7 +168,7 @@ class LoadDiagnoses:
 
         df = pd.read_csv(str(full_csv_path))
         df = df[["dw_ek_borger", "datotid_first_t2d_diagnosis"]]
-        df["val"] = 1
+        df["value"] = 1
 
         df.rename(columns={"datotid_first_t2d_diagnosis": "timestamp"}, inplace=True)
 

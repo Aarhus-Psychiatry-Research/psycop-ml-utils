@@ -29,7 +29,7 @@ class LoadLabResults:
         df.rename(
             columns={
                 "datotid_sidstesvar": "timestamp",
-                "numerisksvar": f"{output_col_name}_val",
+                "numerisksvar": f"{output_col_name}_value",
             },
             inplace=True,
         )
