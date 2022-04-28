@@ -1,6 +1,7 @@
 import pandas as pd
-from loaders.sql_load import sql_load
 from wasabi import msg
+
+from loaders.sql_load import sql_load
 
 
 class LoadDemographics:
@@ -11,6 +12,8 @@ class LoadDemographics:
         sql = f"SELECT dw_ek_borger, foedselsdato FROM [fct].{view}"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
+
+        df.rename({"foedselsdato": "birthdate"}, inplace=True)
 
         msg.good("Loaded birthdays")
         return df.reset_index(drop=True)
