@@ -1,12 +1,14 @@
 from typing import List, Union
+
 import pandas as pd
+from wasabi import msg
+
 from loaders.sql_load import sql_load
 from loaders.str_utils import create_cols_for_unique_vals_at_depth
-from wasabi import msg
 
 
 class LoadDiagnoses:
-    def diagnoses_from_physical_visits(
+    def from_physical_visits(
         icd_str: Union[List[str], str],
         new_col_str: str = None,
         depth: int = None,
@@ -51,7 +53,7 @@ class LoadDiagnoses:
         }
 
         dfs = [
-            LoadDiagnoses._load_diagnoses(
+            LoadDiagnoses._load(
                 icd_str=icd_str,
                 depth=depth,
                 new_col_str=new_col_str,
@@ -66,7 +68,7 @@ class LoadDiagnoses:
         msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
-    def _load_diagnoses(
+    def _load(
         icd_str: Union[List[str], str],
         source_timestamp_col_name: str,
         fct: str,
@@ -154,12 +156,12 @@ class LoadDiagnoses:
         return df.reset_index(drop=True)
 
     def essential_hypertension():
-        return LoadDiagnoses.diagnoses_from_physical_visits(
+        return LoadDiagnoses.from_physical_visits(
             icd_str="I109", wildcard_icd_10_end=False
         )
 
     def hyperlipidemia():
-        return LoadDiagnoses.diagnoses_from_physical_visits(
+        return LoadDiagnoses.from_physical_visits(
             icd_str=[
                 "E780",
                 "E785",
@@ -169,25 +171,25 @@ class LoadDiagnoses:
         )
 
     def liverdisease_uns():
-        return LoadDiagnoses.diagnoses_from_physical_visits(
+        return LoadDiagnoses.from_physical_visits(
             icd_str="K769",
             wildcard_icd_10_end=False,
         )
 
     def polycystic_overian_syndrom():
-        return LoadDiagnoses.diagnoses_from_physical_visits(
+        return LoadDiagnoses.from_physical_visits(
             icd_str="E282",
             wildcard_icd_10_end=False,
         )
 
     def sleep_apnea():
-        return LoadDiagnoses.diagnoses_from_physical_visits(
+        return LoadDiagnoses.from_physical_visits(
             icd_str=["G473", "G4732"],
             wildcard_icd_10_end=False,
         )
 
     def sleep_problems_unspecified():
-        return LoadDiagnoses.diagnoses_from_physical_visits(
+        return LoadDiagnoses.from_physical_visits(
             icd_str="G479",
             wildcard_icd_10_end=False,
         )

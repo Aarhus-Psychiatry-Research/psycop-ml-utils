@@ -1,11 +1,12 @@
 import pandas as pd
+from wasabi import msg
+
 from loaders.sql_load import sql_load
 from loaders.str_utils import create_cols_for_unique_vals_at_depth
-from wasabi import msg
 
 
 class LoadMedications:
-    def medication(
+    def load(
         atc_str: str,
         new_col_str=None,
         load_prescribed=True,
@@ -31,7 +32,7 @@ class LoadMedications:
         df = pd.DataFrame()
 
         if load_prescribed:
-            df_medication_prescribed = LoadMedications._load_medications(
+            df_medication_prescribed = LoadMedications._load_one_source(
                 atc_str=atc_str,
                 source_timestamp_col_name="datotid_ordinationstart",
                 view="FOR_Medicin_ordineret_inkl_2021_feb2022",
@@ -41,7 +42,7 @@ class LoadMedications:
             df = pd.concat([df, df_medication_prescribed])
 
         if load_administered:
-            df_medication_administered = LoadMedications._load_medications(
+            df_medication_administered = LoadMedications._load_one_source(
                 atc_str=atc_str,
                 source_timestamp_col_name="datotid_administration_start",
                 view="FOR_Medicin_administreret_inkl_2021_feb2022",
@@ -63,7 +64,7 @@ class LoadMedications:
         msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
-    def _load_medications(
+    def _load_one_source(
         atc_str: str,
         source_timestamp_col_name: str,
         view: str,
@@ -71,7 +72,7 @@ class LoadMedications:
         depth: int = None,
     ) -> pd.DataFrame:
         """Load the prescribed medications that match atc from the beginning of their atc string.
-        Aggregates all that match. Beware that data is incomplete prior to sep. 2016.
+        Aggregates all that match. Beware that data is incomplete prior to sep. 2016 for prescribed medications.
 
         Args:
             atc_str (str): ATC string to match on.
