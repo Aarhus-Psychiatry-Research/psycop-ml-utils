@@ -4,13 +4,13 @@ from wasabi import msg
 from loaders.sql_load import sql_load
 
 
-class LoadLabs:
-    def blood_sample(blood_sample_id: str, new_col_str: str = None) -> pd.DataFrame:
+class LoadLabResults:
+    def blood_sample(blood_sample_id: str, output_col_name: str = None) -> pd.DataFrame:
         """Load a blood sample.
 
         Args:
             blood_sample_id (str): The blood_sample_id, typically an NPU code.
-            new_col_str (str, optional): Name for new column. Defaults to None.
+            output_col_name (str, optional): Name for new column. Defaults to None.
 
         Returns:
             pd.DataFrame
@@ -23,13 +23,13 @@ class LoadLabs:
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
-        if new_col_str == None:
-            new_col_str = blood_sample_id
+        if output_col_name == None:
+            output_col_name = blood_sample_id
 
         df.rename(
             columns={
                 "datotid_sidstesvar": "timestamp",
-                "numerisksvar": f"{new_col_str}_val",
+                "numerisksvar": f"{output_col_name}_val",
             },
             inplace=True,
         )
@@ -38,26 +38,30 @@ class LoadLabs:
         return df.reset_index(drop=True)
 
     def _aggregate_blood_samples(
-        new_col_str: str, blood_sample_ids: list
+        output_col_name: str, blood_sample_ids: list
     ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one column.
 
         Args:
             blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes.
-            new_col_str (str): Name for new column.
+            output_col_name (str): Name for new column.
 
         Returns:
             pd.DataFrame
         """
         dfs = [
-            LoadLabs.blood_sample(blood_sample_id=f"{id}", new_col_str=new_col_str)
+            LoadLabResults.blood_sample(
+                blood_sample_id=f"{id}", output_col_name=output_col_name
+            )
             for id in blood_sample_ids
         ]
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
     def hba1c():
-        return LoadLabs.blood_sample(blood_sample_id="NPU27300", new_col_str="hba1c")
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU27300", output_col_name="hba1c"
+        )
 
     def scheduled_glc():
         npu_suffixes = [
@@ -107,8 +111,8 @@ class LoadLabs:
 
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
 
-        return LoadLabs._aggregate_blood_samples(
-            blood_sample_ids=blood_sample_ids, new_col_str="scheduled_p_glc"
+        return LoadLabResults._aggregate_blood_samples(
+            blood_sample_ids=blood_sample_ids, output_col_name="scheduled_p_glc"
         )
 
     def unscheduled_p_glc():
@@ -123,65 +127,73 @@ class LoadLabs:
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
         blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
-        return LoadLabs._aggregate_blood_samples(
-            blood_sample_ids=blood_sample_ids, new_col_str="unscheduled_p_glc"
+        return LoadLabResults._aggregate_blood_samples(
+            blood_sample_ids=blood_sample_ids, output_col_name="unscheduled_p_glc"
         )
 
     def triglycerides():
-        return LoadLabs.blood_sample(
-            blood_sample_id="NPU04094", new_col_str="triglyceride"
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU04094", output_col_name="triglyceride"
         )
 
     def fasting_triglycerides():
-        return LoadLabs.blood_sample(
-            blood_sample_id="NPU03620", new_col_str="fasting_triglyceride"
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU03620", output_col_name="fasting_triglyceride"
         )
 
     def hdl():
-        return LoadLabs.blood_sample(blood_sample_id="NPU01567", new_col_str="hdl")
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU01567", output_col_name="hdl"
+        )
 
     def ldl():
-        return LoadLabs._aggregate_blood_samples(
-            blood_sample_id=["NPU01568", "AAB00101"], new_col_str="ldl"
+        return LoadLabResults._aggregate_blood_samples(
+            blood_sample_id=["NPU01568", "AAB00101"], output_col_name="ldl"
         )
 
     def fasting_ldl():
-        return LoadLabs._aggregate_blood_samples(
-            blood_sample_ids=["NPU10171", "AAB00102"], new_col_str="fasting_ldl"
+        return LoadLabResults._aggregate_blood_samples(
+            blood_sample_ids=["NPU10171", "AAB00102"], output_col_name="fasting_ldl"
         )
 
     def alat():
-        return LoadLabs.blood_sample(blood_sample_id="NPU19651", new_col_str="alat")
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU19651", output_col_name="alat"
+        )
 
     def asat():
-        return LoadLabs.blood_sample(blood_sample_id="NPU19654", new_col_str="asat")
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU19654", output_col_name="asat"
+        )
 
     def lymphocytes():
-        return LoadLabs.blood_sample(
-            blood_sample_id="NPU02636", new_col_str="lymphocytes"
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU02636", output_col_name="lymphocytes"
         )
 
     def leukocytes():
-        return LoadLabs.blood_sample(
-            blood_sample_id="NPU02593", new_col_str="leukocytes"
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU02593", output_col_name="leukocytes"
         )
 
     def crp():
-        return LoadLabs.blood_sample(blood_sample_id="NPU19748", new_col_str="crp")
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU19748", output_col_name="crp"
+        )
 
     def creatinine():
-        return LoadLabs._aggregate_blood_samples(
+        return LoadLabResults._aggregate_blood_samples(
             blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
-            new_col_str="creatinine",
+            output_col_name="creatinine",
         )
 
     def egfr():
-        return LoadLabs._aggregate_blood_samples(
+        return LoadLabResults._aggregate_blood_samples(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
-            new_col_str="egfr",
+            output_col_name="egfr",
         )
 
     def albumine_creatinine_ratio():
-        return LoadLabs.blood_sample(
-            blood_sample_id="NPU19661", new_col_str="albumine_creatinine_ratio"
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU19661", output_col_name="albumine_creatinine_ratio"
         )

@@ -13,7 +13,7 @@ class LoadDemographics:
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
-        df.rename({"foedselsdato": "birthdate"}, inplace=True)
+        df.rename({"foedselsdato": "date_of_birth"}, inplace=True)
 
         msg.good("Loaded birthdays")
         return df.reset_index(drop=True)
