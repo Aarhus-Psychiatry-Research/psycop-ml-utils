@@ -1,9 +1,8 @@
 from multiprocessing import Pool
-from multiprocessing.sharedctypes import Value
 from typing import Callable, Dict, List, Optional, Union
 
-import numpy as np
 import pandas as pd
+from loaders.loader_catalogue import data_loaders
 from pandas import DataFrame
 from wasabi import msg
 
@@ -79,14 +78,14 @@ class FlattenedDataset:
     def add_temporal_predictors_from_list_of_argument_dictionaries(
         self,
         predictor_list: List[Dict[str, str]],
-        predictor_dfs_dict: Dict[str, DataFrame],
+        predictor_dfs_dict: Dict[str, DataFrame] = None,
         resolve_multiple_fn_dict: Optional[Dict[str, Callable]] = None,
     ):
         """Add predictors to the flattened dataframe from a list.
 
         Args:
             predictor_list (List[Dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
-            predictor_dfs (Dict[str, DataFrame]): A dictionary mapping the predictor_df in predictor_list to DataFrame objects.
+            predictor_dfs_dict (Dict[str, DataFrame], optional): A dictionary mapping the predictor_df in predictor_list to DataFrame objects. Optional, can be replaced by adding callables returning dfs to @data_loaders. Defaults to None.
             resolve_multiple_fn_dict (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies (i.e. ones that aren't in resolve_fns), requires a dictionary mapping the resolve_multiple string to a Callable object.
 
         Example:
@@ -119,8 +118,6 @@ class FlattenedDataset:
 
         # Replace strings with objects as relevant
         for arg_dict in predictor_list:
-            arg_dict["predictor_df"] = predictor_dfs_dict[arg_dict["predictor_df"]]
-
             if (
                 resolve_multiple_fn_dict is not None
                 and arg_dict["resolve_multiple"] in resolve_multiple_fn_dict
@@ -140,19 +137,23 @@ class FlattenedDataset:
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = None
 
+            required_keys = [
+                "values_df",
+                "direction",
+                "interval_days",
+                "resolve_multiple",
+                "fallback",
+                "new_col_name",
+                "source_values_col_name",
+            ]
+
+            if predictor_dfs_dict is not None:
+                arg_dict["values_df_dict"] = predictor_dfs_dict
+
+                required_keys += ["values_df_dict"]
+
             processed_arg_dicts.append(
-                select_and_assert_keys(
-                    dictionary=arg_dict,
-                    key_list=[
-                        "values_df",
-                        "direction",
-                        "interval_days",
-                        "resolve_multiple",
-                        "fallback",
-                        "new_col_name",
-                        "source_values_col_name",
-                    ],
-                )
+                select_and_assert_keys(dictionary=arg_dict, key_list=required_keys)
             )
 
         pool = Pool(self.n_workers)
@@ -299,7 +300,7 @@ class FlattenedDataset:
 
     def add_temporal_col_to_flattened_dataset(
         self,
-        values_df: DataFrame,
+        values_df: Union[DataFrame, str],
         direction: str,
         interval_days: float,
         resolve_multiple: Union[Callable, str],
@@ -356,7 +357,7 @@ class FlattenedDataset:
     @staticmethod
     def flatten_temporal_values_to_df(
         prediction_times_with_uuid_df: DataFrame,
-        values_df: DataFrame,
+        values_df: Union[str, DataFrame],
         direction: str,
         interval_days: float,
         resolve_multiple: Union[Callable, str],
@@ -364,28 +365,51 @@ class FlattenedDataset:
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
+        values_df_dict: Dict[str, DataFrame] = None,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
     ) -> DataFrame:
         """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 
         Args:
-            values_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
+            values_df_name (str): The name of the values_df to look for in the data_loaders catalogue or the values_df_dict.
             direction (str): Whether to look "ahead" or "behind".
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (List[str]): What to do if no value within the lookahead.
             new_col_name (str, optional): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
+            values_df_dict (Dict[str, DataFrame], optional): _description_. Defaults to None.
 
         Returns:
             DataFrame: One row pr. prediction time, flattened according to arguments
         """
+
+        # Resolve values_df if not already a dataframe. Try catalogue,
+        if not isinstance(values_df, DataFrame):
+            try:
+                values_df = values_df_dict[values_df]
+            except:
+                msg.info(
+                    f"{values_df} was not found in values_df_dict, trying data_loaders catalogue"
+                )
+                try:
+                    values_df = data_loaders.get(values_df)()
+                except:
+                    raise ValueError(
+                        f"{values_df} was not found in data_loaders catalogue or values_df_dict"
+                    )
+
         for col_name in [timestamp_col_name, id_col_name]:
             if col_name not in values_df.columns:
                 raise ValueError(
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
                 )
+
+        if isinstance(values_df, Callable):
+            values_df = values_df()
+        elif isinstance(values_df, str):
+            values_df = data_loaders.get(values_df)()
 
         # Rename column
         if new_col_name is None:
