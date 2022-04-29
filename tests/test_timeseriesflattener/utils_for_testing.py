@@ -37,7 +37,7 @@ def assert_flattened_outcome_as_expected(
     lookahead_days: float,
     expected_flattened_values: List,
     resolve_multiple: Union[Callable, str],
-    values_colname: str = "val",
+    values_colname: str = "value",
     fallback: List = 0,
 ):
     """Run tests from string representations of dataframes.
@@ -85,7 +85,7 @@ def assert_flattened_predictor_as_expected(
     lookbehind_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: str = "val",
+    values_colname: str = "value",
     fallback: List = 0,
 ):
     """Run tests from string representations of dataframes.
@@ -134,7 +134,7 @@ def assert_flattened_values_as_expected(
     interval_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: str = "val",
+    values_colname: str = "value",
     fallback: List = 0,
 ):
     """Run tests from string representations of dataframes.
@@ -162,14 +162,14 @@ def assert_flattened_values_as_expected(
     )
 
     if direction == "behind":
-        dataset.add_predictor(
+        dataset.add_temporal_predictor(
             predictor_df=df_event_times,
             lookbehind_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
         )
     elif direction == "ahead":
-        dataset.add_outcome(
+        dataset.add_temporal_outcome(
             outcome_df=df_event_times,
             lookahead_days=interval_days,
             resolve_multiple=resolve_multiple,
