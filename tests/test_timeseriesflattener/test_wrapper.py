@@ -180,4 +180,4 @@ def test_add_df_from_catalogue():
         predictor_list=predictor_list,
     )
 
-    pass
+    assert flattened_dataset.df.equals(expected_df)
