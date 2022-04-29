@@ -1,9 +1,9 @@
 from typing import Callable, List, Union
 
 import pandas as pd
-from psycopmlutils.utils import data_loaders
 from pandas import DataFrame
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.utils import data_loaders
 
 
 def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:
@@ -63,7 +63,7 @@ def assert_flattened_outcome_as_expected(
         >>>     prediction_times_df_str=prediction_times_df_str,
         >>>     outcome_df_str=outcome_df_str,
         >>>     lookahead_days=2,
-        >>>     resolve_multiple=get_max_value_from_list_of_events,
+        >>>     resolve_multiple=max,
         >>>     fallback = 0,
         >>>     expected_flattened_vals=[0],
         >>> )
@@ -111,7 +111,7 @@ def assert_flattened_predictor_as_expected(
         >>>     prediction_times_df_str=prediction_times_df_str,
         >>>     predictor_df_str=predictor_df_str,
         >>>     lookbehind_days=2,
-        >>>     resolve_multiple=get_max_value_from_list_of_events,
+        >>>     resolve_multiple=max,
         >>>     expected_flattened_values=[-1],
         >>>     fallback=-1,
         >>> )
@@ -180,7 +180,7 @@ def assert_flattened_values_as_expected(
     else:
         raise ValueError("direction only takes look ahead or behind")
 
-    flattened_values_colname = f"{values_colname}_within_{interval_days}_days"
+    flattened_values_colname = f"{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
     expected_flattened_values = pd.DataFrame(
         {flattened_values_colname: expected_flattened_values}

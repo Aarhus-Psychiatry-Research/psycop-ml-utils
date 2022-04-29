@@ -25,7 +25,7 @@ def test_predictor_after_prediction_time():
         prediction_times_df_str=prediction_times_df_str,
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         expected_flattened_values=[-1],
         fallback=-1,
     )
@@ -43,7 +43,7 @@ def test_predictor_before_prediction():
         prediction_times_df_str=prediction_times_df_str,
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         expected_flattened_values=[1],
         fallback=-1,
     )
@@ -69,7 +69,7 @@ def test_multiple_citizens_predictor():
         prediction_times_df_str=prediction_times_df_str,
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         expected_flattened_values=[0, 1, 0, 2, -1.0],
         fallback=-1,
     )
@@ -88,7 +88,7 @@ def test_event_after_prediction_time():
         prediction_times_df_str=prediction_times_df_str,
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         expected_flattened_values=[1],
     )
 
@@ -105,7 +105,7 @@ def test_event_before_prediction():
         prediction_times_df_str=prediction_times_df_str,
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         expected_flattened_values=[0],
     )
 
@@ -128,7 +128,7 @@ def test_multiple_citizens_outcome():
         prediction_times_df_str=prediction_times_df_str,
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         expected_flattened_values=[1, 0, 1, 0],
     )
 
@@ -145,7 +145,7 @@ def test_citizen_without_outcome():
         prediction_times_df_str=prediction_times_df_str,
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
-        resolve_multiple=get_max_in_group,
+        resolve_multiple="max",
         fallback=0,
         expected_flattened_values=[0],
     )
