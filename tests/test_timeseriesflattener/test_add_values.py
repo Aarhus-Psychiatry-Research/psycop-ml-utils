@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 from timeseriesflattener.flattened_dataset import FlattenedDataset
 from timeseriesflattener.resolve_multiple_functions import get_max_in_group
 
@@ -178,7 +179,7 @@ def test_static_predictor():
     )
 
 
-def test_add_age():
+def test_add_age_error():
     prediction_times_df_str = """dw_ek_borger,timestamp,
                             1,1994-12-31 00:00:00
                             1,2021-12-31 00:00:00
@@ -209,3 +210,22 @@ def test_add_age():
         right=expected_values["age_in_years"].reset_index(drop=True),
         check_dtype=False,
     )
+
+
+def test_add_age_error():
+    prediction_times_df_str = """dw_ek_borger,timestamp,
+                            1,1994-12-31 00:00:00
+                            1,2021-12-31 00:00:00
+                            1,2021-12-31 00:00:00
+                            """
+    static_predictor = """dw_ek_borger,date_of_birth
+                        1,94-12-31 00:00:00
+                        """
+
+    dataset = FlattenedDataset(prediction_times_df=str_to_df(prediction_times_df_str))
+
+    with pytest.raises(ValueError):
+        dataset.add_age(
+            date_of_birth_df=str_to_df(static_predictor),
+            date_of_birth_col_name="date_of_birth",
+        )

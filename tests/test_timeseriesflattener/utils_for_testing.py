@@ -5,12 +5,13 @@ from pandas import DataFrame
 from timeseriesflattener.flattened_dataset import FlattenedDataset
 
 
-def str_to_df(str) -> DataFrame:
+def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:
     from io import StringIO
 
     df = pd.read_table(StringIO(str), sep=",", index_col=False)
 
-    df = convert_cols_with_matching_colnames_to_datetime(df, "timestamp")
+    if convert_timestamp_to_datetime:
+        df = convert_cols_with_matching_colnames_to_datetime(df, "timestamp")
 
     # Drop "Unnamed" cols
     return df.loc[:, ~df.columns.str.contains("^Unnamed")]
