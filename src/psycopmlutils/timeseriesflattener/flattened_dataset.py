@@ -4,11 +4,11 @@ from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
 from catalogue import Registry
-from loaders.loader_catalogue import data_loaders
+from psycopmlutils.utils import data_loaders
 from pandas import DataFrame
 from wasabi import msg
 
-from timeseriesflattener.resolve_multiple_functions import resolve_fns
+from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
 
 
 class FlattenedDataset:
@@ -374,7 +374,6 @@ class FlattenedDataset:
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
-        values_df_dict: Dict[str, DataFrame] = None,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
     ) -> DataFrame:
@@ -411,7 +410,7 @@ class FlattenedDataset:
         if new_col_name is None:
             new_col_name = source_values_col_name
 
-        full_col_str = f"{new_col_name}_within_{interval_days}_days"
+        full_col_str = f"{new_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
         # Generate df with one row for each prediction time x event time combination
         # Drop dw_ek_borger for faster merge

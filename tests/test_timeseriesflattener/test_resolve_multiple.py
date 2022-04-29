@@ -1,4 +1,4 @@
-from timeseriesflattener.resolve_multiple_functions import (
+from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
     get_earliest_value_in_group,
     get_latest_value_in_group,
     get_max_in_group,

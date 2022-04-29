@@ -1,5 +1,5 @@
 import pytest
-from timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 
 from utils_for_testing import str_to_df
 

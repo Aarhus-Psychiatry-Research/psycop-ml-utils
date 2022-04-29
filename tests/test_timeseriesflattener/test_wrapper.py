@@ -1,7 +1,9 @@
-from loaders.loader_catalogue import data_loaders
+from psycopmlutils.utils import data_loaders
 from pandas.testing import assert_frame_equal
-from timeseriesflattener.create_feature_combinations import create_feature_combinations
-from timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.timeseriesflattener.create_feature_combinations import (
+    create_feature_combinations,
+)
+from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 
 from utils_for_testing import load_event_times, str_to_df
 

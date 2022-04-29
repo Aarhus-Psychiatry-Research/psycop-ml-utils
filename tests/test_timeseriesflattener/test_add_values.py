@@ -1,7 +1,9 @@
 import pandas as pd
 import pytest
-from timeseriesflattener.flattened_dataset import FlattenedDataset
-from timeseriesflattener.resolve_multiple_functions import get_max_in_group
+from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
+    get_max_in_group,
+)
 
 from utils_for_testing import (
     assert_flattened_outcome_as_expected,

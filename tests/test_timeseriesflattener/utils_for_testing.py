@@ -1,9 +1,9 @@
 from typing import Callable, List, Union
 
 import pandas as pd
-from loaders.loader_catalogue import data_loaders
+from psycopmlutils.utils import data_loaders
 from pandas import DataFrame
-from timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 
 
 def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:

@@ -1,19 +1,25 @@
 import time
 
-from load_data import LoadData
+import numpy as np
+
+import psycopmlutils.loaders  # noqa
+
 from wasabi import msg
 
-from timeseriesflattener.create_feature_combinations import create_feature_combinations
-from timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.timeseriesflattener import (
+    create_feature_combinations,
+    FlattenedDataset,
+)
+
 
 if __name__ == "__main__":
     PREDICTOR_LIST = create_feature_combinations(
         [
             {
-                "predictor_df": "hba1c_vals",
-                "lookbehind_days": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                "resolve_multiple": "latest",
-                "fallback": 35,
+                "predictor_df": "hba1c",
+                "lookbehind_days": [90, 180, 365, 730],
+                "resolve_multiple": ["latest", "mean"],
+                "fallback": np.nan,
                 "source_values_col_name": "val",
                 "new_col_name": "hba1c",
             }
@@ -22,9 +28,8 @@ if __name__ == "__main__":
 
     print(PREDICTOR_LIST)
 
-    prediction_times = LoadData.physical_visits_to_psychiatry()
-    # event_times = LoadData.event_times()
-    hba1c_vals = LoadData.hba1c()
+    prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
+    event_times = psycopmlutils.loaders.LoadDiagnoses.t2d_times()
 
     msg.info("Initialising flattened dataset")
     flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=32)
@@ -33,11 +38,8 @@ if __name__ == "__main__":
     msg.info("Adding predictors")
     start_time = time.time()
 
-    predictor_dfs = {"hba1c_vals": hba1c_vals}
-
     flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictor_list=PREDICTOR_LIST,
-        predictor_dfs_dict=predictor_dfs,
     )
 
     end_time = time.time()

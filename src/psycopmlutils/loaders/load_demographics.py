@@ -1,14 +1,13 @@
-import catalogue
 import pandas as pd
 from wasabi import msg
 
-from loaders.sql_load import sql_load
+from psycopmlutils.loaders.sql_load import sql_load
 
-demographics_loader = catalogue.create("loaders", "demographics")
+from psycopmlutils.utils import data_loaders
 
 
 class LoadDemographics:
-    @demographics_loader.register("birthdays")
+    @data_loaders.register("birthdays")
     def birthdays():
         msg.info("Loading birthdays")
 
@@ -26,7 +25,7 @@ class LoadDemographics:
         msg.good("Loaded birthdays")
         return df.reset_index(drop=True)
 
-    @demographics_loader.register("sex")
+    @data_loaders.register("sex")
     def sex():
         msg.info("Loading sexes")
 

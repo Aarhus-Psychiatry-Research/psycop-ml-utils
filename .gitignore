@@ -159,4 +159,4 @@ pytest-coverage.txt
 
 # Mac
 .DS_Store
-example/timeseriesflattener/test_load_data.py
+*test_load_data.py*

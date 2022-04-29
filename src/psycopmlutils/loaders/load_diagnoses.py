@@ -5,7 +5,8 @@ import catalogue
 import pandas as pd
 from wasabi import msg
 
-from loaders.sql_load import sql_load
+from psycopmlutils.loaders.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
 
 diagnoses_loader = catalogue.create("loaders", "diagnoses")
 
@@ -162,7 +163,7 @@ class LoadDiagnoses:
             }
         )
 
-    @diagnoses_loader.register("diagnoses_loader", "t2d_times")
+    @data_loaders.register("t2d_times")
     def t2d_times():
         msg.info("Loading t2d event times")
 
@@ -179,7 +180,7 @@ class LoadDiagnoses:
         msg.good("Finished loading t2d event times")
         return df.reset_index(drop=True)
 
-    @diagnoses_loader.register("diagnoses_loader", "essential_hypertension")
+    @data_loaders.register("essential_hypertension")
     def essential_hypertension():
         return LoadDiagnoses.from_physical_visits(
             icd_code="I109",
@@ -187,7 +188,7 @@ class LoadDiagnoses:
             output_col_name="essential_hypertension",
         )
 
-    @diagnoses_loader.register("diagnoses_loader", "hyperlipidemia")
+    @data_loaders.register("hyperlipidemia")
     def hyperlipidemia():
         return LoadDiagnoses.from_physical_visits(
             icd_code=[
@@ -198,7 +199,7 @@ class LoadDiagnoses:
             wildcard_icd_10_end=False,
         )
 
-    @diagnoses_loader.register("diagnoses_loader", "liverdisease_unspecified")
+    @data_loaders.register("liverdisease_unspecified")
     def liverdisease_unspecified():
         return LoadDiagnoses.from_physical_visits(
             icd_code="K769",
@@ -206,7 +207,7 @@ class LoadDiagnoses:
             output_col_name="liverdisease_unspecified",
         )
 
-    @diagnoses_loader.register("diagnoses_loader", "polycystic_ovarian_syndrome")
+    @data_loaders.register("polycystic_ovarian_syndrome")
     def polycystic_ovarian_syndrome():
         return LoadDiagnoses.from_physical_visits(
             icd_code="E282",
@@ -214,7 +215,7 @@ class LoadDiagnoses:
             output_col_name="polycystic_ovarian_syndrome",
         )
 
-    @diagnoses_loader.register("diagnoses_loader", "sleep_apnea")
+    @data_loaders.register("sleep_apnea")
     def sleep_apnea():
         return LoadDiagnoses.from_physical_visits(
             icd_code=["G473", "G4732"],
@@ -222,7 +223,7 @@ class LoadDiagnoses:
             output_col_name="sleep_apnea",
         )
 
-    @diagnoses_loader.register("diagnoses_loader", "sleep_problems_unspecified")
+    @data_loaders.register("sleep_problems_unspecified")
     def sleep_problems_unspecified():
         return LoadDiagnoses.from_physical_visits(
             icd_code="G479",
