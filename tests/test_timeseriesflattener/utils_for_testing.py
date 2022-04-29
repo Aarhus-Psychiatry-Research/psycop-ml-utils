@@ -1,6 +1,7 @@
 from typing import Callable, List, Union
 
 import pandas as pd
+from loaders.loader_catalogue import data_loaders
 from pandas import DataFrame
 from timeseriesflattener.flattened_dataset import FlattenedDataset
 
@@ -192,3 +193,13 @@ def assert_flattened_values_as_expected(
         ),
         check_dtype=False,
     )
+
+
+@data_loaders.register("load_event_times")
+def load_event_times():
+    event_times_str = """dw_ek_borger,timestamp,val,
+                    1,2021-12-30 00:00:01, 1
+                    1,2021-12-29 00:00:02, 2
+                    """
+
+    return str_to_df(event_times_str)
