@@ -179,7 +179,7 @@ def test_static_predictor():
     )
 
 
-def test_add_age_error():
+def test_add_age():
     prediction_times_df_str = """dw_ek_borger,timestamp,
                             1,1994-12-31 00:00:00
                             1,2021-12-31 00:00:00
