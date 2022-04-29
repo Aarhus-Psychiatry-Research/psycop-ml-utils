@@ -1,4 +1,5 @@
 from multiprocessing import Pool
+from multiprocessing.sharedctypes import Value
 from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
@@ -75,6 +76,7 @@ class FlattenedDataset:
         # in self.df
         self.df_aggregating = self.pred_times_with_uuid
         self.df = self.pred_times_with_uuid
+        self.loaders_catalogue = data_loaders
 
     def add_temporal_predictors_from_list_of_argument_dictionaries(
         self,
@@ -135,8 +137,16 @@ class FlattenedDataset:
             arg_dict["timestamp_col_name"] = self.timestamp_col_name
             arg_dict["pred_time_uuid_col_name"] = self.pred_time_uuid_col_name
 
-            # We have to add the data_loaders catalogue, because otherwise it isn't cloned to each worker.
-            arg_dict["loaders_catalogue"] = data_loaders
+            # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registry
+            if predictor_dfs_dict is None:
+                predictor_dfs_dict = self.loaders_catalogue.get_all()
+            else:
+                predictor_dfs_dict = {
+                    **predictor_dfs_dict,
+                    **self.loaders_catalogue.get_all(),
+                }
+
+            arg_dict["values_df"] = predictor_dfs_dict[arg_dict["values_df"]]
 
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = None
@@ -149,13 +159,7 @@ class FlattenedDataset:
                 "fallback",
                 "new_col_name",
                 "source_values_col_name",
-                "loaders_catalogue",
             ]
-
-            if predictor_dfs_dict is not None:
-                arg_dict["values_df_dict"] = predictor_dfs_dict
-
-                required_keys += ["values_df_dict"]
 
             processed_arg_dicts.append(
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys)
@@ -362,7 +366,7 @@ class FlattenedDataset:
     @staticmethod
     def flatten_temporal_values_to_df(
         prediction_times_with_uuid_df: DataFrame,
-        values_df: Union[str, DataFrame],
+        values_df: Union[Callable, DataFrame],
         direction: str,
         interval_days: float,
         resolve_multiple: Union[Callable, str],
@@ -373,7 +377,6 @@ class FlattenedDataset:
         values_df_dict: Dict[str, DataFrame] = None,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
-        loaders_catalogue: Registry = None,
     ) -> DataFrame:
         """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 
@@ -391,20 +394,12 @@ class FlattenedDataset:
             DataFrame: One row pr. prediction time, flattened according to arguments
         """
 
-        # Resolve values_df if not already a dataframe. Try catalogue,
+        # Resolve values_df if not already a dataframe.
+        if isinstance(values_df, Callable):
+            values_df = values_df()
+
         if not isinstance(values_df, DataFrame):
-            try:
-                values_df = values_df_dict[values_df]
-            except:
-                msg.info(
-                    f"{values_df} was not found in values_df_dict, trying data_loaders catalogue"
-                )
-                try:
-                    values_df = loaders_catalogue.get(values_df)()
-                except:
-                    raise ValueError(
-                        f"{values_df} was not found in data_loaders catalogue or values_df_dict"
-                    )
+            raise ValueError("values_df is not a dataframe")
 
         for col_name in [timestamp_col_name, id_col_name]:
             if col_name not in values_df.columns:
