@@ -2,6 +2,7 @@ from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
+from catalogue import Registry
 from loaders.loader_catalogue import data_loaders
 from pandas import DataFrame
 from wasabi import msg
@@ -134,6 +135,9 @@ class FlattenedDataset:
             arg_dict["timestamp_col_name"] = self.timestamp_col_name
             arg_dict["pred_time_uuid_col_name"] = self.pred_time_uuid_col_name
 
+            # We have to add the data_loaders catalogue, because otherwise it isn't cloned to each worker.
+            arg_dict["loaders_catalogue"] = data_loaders
+
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = None
 
@@ -145,6 +149,7 @@ class FlattenedDataset:
                 "fallback",
                 "new_col_name",
                 "source_values_col_name",
+                "loaders_catalogue",
             ]
 
             if predictor_dfs_dict is not None:
@@ -368,6 +373,7 @@ class FlattenedDataset:
         values_df_dict: Dict[str, DataFrame] = None,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
+        loaders_catalogue: Registry = None,
     ) -> DataFrame:
         """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 
@@ -394,7 +400,7 @@ class FlattenedDataset:
                     f"{values_df} was not found in values_df_dict, trying data_loaders catalogue"
                 )
                 try:
-                    values_df = data_loaders.get(values_df)()
+                    values_df = loaders_catalogue.get(values_df)()
                 except:
                     raise ValueError(
                         f"{values_df} was not found in data_loaders catalogue or values_df_dict"
@@ -405,11 +411,6 @@ class FlattenedDataset:
                 raise ValueError(
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
                 )
-
-        if isinstance(values_df, Callable):
-            values_df = values_df()
-        elif isinstance(values_df, str):
-            values_df = data_loaders.get(values_df)()
 
         # Rename column
         if new_col_name is None:
