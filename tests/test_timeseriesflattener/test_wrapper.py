@@ -44,7 +44,7 @@ def test_generate_two_features_from_dict():
         ]
     )
 
-    flattened_dataset.add_predictors_from_list_of_argument_dictionaries(
+    flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictor_list=predictor_list,
         predictor_dfs_dict={"event_times_df": event_times_df},
     )
@@ -119,12 +119,12 @@ def test_output_independent_of_order_of_input():
 
     predictor_df = str_to_df(predictor_str)
 
-    flattened_dataset1.add_predictors_from_list_of_argument_dictionaries(
+    flattened_dataset1.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictor_list=predictor_list,
         predictor_dfs_dict={"predictor_df": predictor_df},
     )
 
-    flattened_dataset2.add_predictors_from_list_of_argument_dictionaries(
+    flattened_dataset2.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictor_list=predictor_list2,
         predictor_dfs_dict={"predictor_df": predictor_df},
     )

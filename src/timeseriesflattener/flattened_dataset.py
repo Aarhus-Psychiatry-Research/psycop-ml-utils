@@ -1,6 +1,8 @@
 from multiprocessing import Pool
+from multiprocessing.sharedctypes import Value
 from typing import Callable, Dict, List, Optional, Union
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from wasabi import msg
@@ -74,7 +76,7 @@ class FlattenedDataset:
         self.df_aggregating = self.pred_times_with_uuid
         self.df = self.pred_times_with_uuid
 
-    def add_predictors_from_list_of_argument_dictionaries(
+    def add_temporal_predictors_from_list_of_argument_dictionaries(
         self,
         predictor_list: List[Dict[str, str]],
         predictor_dfs_dict: Dict[str, DataFrame],
@@ -156,7 +158,7 @@ class FlattenedDataset:
         pool = Pool(self.n_workers)
 
         flattened_predictor_dfs = pool.map(
-            self._create_flattened_df_wrapper, processed_arg_dicts
+            self._flatten_temporal_values_to_df_wrapper, processed_arg_dicts
         )
 
         flattened_predictor_dfs = [
@@ -178,8 +180,8 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
 
-    def _create_flattened_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
-        """Wrap create_flattened_df with kwargs for multithreading pool.
+    def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
+        """Wrap flatten_temporal_values_to_df with kwargs for multithreading pool.
 
         Args:
             kwargs_dict (Dict): Dictionary of kwargs
@@ -187,7 +189,7 @@ class FlattenedDataset:
         Returns:
             DataFrame: DataFrame generates with create_flattened_df
         """
-        return self.create_flattened_df_for_value(
+        return self.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
             id_col_name=self.id_col_name,
             timestamp_col_name=self.timestamp_col_name,
@@ -195,7 +197,49 @@ class FlattenedDataset:
             **kwargs_dict,
         )
 
-    def add_outcome(
+    def add_age(
+        self, date_of_birth_df: DataFrame, date_of_birth_col_name: str = "date_of_birth"
+    ):
+        if date_of_birth_df[date_of_birth_col_name].dtype != "<M8[ns]":
+            try:
+                date_of_birth_df[date_of_birth_col_name] = pd.to_datetime(
+                    date_of_birth_df[date_of_birth_col_name], format="%Y-%m-%d"
+                )
+            except:
+                raise ValueError(
+                    f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding."
+                )
+
+        self.add_static_predictor(date_of_birth_df)
+
+        age = (
+            (
+                self.df_aggregating[self.timestamp_col_name]
+                - self.df_aggregating[date_of_birth_col_name]
+            ).dt.days
+            / (365.25)
+        ).round(2)
+
+        self.df_aggregating.drop(date_of_birth_col_name, axis=1, inplace=True)
+        self.df.drop(date_of_birth_col_name, axis=1, inplace=True)
+
+        self.df_aggregating["age_in_years"] = age
+        self.df["age_in_years"] = age
+
+    def add_static_predictor(self, predictor_df: DataFrame):
+        self.df_aggregating = pd.merge(
+            self.df_aggregating,
+            predictor_df,
+            how="left",
+            on=self.id_col_name,
+            suffixes=("", ""),
+        )
+
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
+
+        msg.good(f"Assigned {predictor_df.columns[1]} to instance")
+
+    def add_temporal_outcome(
         self,
         outcome_df: DataFrame,
         lookahead_days: float,
@@ -214,7 +258,7 @@ class FlattenedDataset:
             outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "value".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
-        self.add_col_to_flattened_dataset(
+        self.add_temporal_col_to_flattened_dataset(
             values_df=outcome_df,
             direction="ahead",
             interval_days=lookahead_days,
@@ -224,7 +268,7 @@ class FlattenedDataset:
             source_values_col_name=outcome_df_values_col_name,
         )
 
-    def add_predictor(
+    def add_temporal_predictor(
         self,
         predictor_df: DataFrame,
         lookbehind_days: float,
@@ -243,7 +287,7 @@ class FlattenedDataset:
             source_values_col_name (str): Column name for the predictor values in predictor_df, e.g. the patient's most recent blood-sample value. Defaults to "value".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
-        self.add_col_to_flattened_dataset(
+        self.add_temporal_col_to_flattened_dataset(
             values_df=predictor_df,
             direction="behind",
             interval_days=lookbehind_days,
@@ -253,7 +297,7 @@ class FlattenedDataset:
             source_values_col_name=source_values_col_name,
         )
 
-    def add_col_to_flattened_dataset(
+    def add_temporal_col_to_flattened_dataset(
         self,
         values_df: DataFrame,
         direction: str,
@@ -261,7 +305,7 @@ class FlattenedDataset:
         resolve_multiple: Union[Callable, str],
         fallback: float,
         new_col_name: Optional[str] = None,
-        source_values_col_name: str = "val",
+        source_values_col_name: str = "value",
     ):
         """Add a column to the dataset (either predictor or outcome depending on the value of "direction").
 
@@ -274,7 +318,7 @@ class FlattenedDataset:
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
         """
-        df = FlattenedDataset.create_flattened_df_for_value(
+        df = FlattenedDataset.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
             values_df=values_df,
             direction=direction,
@@ -310,7 +354,7 @@ class FlattenedDataset:
         msg.good(f"Assigned {df.columns[1]} to instance")
 
     @staticmethod
-    def create_flattened_df_for_value(
+    def flatten_temporal_values_to_df(
         prediction_times_with_uuid_df: DataFrame,
         values_df: DataFrame,
         direction: str,
@@ -321,7 +365,7 @@ class FlattenedDataset:
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
         new_col_name: Optional[str] = None,
-        source_values_col_name: str = "val",
+        source_values_col_name: str = "value",
     ) -> DataFrame:
         """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 

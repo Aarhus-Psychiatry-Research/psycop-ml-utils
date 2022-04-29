@@ -1,8 +1,8 @@
 import time
 
+from load_data import LoadData
 from wasabi import msg
 
-from load_data import LoadData
 from timeseriesflattener.create_feature_combinations import create_feature_combinations
 from timeseriesflattener.flattened_dataset import FlattenedDataset
 
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     predictor_dfs = {"hba1c_vals": hba1c_vals}
 
-    flattened_df.add_predictors_from_list_of_argument_dictionaries(
+    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictor_list=PREDICTOR_LIST,
         predictor_dfs_dict=predictor_dfs,
     )

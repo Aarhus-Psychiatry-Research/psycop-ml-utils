@@ -1,8 +1,11 @@
+import pandas as pd
+from timeseriesflattener.flattened_dataset import FlattenedDataset
 from timeseriesflattener.resolve_multiple_functions import get_max_in_group
 
 from utils_for_testing import (
     assert_flattened_outcome_as_expected,
     assert_flattened_predictor_as_expected,
+    str_to_df,
 )
 
 
@@ -142,4 +145,67 @@ def test_citizen_without_outcome():
         resolve_multiple=get_max_in_group,
         fallback=0,
         expected_flattened_values=[0],
+    )
+
+
+def test_static_predictor():
+    prediction_times_df_str = """dw_ek_borger,timestamp,
+                            1,2021-12-31 00:00:00
+                            1,2021-12-31 00:00:01
+                            1,2021-12-31 00:00:02
+                            """
+    static_predictor = """dw_ek_borger,date_of_birth
+                        1,1994-12-31 00:00:01
+                        """
+
+    dataset = FlattenedDataset(prediction_times_df=str_to_df(prediction_times_df_str))
+    dataset.add_static_predictor(str_to_df(static_predictor))
+
+    expected_values = pd.DataFrame(
+        {
+            "date_of_birth": [
+                "1994-12-31 00:00:01",
+                "1994-12-31 00:00:01",
+                "1994-12-31 00:00:01",
+            ]
+        }
+    )
+
+    pd.testing.assert_series_equal(
+        left=dataset.df["date_of_birth"].reset_index(drop=True),
+        right=expected_values["date_of_birth"].reset_index(drop=True),
+        check_dtype=False,
+    )
+
+
+def test_add_age():
+    prediction_times_df_str = """dw_ek_borger,timestamp,
+                            1,1994-12-31 00:00:00
+                            1,2021-12-31 00:00:00
+                            1,2021-12-31 00:00:00
+                            """
+    static_predictor = """dw_ek_borger,date_of_birth
+                        1,1994-12-31 00:00:00
+                        """
+
+    dataset = FlattenedDataset(prediction_times_df=str_to_df(prediction_times_df_str))
+    dataset.add_age(
+        date_of_birth_df=str_to_df(static_predictor),
+        date_of_birth_col_name="date_of_birth",
+    )
+
+    expected_values = pd.DataFrame(
+        {
+            "age_in_years": [
+                0.0,
+                27.0,
+                27.0,
+            ]
+        }
+    )
+
+    pd.testing.assert_series_equal(
+        left=dataset.df["age_in_years"].reset_index(drop=True),
+        right=expected_values["age_in_years"].reset_index(drop=True),
+        check_dtype=False,
     )
