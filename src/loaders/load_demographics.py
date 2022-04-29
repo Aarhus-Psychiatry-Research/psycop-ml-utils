@@ -1,10 +1,14 @@
+import catalogue
 import pandas as pd
 from wasabi import msg
 
 from loaders.sql_load import sql_load
 
+demographics_loader = catalogue.create("loaders", "demographics")
+
 
 class LoadDemographics:
+    @demographics_loader.register("birthdays")
     def birthdays():
         msg.info("Loading birthdays")
 
@@ -22,6 +26,7 @@ class LoadDemographics:
         msg.good("Loaded birthdays")
         return df.reset_index(drop=True)
 
+    @demographics_loader.register("sex")
     def sex():
         msg.info("Loading sexes")
 

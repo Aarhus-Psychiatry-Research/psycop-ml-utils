@@ -1,7 +1,10 @@
+import catalogue
 import pandas as pd
 from wasabi import msg
 
 from loaders.sql_load import sql_load
+
+diagnoses_loader = catalogue.create("loaders", "lab_results")
 
 
 class LoadLabResults:
@@ -58,11 +61,13 @@ class LoadLabResults:
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
+    @diagnoses_loader.register("hba1c")
     def hba1c():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU27300", output_col_name="hba1c"
         )
 
+    @diagnoses_loader.register("scheduled_glc")
     def scheduled_glc():
         npu_suffixes = [
             "08550",
@@ -115,6 +120,7 @@ class LoadLabResults:
             blood_sample_ids=blood_sample_ids, output_col_name="scheduled_p_glc"
         )
 
+    @diagnoses_loader.register("unscheduled_p_glc")
     def unscheduled_p_glc():
         npu_suffixes = [
             "02192",
@@ -131,68 +137,81 @@ class LoadLabResults:
             blood_sample_ids=blood_sample_ids, output_col_name="unscheduled_p_glc"
         )
 
+    @diagnoses_loader.register("triglycerides")
     def triglycerides():
         return LoadLabResults.blood_sample(
-            blood_sample_id="NPU04094", output_col_name="triglyceride"
+            blood_sample_id="NPU04094", output_col_name="triglycerides"
         )
 
+    @diagnoses_loader.register("fasting_triglycerides")
     def fasting_triglycerides():
         return LoadLabResults.blood_sample(
-            blood_sample_id="NPU03620", output_col_name="fasting_triglyceride"
+            blood_sample_id="NPU03620", output_col_name="fasting_triglycerides"
         )
 
+    @diagnoses_loader.register("hdl")
     def hdl():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU01567", output_col_name="hdl"
         )
 
+    @diagnoses_loader.register("ldl")
     def ldl():
         return LoadLabResults._aggregate_blood_samples(
             blood_sample_id=["NPU01568", "AAB00101"], output_col_name="ldl"
         )
 
+    @diagnoses_loader.register("fasting_ldl")
     def fasting_ldl():
         return LoadLabResults._aggregate_blood_samples(
             blood_sample_ids=["NPU10171", "AAB00102"], output_col_name="fasting_ldl"
         )
 
+    @diagnoses_loader.register("alat")
     def alat():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19651", output_col_name="alat"
         )
 
+    @diagnoses_loader.register("asat")
     def asat():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19654", output_col_name="asat"
         )
 
+    @diagnoses_loader.register("lymphocytes")
     def lymphocytes():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU02636", output_col_name="lymphocytes"
         )
 
+    @diagnoses_loader.register("leukocytes")
     def leukocytes():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU02593", output_col_name="leukocytes"
         )
 
+    @diagnoses_loader.register("crp")
     def crp():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19748", output_col_name="crp"
         )
 
+    @diagnoses_loader.register("creatinine")
     def creatinine():
         return LoadLabResults._aggregate_blood_samples(
             blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
             output_col_name="creatinine",
         )
 
+    @diagnoses_loader.register("egfr")
     def egfr():
         return LoadLabResults._aggregate_blood_samples(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             output_col_name="egfr",
         )
 
+    @diagnoses_loader.register("albumine_creatinine_ratio")
     def albumine_creatinine_ratio():
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19661", output_col_name="albumine_creatinine_ratio"
