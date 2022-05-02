@@ -4,11 +4,10 @@ from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
 from catalogue import Registry
-from psycopmlutils.utils import data_loaders
 from pandas import DataFrame
-from wasabi import msg
-
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
+from psycopmlutils.utils import data_loaders
+from wasabi import msg
 
 
 class FlattenedDataset:
@@ -75,21 +74,26 @@ class FlattenedDataset:
         # Having a df_aggregating separate from df allows to only generate the UUID once, while not presenting it
         # in self.df
         self.df_aggregating = self.pred_times_with_uuid
-        self.df = self.pred_times_with_uuid
+        self.df = self.pred_times_with_uuid.copy()
         self.loaders_catalogue = data_loaders
 
     def add_temporal_predictors_from_list_of_argument_dictionaries(
         self,
-        predictor_list: List[Dict[str, str]],
-        predictor_dfs_dict: Dict[str, DataFrame] = None,
-        resolve_multiple_fn_dict: Optional[Dict[str, Callable]] = None,
+        predictors: List[Dict[str, str]],
+        predictor_dfs: Dict[str, DataFrame],
+        resolve_multiple_fns: Optional[Dict[str, Callable]],
     ):
         """Add predictors to the flattened dataframe from a list.
 
         Args:
-            predictor_list (List[Dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
-            predictor_dfs_dict (Dict[str, DataFrame], optional): A dictionary mapping the predictor_df in predictor_list to DataFrame objects. Optional, can be replaced by adding callables returning dfs to @data_loaders. Defaults to None.
-            resolve_multiple_fn_dict (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies (i.e. ones that aren't in resolve_fns), requires a dictionary mapping the resolve_multiple string to a Callable object.
+            predictors (List[Dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
+            predictor_dfs (Dict[str, DataFrame], optional): If wanting to pass already resolved dataframes.
+                By default, you should add your dataframes to the @data_loaders registry.
+                Then the the predictor_df value in the predictor dict will map to a callable which returns the dataframe.
+                Optionally, you can map the string to a dataframe in predictor_dfs.
+            resolve_multiple_fns (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies
+                I.e. ones that aren't in the resolve_fns catalogue require a dictionary mapping the
+                resolve_multiple string to a Callable object.
 
         Example:
             >>> predictor_list = [
@@ -120,12 +124,12 @@ class FlattenedDataset:
         processed_arg_dicts = []
 
         # Replace strings with objects as relevant
-        for arg_dict in predictor_list:
+        for arg_dict in predictors:
             if (
-                resolve_multiple_fn_dict is not None
-                and arg_dict["resolve_multiple"] in resolve_multiple_fn_dict
+                resolve_multiple_fns is not None
+                and arg_dict["resolve_multiple"] in resolve_multiple_fns
             ):
-                arg_dict["resolve_multiple"] = resolve_multiple_fn_dict[
+                arg_dict["resolve_multiple"] = resolve_multiple_fns[
                     arg_dict["resolve_multiple"]
                 ]
 
@@ -138,15 +142,15 @@ class FlattenedDataset:
             arg_dict["pred_time_uuid_col_name"] = self.pred_time_uuid_col_name
 
             # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registry
-            if predictor_dfs_dict is None:
-                predictor_dfs_dict = self.loaders_catalogue.get_all()
+            if predictor_dfs is None:
+                predictor_dfs = self.loaders_catalogue.get_all()
             else:
-                predictor_dfs_dict = {
-                    **predictor_dfs_dict,
+                predictor_dfs = {
+                    **predictor_dfs,
                     **self.loaders_catalogue.get_all(),
                 }
 
-            arg_dict["values_df"] = predictor_dfs_dict[arg_dict["values_df"]]
+            arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
 
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = None
@@ -188,7 +192,7 @@ class FlattenedDataset:
             suffixes=("", ""),
         )
 
-        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
 
     def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
         """Wrap flatten_temporal_values_to_df with kwargs for multithreading pool.
@@ -208,19 +212,32 @@ class FlattenedDataset:
         )
 
     def add_age(
-        self, date_of_birth_df: DataFrame, date_of_birth_col_name: str = "date_of_birth"
+        self,
+        id_to_date_of_birth_mapping: DataFrame,
+        date_of_birth_col_name: str = "date_of_birth",
     ):
-        if date_of_birth_df[date_of_birth_col_name].dtype != "<M8[ns]":
+        """Add age at prediction time to each prediction time.
+
+        Args:
+            id_to_date_of_birth_mapping (DataFrame): Two columns, id and date_of_birth.
+            date_of_birth_col_name (str, optional): Name of the date_of_birth column in id_to_date_of_birth_mapping.
+            Defaults to "date_of_birth".
+
+        Raises:
+            ValueError: _description_
+        """
+        if id_to_date_of_birth_mapping[date_of_birth_col_name].dtype != "<M8[ns]":
             try:
-                date_of_birth_df[date_of_birth_col_name] = pd.to_datetime(
-                    date_of_birth_df[date_of_birth_col_name], format="%Y-%m-%d"
+                id_to_date_of_birth_mapping[date_of_birth_col_name] = pd.to_datetime(
+                    id_to_date_of_birth_mapping[date_of_birth_col_name],
+                    format="%Y-%m-%d",
                 )
             except:
                 raise ValueError(
                     f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding."
                 )
 
-        self.add_static_predictor(date_of_birth_df)
+        self.add_static_predictor(id_to_date_of_birth_mapping)
 
         age = (
             (
@@ -237,6 +254,11 @@ class FlattenedDataset:
         self.df["age_in_years"] = age
 
     def add_static_predictor(self, predictor_df: DataFrame):
+        """Add a static predictor to each prediction time, e.g. age, sex etc.
+
+        Args:
+            predictor_df (DataFrame): Contains an id_column and a value column.
+        """
         self.df_aggregating = pd.merge(
             self.df_aggregating,
             predictor_df,
@@ -245,7 +267,7 @@ class FlattenedDataset:
             suffixes=("", ""),
         )
 
-        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
 
         msg.good(f"Assigned {predictor_df.columns[1]} to instance")
 
@@ -359,7 +381,7 @@ class FlattenedDataset:
             suffixes=("", ""),
         )
 
-        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1)
+        self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
 
         msg.good(f"Assigned {df.columns[1]} to instance")
 
@@ -374,23 +396,31 @@ class FlattenedDataset:
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
-        new_col_name: Optional[str] = None,
+        new_col_name: Optional[str],
         source_values_col_name: str = "value",
     ) -> DataFrame:
         """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 
         Args:
-            values_df_name (str): The name of the values_df to look for in the data_loaders catalogue or the values_df_dict.
-            direction (str): Whether to look "ahead" or "behind".
-            interval_days (float): How far to look in direction.
-            resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
+            prediction_times_with_uuid_df (DataFrame): Dataframe with id_col and timestamps for each prediction time.
+            values_df (Union[Callable, DataFrame]): A dataframe or callable resolving to a dataframe containing id_col, timestamp and value cols.
+            direction (str): Whether to look "ahead" or "behind" the prediction time.
+            interval_days (float): How far to look in each direction.
+            resolve_multiple (Union[Callable, str]): How to handle multiple values within interval_days. Takes either
+                i) a function that takes a list as an argument and returns a float, or
+                ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (List[str]): What to do if no value within the lookahead.
-            new_col_name (str, optional): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
-            source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
-            values_df_dict (Dict[str, DataFrame], optional): _description_. Defaults to None.
+            id_col_name (str): Name of id_column in prediction_times_with_uuid_df and values_df.
+                Required because this is a static method.
+            timestamp_col_name (str): Name of timestamp column in prediction_times_with_uuid_df and values_df.
+                Required because this is a static method.
+            pred_time_uuid_col_name (str): Name of uuid column in prediction_times_with_uuid_df.
+                Required because this is a static method.
+            new_col_name (Optional[str], optional): Name of new column in returned dataframe. .
+            source_values_col_name (str, optional): Name of column containing values in values_df. Defaults to "value".
 
         Returns:
-            DataFrame: One row pr. prediction time, flattened according to arguments
+            DataFrame:
         """
 
         # Resolve values_df if not already a dataframe.

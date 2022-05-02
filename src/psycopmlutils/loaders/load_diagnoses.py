@@ -3,12 +3,9 @@ from typing import List, Union
 
 import catalogue
 import pandas as pd
-from wasabi import msg
-
 from psycopmlutils.loaders.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
-
-diagnoses_loader = catalogue.create("loaders", "diagnoses")
+from wasabi import msg
 
 
 class LoadDiagnoses:
