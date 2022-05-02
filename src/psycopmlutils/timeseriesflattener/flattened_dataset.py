@@ -80,8 +80,8 @@ class FlattenedDataset:
     def add_temporal_predictors_from_list_of_argument_dictionaries(
         self,
         predictors: List[Dict[str, str]],
-        predictor_dfs: Dict[str, DataFrame],
-        resolve_multiple_fns: Optional[Dict[str, Callable]],
+        predictor_dfs: Dict[str, DataFrame] = None,
+        resolve_multiple_fns: Optional[Dict[str, Callable]] = None,
     ):
         """Add predictors to the flattened dataframe from a list.
 
@@ -93,21 +93,21 @@ class FlattenedDataset:
                 Optionally, you can map the string to a dataframe in predictor_dfs.
             resolve_multiple_fns (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies
                 I.e. ones that aren't in the resolve_fns catalogue require a dictionary mapping the
-                resolve_multiple string to a Callable object.
+                resolve_multiple string to a Callable object. Defaults to None.
 
         Example:
             >>> predictor_list = [
             >>>     {
             >>>         "predictor_df": "df_name",
             >>>         "lookbehind_days": 1,
-            >>>         "resolve_multiple": "resolve_multiple_strat_name",
+            >>>         resolve_multiple: "resolve_multiple_strat_name",
             >>>         "fallback": 0,
             >>>         "source_values_col_name": "val",
             >>>     },
             >>>     {
             >>>         "predictor_df": "df_name",
             >>>         "lookbehind_days": 1,
-            >>>         "resolve_multiple": "min",
+            >>>         "resolve_multiple_fns": "min",
             >>>         "fallback": 0,
             >>>         "source_values_col_name": "val",
             >>>     }
@@ -126,14 +126,29 @@ class FlattenedDataset:
         # Replace strings with objects as relevant
         for arg_dict in predictors:
 
-            #
-            if (
-                resolve_multiple_fns is not None
-                and arg_dict["resolve_multiple"] in resolve_multiple_fns
-            ):
-                arg_dict["resolve_multiple"] = resolve_multiple_fns[
-                    arg_dict["resolve_multiple"]
-                ]
+            # If resolve_multiple is a string, see if possible to resolve to a Callable
+            # Actual resolving is handled in resolve_multiple_values_within_interval_days
+            # To preserve str for column name generation
+            if isinstance(arg_dict["resolve_multiple"], str):
+                # Try from resolve_multiple_fns
+                resolved_func = False
+                if resolve_multiple_fns is not None:
+                    try:
+                        resolved_func = resolve_multiple_fns.get(
+                            [arg_dict["resolve_multiple"]]
+                        )
+                    except:
+                        pass
+
+                try:
+                    resolved_func = resolve_fns.get(arg_dict["resolve_multiple"])
+                except:
+                    pass
+
+                if not isinstance(resolved_func, Callable):
+                    raise ValueError(
+                        "resolve_function neither is nor resolved to a Callable"
+                    )
 
             # Rename arguments for create_flattened_df_for_val
             arg_dict["values_df"] = arg_dict["predictor_df"]
@@ -151,8 +166,12 @@ class FlattenedDataset:
                     **predictor_dfs,
                     **self.loaders_catalogue.get_all(),
                 }
-
-            arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
+                try:
+                    arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
+                except:
+                    # Error handling in _validate_processed_arg_dicts
+                    # to handle in bulk
+                    pass
 
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = None
@@ -200,16 +219,6 @@ class FlattenedDataset:
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
 
     def _validate_processed_arg_dicts(self, arg_dicts: list):
-        required_keys = [
-            "values_df",
-            "direction",
-            "interval_days",
-            "resolve_multiple",
-            "fallback",
-            "new_col_name",
-            "source_values_col_name",
-        ]
-
         warn = False
 
         for d in arg_dicts:
@@ -225,10 +234,6 @@ class FlattenedDataset:
 
             if not isinstance(d["interval_days"], (int, float)):
                 msg.warn(f"interval_days is neither an int nor a float in {d}")
-                warn = True
-
-            if not isinstance(d["resolve_multiple"], Callable):
-                msg.warn(f"resolve_multiple didn't resolve to a Callable in {d}")
                 warn = True
 
         if warn:
@@ -564,11 +569,13 @@ class FlattenedDataset:
         # Sort by timestamp_pred in case resolve_multiple needs dates
         df = df.sort_values(by=timestamp_col_name).groupby(pred_time_uuid_colname)
 
+        if isinstance(resolve_multiple, str):
+            resolve_multiple = resolve_fns.get(resolve_multiple)
+
         if isinstance(resolve_multiple, Callable):
             df = resolve_multiple(df).reset_index()
         else:
-            resolve_strategy = resolve_fns.get(resolve_multiple)
-            df = resolve_strategy(df).reset_index()
+            raise ValueError("resolve_multiple must be or resolve to a Callable")
 
         return df
 
