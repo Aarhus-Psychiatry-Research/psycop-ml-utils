@@ -125,6 +125,8 @@ class FlattenedDataset:
 
         # Replace strings with objects as relevant
         for arg_dict in predictors:
+
+            #
             if (
                 resolve_multiple_fns is not None
                 and arg_dict["resolve_multiple"] in resolve_multiple_fns
@@ -169,6 +171,9 @@ class FlattenedDataset:
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys)
             )
 
+        # Validate dicts before starting pool, saves time if errors!
+        self._validate_processed_arg_dicts(processed_arg_dicts)
+
         pool = Pool(self.n_workers)
 
         flattened_predictor_dfs = pool.map(
@@ -193,6 +198,47 @@ class FlattenedDataset:
         )
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
+
+    def _validate_processed_arg_dicts(self, arg_dicts: list):
+        required_keys = [
+            "values_df",
+            "direction",
+            "interval_days",
+            "resolve_multiple",
+            "fallback",
+            "new_col_name",
+            "source_values_col_name",
+        ]
+
+        warn = False
+
+        for d in arg_dicts:
+            if not isinstance(d["values_df"], (DataFrame, Callable)):
+                msg.warn(
+                    f"values_df resolves to neither a Callable nor a DataFrame in {d}"
+                )
+                warn = True
+
+            if not (d["direction"] == "ahead" or d["direction"] == "behind"):
+                msg.warn(f"direction is neither ahead or behind in {d}")
+                warn = True
+
+            if not isinstance(d["interval_days"], (int, float)):
+                msg.warn(f"interval_days is neither an int nor a float in {d}")
+                warn = True
+
+            if not isinstance(d["resolve_multiple"], Callable):
+                msg.warn(f"resolve_multiple didn't resolve to a Callable in {d}")
+                warn = True
+
+            if not isinstance(d["fallback"], Callable):
+                msg.warn(f"resolve_multiple didn't resolve to a Callable in {d}")
+                warn = True
+
+        if warn:
+            raise ValueError(
+                "Errors in argument dictionaries, didn't generate any features."
+            )
 
     def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
         """Wrap flatten_temporal_values_to_df with kwargs for multithreading pool.
@@ -392,7 +438,7 @@ class FlattenedDataset:
         direction: str,
         interval_days: float,
         resolve_multiple: Union[Callable, str],
-        fallback: float,
+        fallback: Union[float, str],
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
@@ -409,7 +455,7 @@ class FlattenedDataset:
             resolve_multiple (Union[Callable, str]): How to handle multiple values within interval_days. Takes either
                 i) a function that takes a list as an argument and returns a float, or
                 ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-            fallback (List[str]): What to do if no value within the lookahead.
+            fallback (Union[float, str]): Which value to put if no value within the lookahead. "NaN" for Pandas NA.
             id_col_name (str): Name of id_column in prediction_times_with_uuid_df and values_df.
                 Required because this is a static method.
             timestamp_col_name (str): Name of timestamp column in prediction_times_with_uuid_df and values_df.
