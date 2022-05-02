@@ -48,8 +48,8 @@ def test_generate_two_features_from_dict():
     )
 
     flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictor_list=predictor_list,
-        predictor_dfs_dict={"event_times_df": event_times_df},
+        predictors=predictor_list,
+        predictor_dfs={"event_times_df": event_times_df},
     )
 
     assert flattened_dataset.df.equals(expected_df)
@@ -123,13 +123,13 @@ def test_output_independent_of_order_of_input():
     predictor_df = str_to_df(predictor_str)
 
     flattened_dataset1.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictor_list=predictor_list,
-        predictor_dfs_dict={"predictor_df": predictor_df},
+        predictors=predictor_list,
+        predictor_dfs={"predictor_df": predictor_df},
     )
 
     flattened_dataset2.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictor_list=predictor_list2,
-        predictor_dfs_dict={"predictor_df": predictor_df},
+        predictors=predictor_list2,
+        predictor_dfs={"predictor_df": predictor_df},
     )
 
     # We don't care about indeces. Sort to match the ordering.
@@ -179,7 +179,7 @@ def test_add_df_from_catalogue():
     )
 
     flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictor_list=predictor_list,
+        predictors=predictor_list,
     )
 
     assert flattened_dataset.df.equals(expected_df)

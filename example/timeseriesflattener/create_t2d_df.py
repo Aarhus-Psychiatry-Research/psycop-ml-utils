@@ -39,7 +39,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictor_list=PREDICTOR_LIST,
+        predictors=PREDICTOR_LIST,
     )
 
     end_time = time.time()
