@@ -231,10 +231,6 @@ class FlattenedDataset:
                 msg.warn(f"resolve_multiple didn't resolve to a Callable in {d}")
                 warn = True
 
-            if not isinstance(d["fallback"], Callable):
-                msg.warn(f"resolve_multiple didn't resolve to a Callable in {d}")
-                warn = True
-
         if warn:
             raise ValueError(
                 "Errors in argument dictionaries, didn't generate any features."
