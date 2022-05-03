@@ -1,5 +1,6 @@
 import catalogue
-from pandas import DataFrame
+from pandas import DataFrame, Series
+from scipy import stats
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
 
@@ -53,3 +54,7 @@ def get_sum_in_group(grouped_df: DataFrame) -> DataFrame:
 @resolve_fns.register("count")
 def get_count_in_group(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.count()
+
+@resolve_fns.register("slope")
+def get_slope_in_group(grouped_df: DataFrame) -> DataFrame:
+    return grouped_df.apply(lambda x: Series({'val': stats.linregress(x.val, x.val)[0]}))
