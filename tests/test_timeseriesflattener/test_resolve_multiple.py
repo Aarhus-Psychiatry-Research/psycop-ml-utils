@@ -155,6 +155,7 @@ def test_resolve_multiple_count():
         expected_flattened_values=[2],
     )
 
+
 def test_resolve_multiple_slope():
     prediction_times_str = """dw_ek_borger,timestamp,
                             1,2021-12-31 00:00:00
