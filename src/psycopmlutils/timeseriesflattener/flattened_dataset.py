@@ -100,7 +100,7 @@ class FlattenedDataset:
             >>>     {
             >>>         "predictor_df": "df_name",
             >>>         "lookbehind_days": 1,
-            >>>         resolve_multiple: "resolve_multiple_strat_name",
+            >>>         "resolve_multiple": "resolve_multiple_strat_name",
             >>>         "fallback": 0,
             >>>         "source_values_col_name": "val",
             >>>     },
