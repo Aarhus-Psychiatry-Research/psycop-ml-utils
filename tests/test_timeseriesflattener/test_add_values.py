@@ -107,7 +107,6 @@ def test_event_before_prediction():
         lookahead_days=2,
         resolve_multiple="max",
         expected_flattened_values=[0],
-        is_fallback_prop_warning_threshold=None,
     )
 
 
@@ -149,7 +148,6 @@ def test_citizen_without_outcome():
         resolve_multiple="max",
         fallback=0,
         expected_flattened_values=[0],
-        is_fallback_prop_warning_threshold=None,
     )
 
 
