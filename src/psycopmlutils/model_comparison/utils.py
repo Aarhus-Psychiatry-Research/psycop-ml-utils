@@ -1,21 +1,10 @@
 import ast
+from multiprocessing.sharedctypes import Value
 
-from typing import Callable, List
+from typing import List, Optional
 import pandas as pd
 
 import numpy as np
-
-
-def parse_column_as_list(df: pd.DataFrame, col: str) -> pd.Series:
-    """Correctly parse a column as list
-    Args:
-        df (pd.DataFrame):
-        col (str): Column to parse
-
-    Returns:
-        pd.Series: the column parsed as a list
-    """
-    return df[col].apply(ast.literal_eval)
 
 
 def aggregate_predictions(df: pd.DataFrame, id_col: str):
@@ -40,6 +29,33 @@ def aggregate_predictions(df: pd.DataFrame, id_col: str):
 
 def idx_to_class(idx: List[int], mapping: dict):
     return [mapping[id] for id in idx]
+
+
+def get_metadata_cols(df: pd.DataFrame, cols: Optional[List[str]]) -> pd.DataFrame:
+    """Extracts model metadata and returns as a single row dataframe.
+
+    Args:
+        df (pd.DataFrame): Dataframe with predictions and metadata.
+        cols (Optional[List[str]]): Which columns contain metadata. 
+            The columns should only contain a single value.
+
+    Raises:
+        ValueError: If a metadata col contains more than a single unique value.
+
+    Returns:
+        pd.DataFrame: 1 row dataframe with metadata
+    """
+    if not cols:
+        return df
+    metadata = {}
+    all_columns = df.columns
+    for col in cols:
+        if col in all_columns:
+            val = df[col].unique()
+            if len(val) > 1:
+                raise ValueError(f"The column '{col}' contains more than one unique value.")
+            metadata[col] = val
+    return pd.DataFrame.from_records([metadata])
 
 
 if __name__ == "__main__":

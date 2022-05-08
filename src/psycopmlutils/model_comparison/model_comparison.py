@@ -17,9 +17,9 @@ from sklearn.metrics import (
 import numpy as np
 
 from psycopmlutils.model_comparison.utils import (
-    parse_column_as_list,
     aggregate_predictions,
     idx_to_class,
+    get_metadata_cols,
 )
 
 """Expect input with columns
@@ -29,7 +29,10 @@ label,scores,model_name,[optional_grouping_columns]
 
 class ModelComparison:
     def __init__(
-        self, id_col: Optional[str] = None, score_mapping: Optional[dict] = None
+        self,
+        id_col: Optional[str] = None,
+        score_mapping: Optional[dict] = None,
+        metadata_cols: Optional[List[str]] = None,
     ):
         """_summary_
 
@@ -37,12 +40,15 @@ class ModelComparison:
             id_col (Optional[str]): id column in case of multiple predictions.
             score_mapping (Optional[dict]): Mapping from scores index to group (should match label). E.g. if scores [0.3, 0.6, 0.1]
                 score_mapping={0:"control", 1:"depression", 2:"schizophrenia}. Not needed for binary models.
+            metadata_cols (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
+                Each column should only contain 1 unique value. E.g. model_name, modality..
         """
-
+        self.id_col = id_col
         self.score_mapping = score_mapping
+        self.metadata_cols = metadata_cols
 
-    def load_data_from_csv(self, path: Union[str, Path]):
-        df = pd.read_csv(path)
+    def load_data_from_json(self, path: Union[str, Path]):
+        df = pd.read_json(path, orient="records", lines=True)
 
         performance = self._evaluate_single_model(df, aggregate_by_id=False)
         performance["level"] = "overall"
@@ -51,6 +57,11 @@ class ModelComparison:
             performance_by_id = self._evaluate_single_model(df, aggregate_by_id=True)
             performance_by_id["level"] = "id"
             performance = pd.concat([performance, performance_by_id])
+
+        if self.metadata_cols:
+            metadata = get_metadata_cols(df, self.metadata_cols)
+            performance = pd.concat([performance, metadata], axis=0)
+        # handle the concatenation as metadata only has 1 row
         return performance
 
     def load_data_from_folder(self, path: Union[str, Path], pattern: str = "*.csv"):
@@ -60,10 +71,6 @@ class ModelComparison:
         pass
 
     def _evaluate_single_model(self, df: pd.DataFrame, aggregate_by_id: bool):
-        # if there is a mapping and scores is not a float, parse the column as a lsit
-        if self.score_mapping and df["scores"].dtype != "float":
-            df["scores"] = parse_column_as_list(df, "scores")
-
         if aggregate_by_id:
             df = aggregate_predictions(df, self.id_col)
 
@@ -144,10 +151,10 @@ class ModelComparison:
 
 if __name__ == "__main__":
 
-    example_data = "/Users/au554730/Desktop/Projects/psycop-ml-utils/tests/test_model_comparison/agg_mfccs_eval.csv"
-    df = pd.read_csv(example_data)
+    example_data = "/Users/au554730/Desktop/Projects/psycop-ml-utils/tests/test_model_comparison/agg_mfccs_eval.jsonl"
+#    df = pd.read_csv(example_data)
 
-    df = df[["label", "scores", "id"]]
+ #   df = df[["label", "scores", "id"]]
     scores_mapping = {0: "TD", 1: "DEPR", 2: "SCHZ", 3: "ASD"}
 
     df = pd.DataFrame(
@@ -163,9 +170,9 @@ if __name__ == "__main__":
         }
     )
 
-    model_comparer = ModelComparison(score_mapping=scores_mapping)
+    model_comparer = ModelComparison(score_mapping=scores_mapping, id_col="id")
 
-    model_comparer.load_data_from_csv(example_data)
+    res = model_comparer.load_data_from_json(example_data)
 
     x = model_comparer.compute_metrics(df["label"], df["prediction"])
     print("2")
