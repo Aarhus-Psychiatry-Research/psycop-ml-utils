@@ -55,6 +55,9 @@ def get_sum_in_group(grouped_df: DataFrame) -> DataFrame:
 def get_count_in_group(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.count()
 
+
 @resolve_fns.register("slope")
 def get_slope_in_group(grouped_df: DataFrame) -> DataFrame:
-    return grouped_df.apply(lambda x: Series({'val': stats.linregress(x.val, x.val)[0]}))
+    return grouped_df.apply(
+        lambda x: Series({"val": stats.linregress(x.val, x.val)[0]})
+    )
