@@ -31,12 +31,12 @@ def idx_to_class(idx: List[int], mapping: dict):
     return [mapping[id] for id in idx]
 
 
-def get_metadata_cols(df: pd.DataFrame, cols: Optional[List[str]]) -> pd.DataFrame:
-    """Extracts model metadata and returns as a single row dataframe.
+def get_metadata_cols(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
+    """Extracts model metadata and generates a dataframe with same m
 
     Args:
         df (pd.DataFrame): Dataframe with predictions and metadata.
-        cols (Optional[List[str]]): Which columns contain metadata. 
+        cols (List[str]): Which columns contain metadata.
             The columns should only contain a single value.
 
     Raises:
@@ -45,17 +45,38 @@ def get_metadata_cols(df: pd.DataFrame, cols: Optional[List[str]]) -> pd.DataFra
     Returns:
         pd.DataFrame: 1 row dataframe with metadata
     """
-    if not cols:
-        return df
+
     metadata = {}
     all_columns = df.columns
     for col in cols:
         if col in all_columns:
             val = df[col].unique()
             if len(val) > 1:
-                raise ValueError(f"The column '{col}' contains more than one unique value.")
-            metadata[col] = val
+                raise ValueError(
+                    f"The column '{col}' contains more than one unique value."
+                )
+            metadata[col] = val[0]
     return pd.DataFrame.from_records([metadata])
+
+
+def add_metadata_cols(df: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
+    """Adds 1 row dataframe with metadata to the long format performance dataframe
+
+    Args:
+        df (pd.DataFrame): Dataframe to add metadata to.
+        metadata (pd.Dataframe): 1 row dataframe with metadata
+
+    Returns:
+        pd.DataFrame: Dataframe with added metadata
+    """
+    nrows = df.shape[0]
+
+    meta_dict = {}
+    for col in metadata.columns:
+        meta_dict[col] = [metadata[col][0]] * nrows
+    meta_df = pd.DataFrame.from_records(meta_dict)
+
+    return df.reset_index(drop=True).join(meta_df)
 
 
 if __name__ == "__main__":
