@@ -1,7 +1,7 @@
 import ast
 from multiprocessing.sharedctypes import Value
 
-from typing import List, Optional
+from typing import List, Optional, Union
 import pandas as pd
 
 import numpy as np
@@ -78,6 +78,20 @@ def add_metadata_cols(df: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
 
     return df.reset_index(drop=True).join(meta_df)
 
+
+def string_to_list(str_or_list: Union[List, str]):
+    if isinstance(str_or_list, str):
+        return [str_or_list]
+    elif isinstance(str_or_list, list):
+        return str_or_list
+    else:
+        raise ValueError(f"{str_or_list} is neither a string nor list")
+
+
+def subset_df_from_dict(df: pd.DataFrame, subset_by: dict):
+    for col, value in subset_by.items():
+        df = df[df[col] == value]
+    return df
 
 if __name__ == "__main__":
     df = pd.DataFrame(
