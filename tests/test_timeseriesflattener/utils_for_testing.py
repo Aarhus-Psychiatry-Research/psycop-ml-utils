@@ -43,6 +43,7 @@ def assert_flattened_outcome_as_expected(
     values_colname: str = "value",
     fallback: List = np.NaN,
     is_fallback_prop_warning_threshold: float = 0.9,
+    low_variance_threshold: float = None,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -81,6 +82,7 @@ def assert_flattened_outcome_as_expected(
         values_colname=values_colname,
         fallback=fallback,
         is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+        low_variance_threshold=low_variance_threshold,
     )
 
 
@@ -142,6 +144,7 @@ def assert_flattened_values_as_expected(
     values_colname: str = "value",
     fallback: List = 0,
     is_fallback_prop_warning_threshold: float = 0.9,
+    low_variance_threshold: float = None,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -155,8 +158,10 @@ def assert_flattened_values_as_expected(
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
         is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-                prediction_times that receive fallback is larger than threshold.
-                Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            prediction_times that receive fallback is larger than threshold.
+            Indicates unlikely to be a learnable feature. Defaults to 0.9.
+        low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
+            Low valuyue indicates high risk of overfitting. Defaults to 0.01.
     Raises:
         ValueError: _description_
     """
@@ -181,6 +186,7 @@ def assert_flattened_values_as_expected(
         dataset.add_temporal_outcome(
             outcome_df=df_event_times,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
             lookahead_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
