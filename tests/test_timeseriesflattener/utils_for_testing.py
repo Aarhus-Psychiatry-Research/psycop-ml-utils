@@ -1,5 +1,6 @@
 from typing import Callable, List, Union
 
+import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
@@ -40,7 +41,7 @@ def assert_flattened_outcome_as_expected(
     expected_flattened_values: List,
     resolve_multiple: Union[Callable, str],
     values_colname: str = "value",
-    fallback: List = 0,
+    fallback: List = np.NaN,
     is_fallback_prop_warning_threshold: float = 0.9,
 ):
     """Run tests from string representations of dataframes.
@@ -90,7 +91,7 @@ def assert_flattened_predictor_as_expected(
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
     values_colname: str = "value",
-    fallback: List = 0,
+    fallback: List = np.NaN,
 ):
     """Run tests from string representations of dataframes.
     Args:

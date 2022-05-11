@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
@@ -106,7 +107,7 @@ def test_event_before_prediction():
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
         resolve_multiple="max",
-        expected_flattened_values=[0],
+        expected_flattened_values=[np.NaN],
         is_fallback_prop_warning_threshold=None,
     )
 
