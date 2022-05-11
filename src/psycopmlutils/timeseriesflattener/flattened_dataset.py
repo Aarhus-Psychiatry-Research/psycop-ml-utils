@@ -594,7 +594,7 @@ class FlattenedDataset:
             how="left",
             on=pred_time_uuid_colname,
             suffixes=("", ""),
-        ).drop(["timestamp_pred", "timestamp_val"], axis=1)
+        ).drop(["timestamp_pred"], axis=1)
 
     @staticmethod
     def resolve_multiple_values_within_interval_days(

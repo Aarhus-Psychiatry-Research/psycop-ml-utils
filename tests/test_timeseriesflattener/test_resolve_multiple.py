@@ -159,6 +159,7 @@ def test_resolve_multiple_count():
 def test_resolve_multiple_slope():
     prediction_times_str = """dw_ek_borger,timestamp,
                             1,2021-12-31 00:00:00
+                            2,2021-12-31 00:00:00
                             """
     event_times_str = """dw_ek_borger,timestamp,val,
                         1,2022-01-01 00:00:01, 1
