@@ -329,6 +329,7 @@ class FlattenedDataset:
         outcome_df_values_col_name: str = "value",
         new_col_name: str = None,
         is_fallback_prop_warning_threshold: float = 0.9,
+        low_variance_threshold: float = 0.01,
     ):
         """Add an outcome-column to the dataset.
 
@@ -342,6 +343,8 @@ class FlattenedDataset:
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
+                Low valuyue indicates high risk of overfitting. Defaults to 0.01.
         """
         self.add_temporal_col_to_flattened_dataset(
             values_df=outcome_df,
@@ -352,6 +355,7 @@ class FlattenedDataset:
             new_col_name=new_col_name,
             source_values_col_name=outcome_df_values_col_name,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
         )
 
     def add_temporal_predictor(
@@ -393,6 +397,7 @@ class FlattenedDataset:
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
         is_fallback_prop_warning_threshold: float = 0.9,
+        low_variance_threshold: float = 0.01,
     ):
         """Add a column to the dataset (either predictor or outcome depending on the value of "direction").
 
@@ -407,6 +412,8 @@ class FlattenedDataset:
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
+                Low valuyue indicates high risk of overfitting. Defaults to 0.01.
         """
         df = FlattenedDataset.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
@@ -421,6 +428,7 @@ class FlattenedDataset:
             new_col_name=new_col_name,
             source_values_col_name=source_values_col_name,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
         )
 
         self.assign_val_df(df)
@@ -481,6 +489,8 @@ class FlattenedDataset:
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
+                Low valuyue indicates high risk of overfitting. Defaults to 0.01.
 
         Returns:
             DataFrame:
