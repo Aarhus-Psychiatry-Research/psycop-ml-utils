@@ -1,9 +1,8 @@
 from multiprocessing import Pool
-from multiprocessing.sharedctypes import Value
 from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
-from catalogue import Registry
+from catalogue import Registry  # noqa
 from pandas import DataFrame
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
 from psycopmlutils.utils import data_loaders
@@ -80,8 +79,8 @@ class FlattenedDataset:
     def add_temporal_predictors_from_list_of_argument_dictionaries(
         self,
         predictors: List[Dict[str, str]],
-        predictor_dfs: Dict[str, DataFrame],
-        resolve_multiple_fns: Optional[Dict[str, Callable]],
+        predictor_dfs: Dict[str, DataFrame] = None,
+        resolve_multiple_fns: Optional[Dict[str, Callable]] = None,
     ):
         """Add predictors to the flattened dataframe from a list.
 
@@ -93,7 +92,7 @@ class FlattenedDataset:
                 Optionally, you can map the string to a dataframe in predictor_dfs.
             resolve_multiple_fns (Union[str, Callable], optional): If wanting to use manually defined resolve_multiple strategies
                 I.e. ones that aren't in the resolve_fns catalogue require a dictionary mapping the
-                resolve_multiple string to a Callable object.
+                resolve_multiple string to a Callable object. Defaults to None.
 
         Example:
             >>> predictor_list = [
@@ -107,7 +106,7 @@ class FlattenedDataset:
             >>>     {
             >>>         "predictor_df": "df_name",
             >>>         "lookbehind_days": 1,
-            >>>         "resolve_multiple": "min",
+            >>>         "resolve_multiple_fns": "min",
             >>>         "fallback": 0,
             >>>         "source_values_col_name": "val",
             >>>     }
@@ -125,13 +124,30 @@ class FlattenedDataset:
 
         # Replace strings with objects as relevant
         for arg_dict in predictors:
-            if (
-                resolve_multiple_fns is not None
-                and arg_dict["resolve_multiple"] in resolve_multiple_fns
-            ):
-                arg_dict["resolve_multiple"] = resolve_multiple_fns[
-                    arg_dict["resolve_multiple"]
-                ]
+
+            # If resolve_multiple is a string, see if possible to resolve to a Callable
+            # Actual resolving is handled in resolve_multiple_values_within_interval_days
+            # To preserve str for column name generation
+            if isinstance(arg_dict["resolve_multiple"], str):
+                # Try from resolve_multiple_fns
+                resolved_func = False
+                if resolve_multiple_fns is not None:
+                    try:
+                        resolved_func = resolve_multiple_fns.get(
+                            [arg_dict["resolve_multiple"]]
+                        )
+                    except:
+                        pass
+
+                try:
+                    resolved_func = resolve_fns.get(arg_dict["resolve_multiple"])
+                except:
+                    pass
+
+                if not isinstance(resolved_func, Callable):
+                    raise ValueError(
+                        "resolve_function neither is nor resolved to a Callable"
+                    )
 
             # Rename arguments for create_flattened_df_for_val
             arg_dict["values_df"] = arg_dict["predictor_df"]
@@ -140,6 +156,12 @@ class FlattenedDataset:
             arg_dict["id_col_name"] = self.id_col_name
             arg_dict["timestamp_col_name"] = self.timestamp_col_name
             arg_dict["pred_time_uuid_col_name"] = self.pred_time_uuid_col_name
+
+            if "new_col_name" not in arg_dict.keys():
+                arg_dict["new_col_name"] = arg_dict["values_df"]
+
+            if "source_values_col_name" not in arg_dict.keys():
+                arg_dict["source_values_col_name"] = "value"
 
             # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registry
             if predictor_dfs is None:
@@ -150,10 +172,13 @@ class FlattenedDataset:
                     **self.loaders_catalogue.get_all(),
                 }
 
-            arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
-
-            if "new_col_name" not in arg_dict.keys():
-                arg_dict["new_col_name"] = None
+            # Resolve arg_dict if string
+            try:
+                arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
+            except:
+                # Error handling in _validate_processed_arg_dicts
+                # to handle in bulk
+                pass
 
             required_keys = [
                 "values_df",
@@ -168,6 +193,9 @@ class FlattenedDataset:
             processed_arg_dicts.append(
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys)
             )
+
+        # Validate dicts before starting pool, saves time if errors!
+        self._validate_processed_arg_dicts(processed_arg_dicts)
 
         pool = Pool(self.n_workers)
 
@@ -193,6 +221,29 @@ class FlattenedDataset:
         )
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
+
+    def _validate_processed_arg_dicts(self, arg_dicts: list):
+        warn = False
+
+        for d in arg_dicts:
+            if not isinstance(d["values_df"], (DataFrame, Callable)):
+                msg.warn(
+                    f"values_df resolves to neither a Callable nor a DataFrame in {d}"
+                )
+                warn = True
+
+            if not (d["direction"] == "ahead" or d["direction"] == "behind"):
+                msg.warn(f"direction is neither ahead or behind in {d}")
+                warn = True
+
+            if not isinstance(d["interval_days"], (int, float)):
+                msg.warn(f"interval_days is neither an int nor a float in {d}")
+                warn = True
+
+        if warn:
+            raise ValueError(
+                "Errors in argument dictionaries, didn't generate any features."
+            )
 
     def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
         """Wrap flatten_temporal_values_to_df with kwargs for multithreading pool.
@@ -269,8 +320,6 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
 
-        msg.good(f"Assigned {predictor_df.columns[1]} to instance")
-
     def add_temporal_outcome(
         self,
         outcome_df: DataFrame,
@@ -279,6 +328,7 @@ class FlattenedDataset:
         fallback: float,
         outcome_df_values_col_name: str = "value",
         new_col_name: str = None,
+        is_fallback_prop_warning_threshold: float = 0.9,
     ):
         """Add an outcome-column to the dataset.
 
@@ -289,6 +339,9 @@ class FlattenedDataset:
             fallback (float): What to do if no value within the lookahead.
             outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "value".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
+                prediction_times that receive fallback is larger than threshold.
+                Indicates unlikely to be a learnable feature. Defaults to 0.9.
         """
         self.add_temporal_col_to_flattened_dataset(
             values_df=outcome_df,
@@ -298,6 +351,7 @@ class FlattenedDataset:
             fallback=fallback,
             new_col_name=new_col_name,
             source_values_col_name=outcome_df_values_col_name,
+            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
         )
 
     def add_temporal_predictor(
@@ -338,6 +392,7 @@ class FlattenedDataset:
         fallback: float,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
+        is_fallback_prop_warning_threshold: float = 0.9,
     ):
         """Add a column to the dataset (either predictor or outcome depending on the value of "direction").
 
@@ -349,6 +404,9 @@ class FlattenedDataset:
             fallback (List[str]): What to do if no value within the lookahead.
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
+            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
+                prediction_times that receive fallback is larger than threshold.
+                Indicates unlikely to be a learnable feature. Defaults to 0.9.
         """
         df = FlattenedDataset.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
@@ -362,6 +420,7 @@ class FlattenedDataset:
             pred_time_uuid_col_name=self.pred_time_uuid_col_name,
             new_col_name=new_col_name,
             source_values_col_name=source_values_col_name,
+            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
         )
 
         self.assign_val_df(df)
@@ -383,8 +442,6 @@ class FlattenedDataset:
 
         self.df = self.df_aggregating.drop(self.pred_time_uuid_col_name, axis=1).copy()
 
-        msg.good(f"Assigned {df.columns[1]} to instance")
-
     @staticmethod
     def flatten_temporal_values_to_df(
         prediction_times_with_uuid_df: DataFrame,
@@ -392,13 +449,16 @@ class FlattenedDataset:
         direction: str,
         interval_days: float,
         resolve_multiple: Union[Callable, str],
-        fallback: float,
+        fallback: Union[float, str],
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
         new_col_name: Optional[str],
         source_values_col_name: str = "value",
+        is_fallback_prop_warning_threshold: float = 0.9,
+        low_variance_threshold: float = 0.01,
     ) -> DataFrame:
+
         """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
 
         Args:
@@ -409,7 +469,7 @@ class FlattenedDataset:
             resolve_multiple (Union[Callable, str]): How to handle multiple values within interval_days. Takes either
                 i) a function that takes a list as an argument and returns a float, or
                 ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-            fallback (List[str]): What to do if no value within the lookahead.
+            fallback (Union[float, str]): Which value to put if no value within the lookahead. "NaN" for Pandas NA.
             id_col_name (str): Name of id_column in prediction_times_with_uuid_df and values_df.
                 Required because this is a static method.
             timestamp_col_name (str): Name of timestamp column in prediction_times_with_uuid_df and values_df.
@@ -418,6 +478,9 @@ class FlattenedDataset:
                 Required because this is a static method.
             new_col_name (Optional[str], optional): Name of new column in returned dataframe. .
             source_values_col_name (str, optional): Name of column containing values in values_df. Defaults to "value".
+            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
+                prediction_times that receive fallback is larger than threshold.
+                Indicates unlikely to be a learnable feature. Defaults to 0.9.
 
         Returns:
             DataFrame:
@@ -452,8 +515,6 @@ class FlattenedDataset:
             suffixes=("_pred", "_val"),
         ).drop("dw_ek_borger", axis=1)
 
-        msg.info(f"Flattening dataframe for {full_col_str}")
-
         # Drop prediction times without event times within interval days
         df = FlattenedDataset.drop_records_outside_interval_days(
             df,
@@ -476,10 +537,42 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         )
 
-        df.rename({"val": full_col_str}, axis=1, inplace=True)
+        df.rename({"value": full_col_str}, axis=1, inplace=True)
 
-        msg.good(f"Returning flattened dataframe with {full_col_str}")
-        return df[[pred_time_uuid_col_name, full_col_str]]
+        do_return_col = True
+
+        if direction is "ahead":
+            if is_fallback_prop_warning_threshold is not None:
+                prop_of_values_that_are_fallback = (
+                    df[df[full_col_str] == fallback].shape[0] / df.shape[0]
+                )
+
+                if (
+                    prop_of_values_that_are_fallback
+                    > is_fallback_prop_warning_threshold
+                ):
+                    msg.warn(
+                        f"""{full_col_str}: Removed since {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None."""
+                    )
+
+                    do_return_col = False
+
+            if low_variance_threshold is not None:
+                variance_as_fraction_of_mean = (
+                    df[full_col_str].var() / df[full_col_str].mean()
+                )
+                if variance_as_fraction_of_mean < low_variance_threshold:
+                    msg.warn(
+                        f"""{full_col_str}: Removed since variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None."""
+                    )
+
+                    do_return_col = False
+
+        if do_return_col:
+            msg.good(f"Returning flattened dataframe with {full_col_str}")
+            return df[[pred_time_uuid_col_name, full_col_str]]
+        else:
+            return df[pred_time_uuid_col_name]
 
     @staticmethod
     def add_back_prediction_times_without_value(
@@ -522,11 +615,13 @@ class FlattenedDataset:
         # Sort by timestamp_pred in case resolve_multiple needs dates
         df = df.sort_values(by=timestamp_col_name).groupby(pred_time_uuid_colname)
 
+        if isinstance(resolve_multiple, str):
+            resolve_multiple = resolve_fns.get(resolve_multiple)
+
         if isinstance(resolve_multiple, Callable):
             df = resolve_multiple(df).reset_index()
         else:
-            resolve_strategy = resolve_fns.get(resolve_multiple)
-            df = resolve_strategy(df).reset_index()
+            raise ValueError("resolve_multiple must be or resolve to a Callable")
 
         return df
 
