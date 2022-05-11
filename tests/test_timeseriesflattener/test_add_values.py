@@ -131,7 +131,7 @@ def test_multiple_citizens_outcome():
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
         resolve_multiple="max",
-        expected_flattened_values=[1, 0, 1, 0],
+        expected_flattened_values=[1, np.NaN, 1, np.NaN],
     )
 
 
@@ -233,4 +233,29 @@ def test_add_age_error():
         dataset.add_age(
             id_to_date_of_birth_mapping=str_to_df(static_predictor),
             date_of_birth_col_name="date_of_birth",
+        )
+
+
+def test_low_variance_threshold():
+    prediction_times_df_str = """dw_ek_borger,timestamp,
+                            1,2021-12-31 00:00:00
+                            1,2022-01-02 00:00:00
+                            5,2025-01-02 00:00:00
+                            5,2025-08-05 00:00:00
+                            """
+    outcome_df_str = """dw_ek_borger,timestamp,value,
+                        1,2021-12-31 00:00:01, 1.0
+                        1,2023-01-02 00:00:00, 1.0
+                        5,2025-01-03 00:00:00, 1.0
+                        5,2022-01-05 00:00:01, 1.0
+                        """
+
+    with pytest.raises(KeyError):
+        assert_flattened_outcome_as_expected(
+            prediction_times_df_str=prediction_times_df_str,
+            outcome_df_str=outcome_df_str,
+            lookahead_days=2,
+            resolve_multiple="max",
+            low_variance_threshold=0.01,
+            expected_flattened_values=[1, np.NaN, 1, np.NaN],
         )
