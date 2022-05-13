@@ -80,7 +80,7 @@ class ModelComparison:
             pd.Dataframe: Long format dataframe with aggreagted predictions.
         """
         path = Path(path)
-        dfs = [self.transform_data_from_file(p) for p in path.glob("*.jsonl")]
+        dfs = [self.transform_data_from_file(p) for p in path.glob(pattern)]
         return pd.concat(dfs)
 
     def transform_data_from_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
