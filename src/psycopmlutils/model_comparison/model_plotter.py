@@ -11,72 +11,39 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
 
-def aggrid_interactive_table(df: pd.DataFrame):
-    """Creates an st-aggrid interactive table based on a dataframe.
-
-    Args:
-        df (pd.DataFrame]): Source dataframe
-
-    Returns:
-        dict: The selected row
-    """
-    options = GridOptionsBuilder.from_dataframe(
-        df, enableRowGroup=True, enableValue=True, enablePivot=True
-    )
-
-    options.configure_side_bar()
-
-    options.configure_selection("multiple")
-    selection = AgGrid(
-        df,
-        enable_enterprise_modules=True,
-        gridOptions=options.build(),
-        theme="light",
-        update_mode=GridUpdateMode.MODEL_CHANGED,
-        allow_unsafe_jscode=True,
-    )
-
-    return selection
-
-
-def plot_scatter(
+def plotly_plotter(
     df: pd.DataFrame,
     x: str,
     y: str,
+    type: str,
     color: Optional[str] = None,
     facet_col: Optional[str] = None,
     facet_row: Optional[str] = None,
+    title: Optional[str] = None
 ):
-    fig = px.scatter(
+    if type == "scatter":
+        fig = px.scatter(
+            data_frame=df,
+            x=x,
+            y=y,
+            color=color,
+            facet_col=facet_col,
+            facet_row=facet_row,
+            title=title,
+        )
+    if type == "line":
+        fig = px.line(
         data_frame=df,
         x=x,
         y=y,
         color=color,
         facet_col=facet_col,
         facet_row=facet_row,
+        title=title,
     )
     fig.update_layout(legend=dict(orientation="h", y=-0.2))
     return fig
 
-
-def plot_line(
-    df: pd.DataFrame,
-    x: str,
-    y: str,
-    color: Optional[str] = None,
-    facet_col: Optional[str] = None,
-    facet_row: Optional[str] = None,
-):
-    fig = px.line(
-        data_frame=df,
-        x=x,
-        y=y,
-        color=color,
-        facet_col=facet_col,
-        facet_row=facet_row,
-    )
-    fig.update_layout(legend=dict(orientation="h", y=-0.2))
-    return fig
 
 
 class ModelPlotter:

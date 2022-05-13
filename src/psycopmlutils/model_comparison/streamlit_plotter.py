@@ -2,12 +2,7 @@ from numpy import False_
 import streamlit as st
 import pandas as pd
 from psycopmlutils.model_comparison.model_comparison import ModelComparison
-from psycopmlutils.model_comparison.model_plotter import (
-    ModelPlotter,
-    plot_scatter,
-    plot_line,
-    aggrid_interactive_table,
-)
+from psycopmlutils.model_comparison.model_plotter import ModelPlotter, plotly_plotter
 
 
 from typing import Optional
@@ -65,8 +60,6 @@ if uploaded_file is not None:
                 var, possible_vars, index=(len(possible_vars) - 1), key=f"{var}_select"
             )
 
-    plotting_funs = {None: None, "scatter": plot_scatter, "line": plot_line}
-
     st.subheader("Choose plot type")
     with st.expander("Suggestions for scatter plot"):
         st.write(
@@ -74,17 +67,33 @@ if uploaded_file is not None:
         )
     with st.expander("Suggestions for line plot"):
         st.write("class on x, value on y, color by model_name, facet_col by score_type")
-    chosen_plot = st.selectbox("Plot type", plotting_funs.keys())
+    plotting_funs = ["scatter", "line"]
+    chosen_plot = st.selectbox("Plot type", plotting_funs)
 
+    make_title = st.checkbox("Autogenerate title?")
+    if make_title:
+        score_types = " ".join(df_sub["score_type"].unique())
+        classes = " ".join(df_sub["class"].unique())
+        extra_cols = [
+            col
+            for col in metadata_cols
+            if col not in ["score_type", "class", "model_name"]
+        ]
+        extra_cols = {col: str(df_sub[col].unique().tolist()) for col in extra_cols}
+        title = f"{score_types} for {classes} with {extra_cols}"
+    else:
+        title = None
     if chosen_plot:
         st.plotly_chart(
-            plotting_funs[chosen_plot](
+            plotly_plotter(
                 df=df_sub,
+                type=chosen_plot,
                 x=buttons["x"],
                 y=buttons["y"],
                 color=buttons["color"],
                 facet_col=buttons["facet_col"],
                 facet_row=buttons["facet_row"],
+                title=title,
             ),
             use_container_width=True,
         )
