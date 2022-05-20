@@ -2,6 +2,7 @@ from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
+import datetime as dt
 from catalogue import Registry  # noqa
 from pandas import DataFrame
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
@@ -627,6 +628,9 @@ class FlattenedDataset:
         Returns:
             DataFrame: DataFrame with one row pr. prediction time.
         """
+        # Convert timestamp val to numeric that can be used for resolve_multiple functions
+        df["timestamp_val"] = df["timestamp_val"].map(dt.datetime.toordinal)
+
         # Sort by timestamp_pred in case resolve_multiple needs dates
         df = df.sort_values(by=timestamp_col_name).groupby(pred_time_uuid_colname)
 

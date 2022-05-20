@@ -162,13 +162,13 @@ def test_resolve_multiple_slope():
                             """
     event_times_str = """dw_ek_borger,timestamp,val,
                         1,2022-01-01 00:00:01, 1
-                        1,2022-01-01 00:00:02, 2
+                        1,2022-01-02 00:00:02, 2
                         """
 
     assert_flattened_outcome_as_expected(
         prediction_times_df_str=prediction_times_str,
         outcome_df_str=event_times_str,
         resolve_multiple="slope",
-        lookahead_days=2,
+        lookahead_days=4,
         expected_flattened_values=[1],
     )
