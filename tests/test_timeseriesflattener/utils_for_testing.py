@@ -54,6 +54,11 @@ def assert_flattened_outcome_as_expected(
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
         values_colname (str, optional): Column name for the new values. Defaults to "value".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+        is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
+            prediction_times that receive fallback is larger than threshold.
+            Indicates unlikely to be a learnable feature. Defaults to 0.9.
+        low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
+            Low valuyue indicates high risk of overfitting. Defaults to 0.01.
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
@@ -94,6 +99,8 @@ def assert_flattened_predictor_as_expected(
     expected_flattened_values: List,
     values_colname: str = "value",
     fallback: List = np.NaN,
+    is_fallback_prop_warning_threshold: float = 0.9,
+    low_variance_threshold: float = None,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -104,6 +111,11 @@ def assert_flattened_predictor_as_expected(
         expected_flattened_values (List): A list of the expected values in the value column of the flattened df
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+        is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
+            prediction_times that receive fallback is larger than threshold.
+            Indicates unlikely to be a learnable feature. Defaults to 0.9.
+        low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
+            Low valuyue indicates high risk of overfitting. Defaults to 0.01.
     Example:
         >>> prediction_times_df_str =  '''dw_ek_borger,timestamp,
         >>>                            1,2021-12-31 00:00:00
@@ -131,6 +143,8 @@ def assert_flattened_predictor_as_expected(
         expected_flattened_values=expected_flattened_values,
         values_colname=values_colname,
         fallback=fallback,
+        is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+        low_variance_threshold=low_variance_threshold,
     )
 
 
@@ -178,6 +192,8 @@ def assert_flattened_values_as_expected(
     if direction == "behind":
         dataset.add_temporal_predictor(
             predictor_df=df_event_times,
+            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
             lookbehind_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
