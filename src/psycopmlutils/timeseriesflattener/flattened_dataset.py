@@ -550,6 +550,8 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         ).fillna(fallback)
 
+        df["timestamp_val"].replace({fallback:pd.NaT}, inplace=True)
+
         df = FlattenedDataset.resolve_multiple_values_within_interval_days(
             resolve_multiple=resolve_multiple,
             df=df,

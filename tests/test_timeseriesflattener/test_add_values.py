@@ -27,6 +27,7 @@ def test_predictor_after_prediction_time():
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
         resolve_multiple="max",
+        is_fallback_prop_warning_threshold=1,
         expected_flattened_values=[-1],
         fallback=-1,
     )
