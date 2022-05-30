@@ -2,6 +2,7 @@ from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
+import datetime as dt
 from catalogue import Registry  # noqa
 from pandas import DataFrame
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
@@ -329,6 +330,7 @@ class FlattenedDataset:
         outcome_df_values_col_name: str = "value",
         new_col_name: str = None,
         is_fallback_prop_warning_threshold: float = 0.9,
+        low_variance_threshold: float = 0.01,
     ):
         """Add an outcome-column to the dataset.
 
@@ -342,6 +344,8 @@ class FlattenedDataset:
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError if variance / mean < low_variance_threshold
+                Low value indicates high risk of overfitting. Defaults to 0.01.
         """
         self.add_temporal_col_to_flattened_dataset(
             values_df=outcome_df,
@@ -352,6 +356,7 @@ class FlattenedDataset:
             new_col_name=new_col_name,
             source_values_col_name=outcome_df_values_col_name,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
         )
 
     def add_temporal_predictor(
@@ -362,6 +367,8 @@ class FlattenedDataset:
         fallback: float,
         source_values_col_name: str = "value",
         new_col_name: str = None,
+        is_fallback_prop_warning_threshold: float = 0.9,
+        low_variance_threshold: float = 0.01,
     ):
         """Add a column with predictor values to the flattened dataset (e.g. "average value of bloodsample within n days").
 
@@ -372,6 +379,11 @@ class FlattenedDataset:
             fallback (List[str]): What to do if no value within the lookahead.
             source_values_col_name (str): Column name for the predictor values in predictor_df, e.g. the patient's most recent blood-sample value. Defaults to "value".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
+                prediction_times that receive fallback is larger than threshold.
+                Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError if variance / mean < low_variance_threshold
+                Low value indicates high risk of overfitting. Defaults to 0.01.
         """
         self.add_temporal_col_to_flattened_dataset(
             values_df=predictor_df,
@@ -381,6 +393,8 @@ class FlattenedDataset:
             fallback=fallback,
             new_col_name=new_col_name,
             source_values_col_name=source_values_col_name,
+            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
         )
 
     def add_temporal_col_to_flattened_dataset(
@@ -393,6 +407,7 @@ class FlattenedDataset:
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
         is_fallback_prop_warning_threshold: float = 0.9,
+        low_variance_threshold: float = 0.01,
     ):
         """Add a column to the dataset (either predictor or outcome depending on the value of "direction").
 
@@ -407,6 +422,8 @@ class FlattenedDataset:
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError if variance / mean < low_variance_threshold
+                Low value indicates high risk of overfitting. Defaults to 0.01.
         """
         df = FlattenedDataset.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.pred_times_with_uuid,
@@ -421,6 +438,7 @@ class FlattenedDataset:
             new_col_name=new_col_name,
             source_values_col_name=source_values_col_name,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
+            low_variance_threshold=low_variance_threshold,
         )
 
         self.assign_val_df(df)
@@ -481,6 +499,8 @@ class FlattenedDataset:
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
+            low_variance_threshold (float, optional):  Triggers a ValueError if variance / mean < low_variance_threshold
+                Low value indicates high risk of overfitting. Defaults to 0.01.
 
         Returns:
             DataFrame:
@@ -530,6 +550,8 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         ).fillna(fallback)
 
+        df["timestamp_val"].replace({fallback: pd.NaT}, inplace=True)
+
         df = FlattenedDataset.resolve_multiple_values_within_interval_days(
             resolve_multiple=resolve_multiple,
             df=df,
@@ -541,32 +563,28 @@ class FlattenedDataset:
 
         do_return_col = True
 
-        if direction is "ahead":
-            if is_fallback_prop_warning_threshold is not None:
-                prop_of_values_that_are_fallback = (
-                    df[df[full_col_str] == fallback].shape[0] / df.shape[0]
+        if is_fallback_prop_warning_threshold is not None:
+            prop_of_values_that_are_fallback = (
+                df[df[full_col_str] == fallback].shape[0] / df.shape[0]
+            )
+
+            if prop_of_values_that_are_fallback > is_fallback_prop_warning_threshold:
+                msg.warn(
+                    f"""{full_col_str}: Removed since {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None."""
                 )
 
-                if (
-                    prop_of_values_that_are_fallback
-                    > is_fallback_prop_warning_threshold
-                ):
-                    msg.warn(
-                        f"""{full_col_str}: Removed since {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None."""
-                    )
+                do_return_col = False
 
-                    do_return_col = False
-
-            if low_variance_threshold is not None:
-                variance_as_fraction_of_mean = (
-                    df[full_col_str].var() / df[full_col_str].mean()
+        if low_variance_threshold is not None:
+            variance_as_fraction_of_mean = (
+                df[full_col_str].var() / df[full_col_str].mean()
+            )
+            if variance_as_fraction_of_mean < low_variance_threshold:
+                msg.warn(
+                    f"""{full_col_str}: Removed since variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None."""
                 )
-                if variance_as_fraction_of_mean < low_variance_threshold:
-                    msg.warn(
-                        f"""{full_col_str}: Removed since variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None."""
-                    )
 
-                    do_return_col = False
+                do_return_col = False
 
         if do_return_col:
             msg.good(f"Returning flattened dataframe with {full_col_str}")
@@ -594,7 +612,7 @@ class FlattenedDataset:
             how="left",
             on=pred_time_uuid_colname,
             suffixes=("", ""),
-        ).drop(["timestamp_pred", "timestamp_val"], axis=1)
+        ).drop(["timestamp_pred"], axis=1)
 
     @staticmethod
     def resolve_multiple_values_within_interval_days(
@@ -612,6 +630,9 @@ class FlattenedDataset:
         Returns:
             DataFrame: DataFrame with one row pr. prediction time.
         """
+        # Convert timestamp val to numeric that can be used for resolve_multiple functions
+        df["timestamp_val"] = df["timestamp_val"].map(dt.datetime.toordinal)
+
         # Sort by timestamp_pred in case resolve_multiple needs dates
         df = df.sort_values(by=timestamp_col_name).groupby(pred_time_uuid_colname)
 
