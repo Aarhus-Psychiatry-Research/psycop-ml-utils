@@ -1,17 +1,63 @@
-from typing import List, Union
+from typing import List, Union, TypeVar
 import pandas as pd
 
+
+from pandas import Series
 import numpy as np
 
 
-def aggregate_predictions(df: pd.DataFrame, id_col: str):
+SeriesListOfFloats = TypeVar("pandas.core.series.Series(List[float])")
+SeriesOfFloats = TypeVar("pandas.core.series.Series(float)")
+SeriesOfStr = TypeVar("pandas.core.series.Series(str)")
+SeriesOfInt = TypeVar("pandas.core.series.Series(int)")
+
+
+def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series:
+    """Converts a series of scores to probabilities. Assumes input scores to be
+    a list of floats of maximum length 2.
+
+    Args:
+        scores (Union[Series[List[float]], Series[float]]): Series containing output
+        from softmax from a binary classification or raw probabilities
+
+    Returns:
+        Series: Probability of class 1
+    """
+
+    if scores.dtype == "float":
+        return scores
+    else:
+        return scores.apply(lambda x: x[1])
+
+
+def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict) -> Series:
+    """Converts label to int mapping. Only makes sense for binary models. If
+    already int will return as is.
+
+    Args:
+        labels (Union[Series[str], Series[int]]): Series containing labels.
+        Either as string (e.g. ASD) or as int.
+        label2id (dict): Dictionary mapping the labels to 0 and 1
+
+    Returns:
+        Series: _description_
+    """
+    if labels.dtype == "int":
+        return labels
+    else:
+        return labels.apply(lambda x: label2id[x])
+
+
+def aggregate_predictions(
+    df: pd.DataFrame, id_col: str, scores_col: str, label_col: str
+):
     """Calculates the mean prediction by a grouping col (id_col).
-    Assumes that df has the columns 'scores': List[float] and
-    'label' : str
 
     Args:
         df (pd.DataFrame): Dataframe with 'scores', 'label' and id_col columns
         id_col (str): Column to group by
+        scores_col (str): column containing scores
+        label_col (str): column containing labels
     """
 
     def mean_scores(x: pd.Series):
@@ -21,7 +67,7 @@ def aggregate_predictions(df: pd.DataFrame, id_col: str):
     def get_first_entry(x: pd.Series):
         return x.unique()[0]
 
-    return df.groupby(id_col).agg({"scores": mean_scores, "label": get_first_entry})
+    return df.groupby(id_col).agg({scores_col: mean_scores, label_col: get_first_entry})
 
 
 def idx_to_class(idx: List[int], mapping: dict):

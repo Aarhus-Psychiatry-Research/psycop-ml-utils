@@ -1,5 +1,6 @@
 """"Tools for model comparison"""
 
+from unittest.util import unorderable_list_difference
 import pandas as pd
 
 from typing import Union, List, Optional
@@ -20,17 +21,21 @@ import numpy as np
 from psycopmlutils.model_comparison.utils import (
     add_metadata_cols,
     aggregate_predictions,
+    labels_to_int,
     idx_to_class,
     get_metadata_cols,
     add_metadata_cols,
+    scores_to_probs,
 )
 
 
 class ModelComparison:
     def __init__(
         self,
+        label_col: str = "label",
+        scores_col: str = "scores",
         id_col: Optional[str] = None,
-        score_mapping: Optional[dict] = None,
+        id2label: Optional[dict] = None,
         metadata_cols: Optional[List[str]] = None,
     ):
         """Methods for loading and transforming dataframes with 1 row per prediction into aggregated results.
@@ -43,8 +48,10 @@ class ModelComparison:
 
         Args:
             id_col (Optional[str]): id column in case of multiple predictions.
-            score_mapping (Optional[dict]): Mapping from scores index to group (should match label). E.g. if scores [0.3, 0.6, 0.1]
-                score_mapping={0:"control", 1:"depression", 2:"schizophrenia}. Not needed for binary models.
+            label_col (str): column containing ground truth label
+            scores (str): column containing softmaxed output or float of probabilities
+            id2label (Optional[dict]): Mapping from scores index to group (should match label). E.g. if scores [0.3, 0.6, 0.1]
+                id2label={0:"control", 1:"depression", 2:"schizophrenia}. Not needed for binary models if labels are 0 and 1.
             metadata_cols (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
                 Each column should only contain 1 unique value. E.g. model_name, modality.. Auto-detects columns with only 1
                 unique value if not specified.
@@ -52,8 +59,11 @@ class ModelComparison:
         Returns:
             pd.Dataframe: _description_
         """
+        self.label_col = label_col
+        self.scores_col = scores_col
         self.id_col = id_col
-        self.score_mapping = score_mapping
+        self.id2label = id2label
+        self.label2id = {v: k for k, v in id2label.items()}
         if isinstance(metadata_cols, str):
             metadata_cols = [metadata_cols]
         self.metadata_cols = metadata_cols
@@ -125,15 +135,32 @@ class ModelComparison:
             pd.Dataframe: _description_
         """
         if aggregate_by_id:
-            df = aggregate_predictions(df, self.id_col)
+            df = aggregate_predictions(df, self.id_col, self.scores_col, self.label_col)
 
         # get predicted labels
-        if df["scores"].dtype != "float":
-            argmax_indices = df["scores"].apply(lambda x: np.argmax(x))
-            predictions = idx_to_class(argmax_indices, self.score_mapping)
+        if df[self.scores_col].dtype != "float":
+            argmax_indices = df[self.scores_col].apply(lambda x: np.argmax(x))
+            predictions = idx_to_class(argmax_indices, self.id2label)
         else:
-            predictions = np.round(df["scores"])
-        return self.compute_metrics(df["label"], predictions)
+            predictions = np.round(df[self.scores_col])
+
+        metrics = self.compute_metrics(df[self.label_col], predictions)
+
+        # calculate roc if binary model
+        # convoluted way to take first element of scores column and test how how many items it contains 
+        if len(df[self.scores_col].take([0]).values[0]) <= 2:
+            probs = scores_to_probs(df[self.scores_col])
+            label_int = labels_to_int(df[self.label_col], self.label2id)
+            roc_df = self._calculate_roc(label_int, probs)
+
+            metrics = pd.concat([metrics, roc_df]).reset_index()
+
+        return metrics
+
+    @staticmethod
+    def _calculate_roc(labels: Union[pd.Series, List], predicted: Union[pd.Series, List]):
+        roc_auc = roc_auc_score(labels, predicted)
+        return pd.DataFrame([{"class" : "overall", "score_type" : "auc", "value" : roc_auc}])
 
     @staticmethod
     def compute_metrics(
@@ -169,11 +196,6 @@ class ModelComparison:
         )
         performance["confusion_matrix-overall"] = confusion_matrix(labels, predicted)
 
-        # TODO: requires us to pass the predicted score (e.g. 0.65) and map to the correct class
-        # How much do we really care about AUC after all..?
-        # if len(classes) == 2:
-        #     performance["roc_auc-overall"] = roc_auc_score(labels, predicted)
-
         # calculate scores by class
         f1_by_class = f1_score(labels, predicted, average=None)
         precision_by_class = precision_score(labels, predicted, average=None)
@@ -195,7 +217,6 @@ class ModelComparison:
         # drop unused columns and rearrange
         performance = performance[["class", "score_type", "value"]]
         return performance
-
 
 
 if __name__ == "__main__":
@@ -227,10 +248,28 @@ if __name__ == "__main__":
             "model_name": ["test"] * 8,
         }
     )
-    scores_mapping = {0: "ASD", 1: "DEPR", 2: "TD", 3: "SCHZ"}
+    id2label = {0: "ASD", 1: "DEPR", 2: "TD", 3: "SCHZ"}
 
     model_comparer = ModelComparison(
-        score_mapping=scores_mapping, id_col="id", metadata_cols="model_name"
+        id2label=id2label, id_col="id", metadata_cols="model_name"
     )
 
     res = model_comparer.transform_data_from_dataframe(multiclass_df)
+
+
+    binary_df = pd.DataFrame(
+        {
+            "id": [1, 1, 2, 2],
+            "scores": [[0.8, 0.2], [0.5, 0.5], [0.4, 0.6], [0.9, 0.1]],
+            "label": ["TD", "TD", "DEPR", "DEPR"],
+            "optional_grouping1": ["grouping1"] * 4,
+            "optional_grouping2": ["grouping2"] * 4,
+        }
+    )
+
+    model_comparer = ModelComparison(
+        id_col="id",
+        metadata_cols=["optional_grouping1", "optional_grouping2"],
+        id2label={0: "TD", 1: "DEPR"},
+    )
+    res = model_comparer.transform_data_from_dataframe(binary_df)
