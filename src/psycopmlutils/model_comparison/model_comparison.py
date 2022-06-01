@@ -1,6 +1,5 @@
 """"Tools for model comparison"""
 
-from curses import meta
 import pandas as pd
 
 from typing import Union, List, Optional
@@ -12,6 +11,7 @@ from sklearn.metrics import (
     roc_auc_score,
     precision_score,
     recall_score,
+    confusion_matrix,
 )
 
 
@@ -46,7 +46,8 @@ class ModelComparison:
             score_mapping (Optional[dict]): Mapping from scores index to group (should match label). E.g. if scores [0.3, 0.6, 0.1]
                 score_mapping={0:"control", 1:"depression", 2:"schizophrenia}. Not needed for binary models.
             metadata_cols (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
-                Each column should only contain 1 unique value. E.g. model_name, modality..
+                Each column should only contain 1 unique value. E.g. model_name, modality.. Auto-detects columns with only 1
+                unique value if not specified.
 
         Returns:
             pd.Dataframe: _description_
@@ -166,6 +167,7 @@ class ModelComparison:
         performance["recall_micro-overall"] = recall_score(
             labels, predicted, average="micro"
         )
+        performance["confusion_matrix-overall"] = confusion_matrix(labels, predicted)
 
         # TODO: requires us to pass the predicted score (e.g. 0.65) and map to the correct class
         # How much do we really care about AUC after all..?
@@ -194,9 +196,6 @@ class ModelComparison:
         performance = performance[["class", "score_type", "value"]]
         return performance
 
-    def plot_f1(self):
-        "lots of fun grouping options to handle"
-        pass
 
 
 if __name__ == "__main__":
