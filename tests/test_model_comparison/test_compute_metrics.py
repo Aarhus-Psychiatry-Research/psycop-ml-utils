@@ -59,19 +59,19 @@ def binary_score_mapping():
 
 def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_mapping):
     model_comparer = ModelComparison(
-        score_mapping=multiclass_score_mapping, id_col="id", metadata_cols="model_name"
+        id2label=multiclass_score_mapping, id_col="id", metadata_cols="model_name"
     )
 
     res = model_comparer.transform_data_from_dataframe(multiclass_df)
 
     assert len(res["model_name"].unique()) == 1
     assert len(res["level"].unique()) == 2
-    assert res.shape[0] == 38  # (3 metrics per class (4) + 6 overall) * 2
+    assert res.shape[0] == 40  # (3 metrics per class (4) + 7 overall) * 2
 
 
 def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
     model_comparer = ModelComparison(
-        score_mapping=binary_score_mapping,
+        id2label=binary_score_mapping,
         id_col="id",
         metadata_cols=["optional_grouping1", "optional_grouping2"],
     )
@@ -83,6 +83,4 @@ def test_binary_transform_from_dataframe_with_float(binary_float_df):
     model_comparer = ModelComparison()
 
     res = model_comparer.transform_data_from_dataframe(binary_float_df)
-    pd.testing.assert_series_equal(
-        res[res["score_type"] == "acc"]["value"], pd.Series({0: 0.666667}, name="value")
-    )
+    assert res[res["score_type"] == "acc"]["value"].values[0] == pytest.approx(0.666667)

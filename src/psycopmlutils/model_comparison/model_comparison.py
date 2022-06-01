@@ -63,7 +63,7 @@ class ModelComparison:
         self.scores_col = scores_col
         self.id_col = id_col
         self.id2label = id2label
-        self.label2id = {v: k for k, v in id2label.items()}
+        self.label2id = {v: k for k, v in id2label.items()} if id2label else None
         if isinstance(metadata_cols, str):
             metadata_cols = [metadata_cols]
         self.metadata_cols = metadata_cols
@@ -148,7 +148,9 @@ class ModelComparison:
 
         # calculate roc if binary model
         # convoluted way to take first element of scores column and test how how many items it contains 
-        if len(df[self.scores_col].take([0]).values[0]) <= 2:
+        first_score = df[self.scores_col].take([0]).values[0]
+        
+        if isinstance(first_score, float) or len(first_score) <= 2:
             probs = scores_to_probs(df[self.scores_col])
             label_int = labels_to_int(df[self.label_col], self.label2id)
             roc_df = self._calculate_roc(label_int, probs)

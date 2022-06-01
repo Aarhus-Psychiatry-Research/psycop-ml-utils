@@ -11,13 +11,17 @@ def test_transform_folder():
     metadata_cols = ["model_name", "split", "type", "binary"]
 
     dfs = []
-    for diagnosis in ["DEPR", "ASD", "SCHZ"]:
-        score_mapping = {0: diagnosis, 1: "TD"}
+    for diagnosis in ["DEPR", "ASD", "SCHZ", "multiclass"]:
+        if diagnosis != "multiclass":
+            score_mapping = {0: diagnosis, 1: "TD"}
+        else:
+            score_mapping = {0: "TD", 1: "DEPR", 2: "ASD", 3: "SCHZ"}
+
         model_comparer = ModelComparison(
-            id_col="id", score_mapping=score_mapping, metadata_cols=metadata_cols
+            id_col="id", id2label=score_mapping, metadata_cols=metadata_cols
         )
         df = model_comparer.transform_data_from_folder(folder, f"*{diagnosis}*.jsonl")
         dfs.append(df)
 
     dfs = pd.concat(dfs)
-    dfs.to_json("binary_baselines.jsonl", orient="records", lines=True)
+    dfs.to_json("all_baselines.jsonl", orient="records", lines=True)
