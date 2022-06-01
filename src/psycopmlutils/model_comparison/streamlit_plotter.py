@@ -10,6 +10,8 @@ from typing import Optional
 import plotly.express as px
 
 
+## TODO sort plots by descending value
+
 st.set_page_config(layout="wide", page_title="Model Comparison")
 
 if "df" not in st.session_state:
@@ -19,6 +21,7 @@ uploaded_file = st.file_uploader("Select file")
 
 if uploaded_file is not None:
     df = pd.read_json(uploaded_file, orient="records", lines=True)
+    df = df.reset_index(drop=True)
     columns = df.columns
     metadata_cols = [col for col in columns if col != "value"]
 
@@ -67,7 +70,7 @@ if uploaded_file is not None:
         )
     with st.expander("Suggestions for line plot"):
         st.write("class on x, value on y, color by model_name, facet_col by score_type")
-    plotting_funs = ["scatter", "line"]
+    plotting_funs = ["scatter", "line", "strip"]
     chosen_plot = st.selectbox("Plot type", plotting_funs)
 
     make_title = st.checkbox("Autogenerate title?")

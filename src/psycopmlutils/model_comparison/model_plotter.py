@@ -19,7 +19,7 @@ def plotly_plotter(
     color: Optional[str] = None,
     facet_col: Optional[str] = None,
     facet_row: Optional[str] = None,
-    title: Optional[str] = None
+    title: Optional[str] = None,
 ):
     if type == "scatter":
         fig = px.scatter(
@@ -33,17 +33,26 @@ def plotly_plotter(
         )
     if type == "line":
         fig = px.line(
-        data_frame=df,
-        x=x,
-        y=y,
-        color=color,
-        facet_col=facet_col,
-        facet_row=facet_row,
-        title=title,
-    )
+            data_frame=df,
+            x=x,
+            y=y,
+            color=color,
+            facet_col=facet_col,
+            facet_row=facet_row,
+            title=title,
+        )
+    if type == "strip":
+        fig = px.strip(
+            data_frame=df,
+            x=x,
+            y=y,
+            color=color,
+            facet_col=facet_col,
+            facet_row=facet_row,
+            title=title,
+        )
     fig.update_layout(legend=dict(orientation="h", y=-0.2))
     return fig
-
 
 
 class ModelPlotter:
