@@ -1,7 +1,4 @@
-import ast
-from multiprocessing.sharedctypes import Value
-
-from typing import List, Optional, Union
+from typing import List, Union
 import pandas as pd
 
 import numpy as np
@@ -47,15 +44,29 @@ def get_metadata_cols(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
     """
 
     metadata = {}
-    all_columns = df.columns
-    for col in cols:
-        if col in all_columns:
-            val = df[col].unique()
-            if len(val) > 1:
+
+    # if metadata not specified save all columns with only 1 unique value
+    if not cols:
+        for col in df.columns:
+            n_unique = df[col].nunique()
+            if n_unique == 1:
+                metadata[col] = df[col].unique()[0]
+
+    # otherwise iterate over specified columns
+    else:
+        all_columns = df.columns
+        for col in cols:
+            if col in all_columns:
+                val = df[col].unique()
+                if len(val) > 1:
+                    raise ValueError(
+                        f"The column '{col}' contains more than one unique value."
+                    )
+                metadata[col] = val[0]
+            else:
                 raise ValueError(
-                    f"The column '{col}' contains more than one unique value."
+                    f"The metadata column '{col}' is not contained in the data"
                 )
-            metadata[col] = val[0]
     return pd.DataFrame.from_records([metadata])
 
 
@@ -92,6 +103,7 @@ def subset_df_from_dict(df: pd.DataFrame, subset_by: dict):
     for col, value in subset_by.items():
         df = df[df[col] == value]
     return df
+
 
 if __name__ == "__main__":
     df = pd.DataFrame(
