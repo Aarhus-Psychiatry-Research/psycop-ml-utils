@@ -147,9 +147,9 @@ class ModelComparison:
         metrics = self.compute_metrics(df[self.label_col], predictions)
 
         # calculate roc if binary model
-        # convoluted way to take first element of scores column and test how how many items it contains 
+        # convoluted way to take first element of scores column and test how how many items it contains
         first_score = df[self.scores_col].take([0]).values[0]
-        
+
         if isinstance(first_score, float) or len(first_score) <= 2:
             probs = scores_to_probs(df[self.scores_col])
             label_int = labels_to_int(df[self.label_col], self.label2id)
@@ -160,9 +160,24 @@ class ModelComparison:
         return metrics
 
     @staticmethod
-    def _calculate_roc(labels: Union[pd.Series, List], predicted: Union[pd.Series, List]):
+    def _calculate_roc(
+        labels: Union[pd.Series, List], predicted: Union[pd.Series, List]
+    ) -> pd.DataFrame:
+        """Calculates the area under the receiver operating characteristic curve.
+        Potentially extendable to calculate other metrics that require probabilities
+        instead of label predictions
+
+        Args:
+            labels (Union[pd.Series, List]): True labels as 0 or 1
+            predicted (Union[pd.Series, List]): Predictions as values between 0 and 1
+
+        Returns:
+            pd.DataFrame: DataFrame in metric format
+        """
         roc_auc = roc_auc_score(labels, predicted)
-        return pd.DataFrame([{"class" : "overall", "score_type" : "auc", "value" : roc_auc}])
+        return pd.DataFrame(
+            [{"class": "overall", "score_type": "auc", "value": roc_auc}]
+        )
 
     @staticmethod
     def compute_metrics(
@@ -257,7 +272,6 @@ if __name__ == "__main__":
     )
 
     res = model_comparer.transform_data_from_dataframe(multiclass_df)
-
 
     binary_df = pd.DataFrame(
         {
