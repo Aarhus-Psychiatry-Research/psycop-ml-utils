@@ -5,11 +5,11 @@ from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
     get_mean_in_group,
     get_min_in_group,
 )
-from tests.test_timeseriesflattener.utils_for_testing import (
+
+from utils_for_testing import (
+    assert_flattened_outcome_as_expected,
     assert_flattened_predictor_as_expected,
 )
-
-from utils_for_testing import assert_flattened_outcome_as_expected
 
 
 def test_resolve_multiple_catalogue():
