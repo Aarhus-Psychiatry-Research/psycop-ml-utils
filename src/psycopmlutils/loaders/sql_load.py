@@ -58,9 +58,7 @@ def sql_load(
             if any(str for str in ["datotid", "timestamp"] in colname.lower)
         ]
 
-        df[datetime_col_names] = df[datetime_col_names].apply(
-            pd.to_datetime
-        )
+        df[datetime_col_names] = df[datetime_col_names].apply(pd.to_datetime)
 
     engine.dispose()
 
