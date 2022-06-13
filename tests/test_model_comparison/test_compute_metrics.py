@@ -1,4 +1,4 @@
-from psycopmlutils.model_comparison import ModelComparison
+from psycopmlutils.model_comparison import ModelPerformance
 import pytest
 
 import pandas as pd
@@ -58,7 +58,7 @@ def binary_score_mapping():
 
 
 def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_mapping):
-    model_comparer = ModelComparison(
+    model_comparer = ModelPerformance(
         id2label=multiclass_score_mapping, id_col="id", metadata_cols="model_name"
     )
 
@@ -70,7 +70,7 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
 
 
 def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
-    model_comparer = ModelComparison(
+    model_comparer = ModelPerformance(
         id2label=binary_score_mapping,
         id_col="id",
         metadata_cols=["optional_grouping1", "optional_grouping2"],
@@ -80,7 +80,7 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
 
 
 def test_binary_transform_from_dataframe_with_float(binary_float_df):
-    model_comparer = ModelComparison()
+    model_comparer = ModelPerformance()
 
     res = model_comparer.transform_data_from_dataframe(binary_float_df)
     assert res[res["score_type"] == "acc"]["value"].values[0] == pytest.approx(0.666667)

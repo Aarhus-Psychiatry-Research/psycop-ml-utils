@@ -1,4 +1,4 @@
-from psycopmlutils.model_comparison import ModelComparison
+from psycopmlutils.model_comparison import ModelPerformance
 import pytest
 
 import pandas as pd
@@ -17,7 +17,7 @@ def test_transform_folder():
         else:
             score_mapping = {0: "TD", 1: "DEPR", 2: "ASD", 3: "SCHZ"}
 
-        model_comparer = ModelComparison(
+        model_comparer = ModelPerformance(
             id_col="id", id2label=score_mapping, metadata_cols=metadata_cols
         )
         df = model_comparer.transform_data_from_folder(folder, f"*{diagnosis}*.jsonl")

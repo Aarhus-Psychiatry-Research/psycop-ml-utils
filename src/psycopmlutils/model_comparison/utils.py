@@ -74,13 +74,16 @@ def idx_to_class(idx: List[int], mapping: dict):
     return [mapping[id] for id in idx]
 
 
-def get_metadata_cols(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
+def get_metadata_cols(
+    df: pd.DataFrame, cols: List[str], skip: List[str]
+) -> pd.DataFrame:
     """Extracts model metadata and generates a dataframe with same m
 
     Args:
         df (pd.DataFrame): Dataframe with predictions and metadata.
         cols (List[str]): Which columns contain metadata.
             The columns should only contain a single value.
+        skip (List[str]): columns to definitely not include.
 
     Raises:
         ValueError: If a metadata col contains more than a single unique value.
@@ -92,8 +95,11 @@ def get_metadata_cols(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
     metadata = {}
 
     # if metadata not specified save all columns with only 1 unique value
-    if not cols:
+    if cols[0] == "all":
         for col in df.columns:
+            # Necessary to skip scores column if it is a list, otherwise errors
+            if col in skip:
+                continue
             n_unique = df[col].nunique()
             if n_unique == 1:
                 metadata[col] = df[col].unique()[0]

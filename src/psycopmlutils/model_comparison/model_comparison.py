@@ -1,42 +1,37 @@
-""""Tools for model comparison"""
+""""Tools for calculating model performance metrics"""
 
-from unittest.util import unorderable_list_difference
-import pandas as pd
-
-from typing import Union, List, Optional
 from pathlib import Path
-
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    roc_auc_score,
-    precision_score,
-    recall_score,
-    confusion_matrix,
-)
-
+from typing import List, Optional, Union
 
 import numpy as np
-
+import pandas as pd
 from psycopmlutils.model_comparison.utils import (
     add_metadata_cols,
     aggregate_predictions,
-    labels_to_int,
-    idx_to_class,
     get_metadata_cols,
-    add_metadata_cols,
+    idx_to_class,
+    labels_to_int,
     scores_to_probs,
+)
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
 
 
-class ModelComparison:
+class ModelPerformance:
     def __init__(
         self,
         label_col: str = "label",
         scores_col: str = "scores",
         id_col: Optional[str] = None,
         id2label: Optional[dict] = None,
-        metadata_cols: Optional[List[str]] = None,
+        metadata_cols: Optional[List[str]] = "all",
+        to_wide: bool = False,
     ):
         """Methods for loading and transforming dataframes with 1 row per prediction into aggregated results.
         Expects files/dataframes to have the following columns:
@@ -67,6 +62,7 @@ class ModelComparison:
         if isinstance(metadata_cols, str):
             metadata_cols = [metadata_cols]
         self.metadata_cols = metadata_cols
+        self.to_wide = to_wide
 
     def transform_data_from_file(self, path: Union[str, Path]) -> pd.DataFrame:
         path = Path(path)
@@ -117,7 +113,9 @@ class ModelComparison:
 
         if self.metadata_cols:
             # Add metadata if specified
-            metadata = get_metadata_cols(df, self.metadata_cols)
+            metadata = get_metadata_cols(
+                df, self.metadata_cols, skip=[self.scores_col, self.label_col]
+            )
             performance = add_metadata_cols(performance, metadata)
         return performance
 
@@ -144,7 +142,7 @@ class ModelComparison:
         else:
             predictions = np.round(df[self.scores_col])
 
-        metrics = self.compute_metrics(df[self.label_col], predictions)
+        metrics = self.compute_metrics(df[self.label_col], predictions, self.to_wide)
 
         # calculate roc if binary model
         # convoluted way to take first element of scores column and test how how many items it contains
@@ -153,7 +151,7 @@ class ModelComparison:
         if isinstance(first_score, float) or len(first_score) <= 2:
             probs = scores_to_probs(df[self.scores_col])
             label_int = labels_to_int(df[self.label_col], self.label2id)
-            roc_df = self._calculate_roc(label_int, probs)
+            roc_df = self._calculate_roc(label_int, probs, self.to_wide)
 
             metrics = pd.concat([metrics, roc_df]).reset_index()
 
@@ -161,7 +159,7 @@ class ModelComparison:
 
     @staticmethod
     def _calculate_roc(
-        labels: Union[pd.Series, List], predicted: Union[pd.Series, List]
+        labels: Union[pd.Series, List], predicted: Union[pd.Series, List], to_wide: bool
     ) -> pd.DataFrame:
         """Calculates the area under the receiver operating characteristic curve.
         Potentially extendable to calculate other metrics that require probabilities
@@ -175,14 +173,16 @@ class ModelComparison:
             pd.DataFrame: DataFrame in metric format
         """
         roc_auc = roc_auc_score(labels, predicted)
-        return pd.DataFrame(
-            [{"class": "overall", "score_type": "auc", "value": roc_auc}]
-        )
+        if to_wide:
+            return pd.DataFrame([{"auc-overall": roc_auc}])
+        else:
+            return pd.DataFrame(
+                [{"class": "overall", "score_type": "auc", "value": roc_auc}]
+            )
 
     @staticmethod
     def compute_metrics(
-        labels: Union[pd.Series, List],
-        predicted: Union[pd.Series, List],
+        labels: Union[pd.Series, List], predicted: Union[pd.Series, List], to_wide: bool
     ) -> pd.DataFrame:
         """Computes performance metrics for both binary and multiclass tasks
 
@@ -225,6 +225,8 @@ class ModelComparison:
 
         # to df
         performance = pd.DataFrame.from_records([performance])
+        if to_wide:
+            return performance
         # convert to long format
         performance = pd.melt(performance)
         # split score and class into two columns
@@ -234,6 +236,108 @@ class ModelComparison:
         # drop unused columns and rearrange
         performance = performance[["class", "score_type", "value"]]
         return performance
+
+
+def performance_metrics_from_file(
+    path: Union[str, Path],
+    label_col: str = "label",
+    scores_col: str = "scores",
+    id_col: Optional[str] = None,
+    id2label: Optional[dict] = None,
+    metadata_cols: Optional[List[str]] = "all",
+    to_wide: bool = False,
+) -> pd.DataFrame:
+    """Calculates a bunch of performance metrics from a .jsonl file.
+
+    Args:
+        path (Union[str, Path]): Path to file
+        label_col (str, optional): Column containing the label. Column contents can either be ones and zeros or strings. Defaults to "label".
+        scores_col (str, optional): Column containing the model outputs. Column contents can either be a float or list of float (softmaxed output). Defaults to "label".
+        id_col (Optional[str], optional): Column containing ID in case of multiple predictions of the same ID. Will also calculate performance on ID level if supplied. Defaults to None.
+        id2label (Optional[dict], optional): Dictionary mapping the order of softmaxed output to labels. Defaults to None.
+        metadata_cols (Optional[List[str]], optional): Columns containing metadata to keep in the performance file. Defaults to "all" which autodetects columns with only a single value.
+        Will not add metadata if set to None.
+
+    Returns:
+        pd.DataFrame: Long format dataframe with performances
+    """
+
+    return ModelPerformance(
+        label_col=label_col,
+        scores_col=scores_col,
+        id_col=id_col,
+        id2label=id2label,
+        metadata_cols=metadata_cols,
+        to_wide=to_wide,
+    ).transform_data_from_file(path)
+
+
+def performance_metrics_from_df(
+    df: pd.DataFrame,
+    label_col: str = "label",
+    scores_col: str = "scores",
+    id_col: Optional[str] = None,
+    id2label: Optional[dict] = None,
+    metadata_cols: Optional[List[str]] = "all",
+    to_wide: bool = False,
+) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        df (pd.DataFrame): DataFrame with 1 row per prediction/observation
+        label_col (str, optional): Column containing the label. Column contents can either be ones and zeros or strings. Defaults to "label".
+        scores_col (str, optional): Column containing the model outputs. Column contents can either be a float or list of float (softmaxed output). Defaults to "label".
+        id_col (Optional[str], optional): Column containing ID in case of multiple predictions of the same ID. Will also calculate performance on ID level if supplied. Defaults to None.
+        id2label (Optional[dict], optional): Dictionary mapping the order of softmaxed output to labels. Defaults to None.
+        metadata_cols (Optional[List[str]], optional): Columns containing metadata to keep in the performance file. Defaults to "all" which autodetects columns with only a single value.
+        Will not add metadata if set to None.
+
+    Returns:
+        pd.DataFrame: Long format dataframe with performances
+    """
+    return ModelPerformance(
+        label_col=label_col,
+        scores_col=scores_col,
+        id_col=id_col,
+        id2label=id2label,
+        metadata_cols=metadata_cols,
+        to_wide=to_wide,
+    ).transform_data_from_dataframe(df)
+
+
+def performance_metrics_from_folder(
+    path: Union[str, Path],
+    pattern: str = "*.jsonl",
+    label_col: str = "label",
+    scores_col: str = "scores",
+    id_col: Optional[str] = None,
+    id2label: Optional[dict] = None,
+    metadata_cols: Optional[List[str]] = "all",
+    to_wide: bool = False,
+) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        path (Union[str, Path]): Path to directory to iterate over.
+        pattern (str): Pattern to match.
+        label_col (str, optional): Column containing the label. Column contents can either be ones and zeros or strings. Defaults to "label".
+        scores_col (str, optional): Column containing the model outputs. Column contents can either be a float or list of float (softmaxed output). Defaults to "label".
+        id_col (Optional[str], optional): Column containing ID in case of multiple predictions of the same ID. Will also calculate performance on ID level if supplied. Defaults to None.
+        id2label (Optional[dict], optional): Dictionary mapping the order of softmaxed output to labels. Defaults to None.
+        metadata_cols (Optional[List[str]], optional): Columns containing metadata to keep in the performance file. Defaults to "all" which autodetects columns with only a single value.
+        Will not add metadata if set to None.
+
+    Returns:
+        pd.DataFrame: Long format dataframe with performances
+    """
+    return ModelPerformance(
+        label_col=label_col,
+        scores_col=scores_col,
+        id_col=id_col,
+        id2label=id2label,
+        metadata_cols=metadata_cols,
+        to_wide=to_wide,
+    ).transform_data_from_folder(path, pattern)
 
 
 if __name__ == "__main__":
@@ -267,7 +371,7 @@ if __name__ == "__main__":
     )
     id2label = {0: "ASD", 1: "DEPR", 2: "TD", 3: "SCHZ"}
 
-    model_comparer = ModelComparison(
+    model_comparer = ModelPerformance(
         id2label=id2label, id_col="id", metadata_cols="model_name"
     )
 
@@ -283,9 +387,10 @@ if __name__ == "__main__":
         }
     )
 
-    model_comparer = ModelComparison(
+    model_comparer = ModelPerformance(
         id_col="id",
         metadata_cols=["optional_grouping1", "optional_grouping2"],
         id2label={0: "TD", 1: "DEPR"},
+        to_wide=True,
     )
     res = model_comparer.transform_data_from_dataframe(binary_df)
