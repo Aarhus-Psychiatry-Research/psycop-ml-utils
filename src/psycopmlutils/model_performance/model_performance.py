@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from psycopmlutils.model_comparison.utils import (
+from psycopmlutils.model_performance.utils import (
     add_metadata_cols,
     aggregate_predictions,
     get_metadata_cols,

@@ -1,4 +1,4 @@
-from psycopmlutils.model_comparison import ModelPerformance
+from psycopmlutils.model_performance import ModelPerformance
 import pytest
 
 import pandas as pd

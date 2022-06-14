@@ -1,4 +1,4 @@
-from psycopmlutils.model_comparison import (
+from psycopmlutils.model_performance import (
     performance_metrics_from_df,
     performance_metrics_from_folder,
 )
