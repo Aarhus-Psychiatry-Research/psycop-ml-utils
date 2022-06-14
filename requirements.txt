@@ -21,4 +21,4 @@ catalogue>=2.0.7
 wasabi>=0.9.1
 
 # Model comparison
-sklearn>=1.0.0
+scikit-learn>=1.0.0
