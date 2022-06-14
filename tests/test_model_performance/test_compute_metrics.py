@@ -1,7 +1,11 @@
-from psycopmlutils.model_comparison import ModelPerformance
+from psycopmlutils.model_comparison import (
+    performance_metrics_from_df,
+    performance_metrics_from_folder,
+)
 import pytest
 
 import pandas as pd
+from pathlib import Path
 
 
 @pytest.fixture(scope="function")
@@ -58,11 +62,13 @@ def binary_score_mapping():
 
 
 def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_mapping):
-    model_comparer = ModelPerformance(
-        id2label=multiclass_score_mapping, id_col="id", metadata_cols="model_name"
-    )
 
-    res = model_comparer.transform_data_from_dataframe(multiclass_df)
+    res = performance_metrics_from_df(
+        multiclass_df,
+        id2label=multiclass_score_mapping,
+        id_col="id",
+        metadata_cols="model_name",
+    )
 
     assert len(res["model_name"].unique()) == 1
     assert len(res["level"].unique()) == 2
@@ -70,17 +76,52 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
 
 
 def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
-    model_comparer = ModelPerformance(
-        id2label=binary_score_mapping,
-        id_col="id",
-        metadata_cols=["optional_grouping1", "optional_grouping2"],
+
+    res = performance_metrics_from_df(
+        binary_df, id2label=binary_score_mapping, id_col="id", metadata_cols="all"
+    )
+    assert (
+        res[
+            (res["class"] == "TD")
+            & (res["level"] == "id")
+            & (res["score_type"] == "recall")
+        ]["value"].tolist()[0]
+        == 1.0
     )
 
-    res = model_comparer.transform_data_from_dataframe(binary_df)
-
-
 def test_binary_transform_from_dataframe_with_float(binary_float_df):
-    model_comparer = ModelPerformance()
 
-    res = model_comparer.transform_data_from_dataframe(binary_float_df)
+    res = performance_metrics_from_df(binary_float_df)
+
     assert res[res["score_type"] == "acc"]["value"].values[0] == pytest.approx(0.666667)
+
+
+def test_binary_transform_from_dataframe_with_float_wide(binary_float_df):
+    res = performance_metrics_from_df(binary_float_df, to_wide=True)
+    assert res["acc-overall"][0] == pytest.approx(0.666667)
+
+
+def test_transform_folder():
+    folder = Path("tests") / "test_model_performance" / "test_data"
+    metadata_cols = ["model_name", "split", "type", "binary"]
+
+    dfs = []
+    for diagnosis in ["DEPR", "ASD", "SCHZ", "multiclass"]:
+        if diagnosis != "multiclass":
+            score_mapping = {0: diagnosis, 1: "TD"}
+        else:
+            score_mapping = {0: "TD", 1: "DEPR", 2: "ASD", 3: "SCHZ"}
+
+        df = performance_metrics_from_folder(
+            folder,
+            pattern=f"*{diagnosis}*.jsonl",
+            id_col="id",
+            id2label=score_mapping,
+            metadata_cols=metadata_cols,
+        )
+
+        dfs.append(df)
+
+    dfs = pd.concat(dfs)
+    assert len(dfs.columns) == 9 
+    assert len(dfs["model_name"]) > 1
