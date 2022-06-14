@@ -6,6 +6,7 @@ from pandas import Series
 import numpy as np
 
 
+# To specify type hints for series
 SeriesListOfFloats = TypeVar("pandas.core.series.Series(List[float])")
 SeriesOfFloats = TypeVar("pandas.core.series.Series(float)")
 SeriesOfStr = TypeVar("pandas.core.series.Series(str)")
@@ -13,7 +14,7 @@ SeriesOfInt = TypeVar("pandas.core.series.Series(int)")
 
 
 def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series:
-    """Converts a series of scores to probabilities. Assumes input scores to be
+    """Converts a series of lists of softmax scores to probabilities. Assumes input scores to be
     a list of floats of maximum length 2.
 
     Args:
@@ -36,7 +37,7 @@ def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict) -> Se
 
     Args:
         labels (Union[Series[str], Series[int]]): Series containing labels.
-        Either as string (e.g. ASD) or as int.
+        Either as string (e.g. "ASD") or as int.
         label2id (dict): Dictionary mapping the labels to 0 and 1
 
     Returns:
@@ -49,14 +50,14 @@ def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict) -> Se
 
 
 def aggregate_predictions(
-    df: pd.DataFrame, id_col: str, scores_col: str, label_col: str
+    df: pd.DataFrame, id_col: str, predictions_col: str, label_col: str
 ):
     """Calculates the mean prediction by a grouping col (id_col).
 
     Args:
-        df (pd.DataFrame): Dataframe with 'scores', 'label' and id_col columns
+        df (pd.DataFrame): Dataframe with 'scores_col', 'label_col' and `id_col` columns
         id_col (str): Column to group by
-        scores_col (str): column containing scores
+        predictions_col (str): column containing predictions
         label_col (str): column containing labels
     """
 
@@ -67,17 +68,28 @@ def aggregate_predictions(
     def get_first_entry(x: pd.Series):
         return x.unique()[0]
 
-    return df.groupby(id_col).agg({scores_col: mean_scores, label_col: get_first_entry})
+    return df.groupby(id_col).agg(
+        {predictions_col: mean_scores, label_col: get_first_entry}
+    )
 
 
-def idx_to_class(idx: List[int], mapping: dict):
+def idx_to_class(idx: List[int], mapping: dict) -> List[str]:
+    """Returns the label from an id2label mapping
+
+    Args:
+        idx (List[int]): index
+        mapping (dict): dictionary mapping index to label
+
+    Returns:
+        List[str]: Labels matching the indices
+    """
     return [mapping[id] for id in idx]
 
 
 def get_metadata_cols(
     df: pd.DataFrame, cols: List[str], skip: List[str]
 ) -> pd.DataFrame:
-    """Extracts model metadata and generates a dataframe with same m
+    """Extracts model metadata to a 1 row dataframe
 
     Args:
         df (pd.DataFrame): Dataframe with predictions and metadata.
@@ -97,7 +109,7 @@ def get_metadata_cols(
     # if metadata not specified save all columns with only 1 unique value
     if cols[0] == "all":
         for col in df.columns:
-            # Necessary to skip scores column if it is a list, otherwise errors
+            # Necessary to skip predictions column if it is a list, otherwise errors
             if col in skip:
                 continue
             n_unique = df[col].nunique()
@@ -142,7 +154,19 @@ def add_metadata_cols(df: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
     return df.reset_index(drop=True).join(meta_df)
 
 
+####### For model plotter (that has been removed for now)
 def string_to_list(str_or_list: Union[List, str]):
+    """Converts
+
+    Args:
+        str_or_list (Union[List, str]): _description_
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
     if isinstance(str_or_list, str):
         return [str_or_list]
     elif isinstance(str_or_list, list):

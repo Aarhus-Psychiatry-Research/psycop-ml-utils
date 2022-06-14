@@ -1,4 +1,4 @@
-from .model_comparison import (
+from .model_performance import (
     ModelPerformance,
     performance_metrics_from_df,
     performance_metrics_from_file,
