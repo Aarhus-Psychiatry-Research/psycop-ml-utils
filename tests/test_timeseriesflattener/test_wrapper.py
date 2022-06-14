@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 from psycopmlutils.timeseriesflattener.create_feature_combinations import (
@@ -16,12 +17,12 @@ def test_generate_two_features_from_dict():
                             1,2021-12-31 00:00:00
                             """
 
-    event_times_str = """dw_ek_borger,timestamp,val,
+    event_times_str = """dw_ek_borger,timestamp,value,
                         1,2021-12-30 00:00:01, 1
                         1,2021-12-29 00:00:02, 2
                         """
 
-    expected_df_str = """dw_ek_borger,timestamp,val_within_1_days_max_fallback_0,val_within_2_days_max_fallback_0,val_within_3_days_max_fallback_0,val_within_4_days_max_fallback_0
+    expected_df_str = """dw_ek_borger,timestamp,event_times_df_within_1_days_max_fallback_0,event_times_df_within_2_days_max_fallback_0,event_times_df_within_3_days_max_fallback_0,event_times_df_within_4_days_max_fallback_0
                         1,2021-12-31 00:00:00,1,2,2,2                      
     """
 
@@ -53,7 +54,13 @@ def test_generate_two_features_from_dict():
         predictor_dfs={"event_times_df": event_times_df},
     )
 
-    assert flattened_dataset.df.equals(expected_df)
+    for col in [
+        "dw_ek_borger",
+        "timestamp",
+        "event_times_df_within_1_days_max_fallback_0",
+        "event_times_df_within_2_days_max_fallback_0",
+    ]:
+        pd.testing.assert_series_equal(flattened_dataset.df[col], expected_df[col])
 
 
 def test_output_independent_of_order_of_input():
@@ -114,7 +121,7 @@ def test_output_independent_of_order_of_input():
         ]
     )
 
-    predictor_str = """dw_ek_borger,timestamp,val,
+    predictor_str = """dw_ek_borger,timestamp,value,
                         1,2021-12-30 00:00:01, 1
                         1,2021-12-29 00:00:02, 2
                         2,2021-12-30 00:00:01, 1
@@ -153,7 +160,7 @@ def test_add_df_from_catalogue():
                             1,2021-12-31 00:00:00
                             """
 
-    expected_df_str = """dw_ek_borger,timestamp,val_within_1_days_max_fallback_0,val_within_2_days_max_fallback_0,val_within_3_days_max_fallback_0,val_within_4_days_max_fallback_0
+    expected_df_str = """dw_ek_borger,timestamp,load_event_times_within_1_days_max_fallback_0,load_event_times_within_2_days_max_fallback_0,load_event_times_within_3_days_max_fallback_0,load_event_times_within_4_days_max_fallback_0
                         1,2021-12-31 00:00:00,1,2,2,2                      
     """
 
@@ -183,7 +190,13 @@ def test_add_df_from_catalogue():
         predictors=predictor_list,
     )
 
-    assert flattened_dataset.df.equals(expected_df)
+    for col in [
+        "dw_ek_borger",
+        "timestamp",
+        "load_event_times_within_1_days_max_fallback_0",
+        "load_event_times_within_2_days_max_fallback_0",
+    ]:
+        pd.testing.assert_series_equal(flattened_dataset.df[col], expected_df[col])
 
 
 def test_wrong_formatting():
@@ -193,14 +206,14 @@ def test_wrong_formatting():
                             1,2021-12-31 00:00:00
                             """
 
-    expected_df_str = """dw_ek_borger,timestamp,val_within_1_days_max_fallback_0,val_within_2_days_max_fallback_0,val_within_3_days_max_fallback_0,val_within_4_days_max_fallback_0
+    expected_df_str = """dw_ek_borger,timestamp,event_times_df_within_1_days_max_fallback_0,event_times_df_within_2_days_max_fallback_0,event_times_df_within_3_days_max_fallback_0,event_times_df_within_4_days_max_fallback_0
                         1,2021-12-31 00:00:00,1,2,2,2                      
     """
 
     prediction_times_df = str_to_df(prediction_times_str)
     expected_df = str_to_df(expected_df_str)
 
-    predictor_str = """dw_ek_borger,timestamp,val,
+    predictor_str = """dw_ek_borger,timestamp,value,
                         1,2021-12-30 00:00:01, 1
                         1,2021-12-29 00:00:02, 2
                         2,2021-12-30 00:00:01, 1

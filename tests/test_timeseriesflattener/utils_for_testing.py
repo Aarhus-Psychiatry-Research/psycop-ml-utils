@@ -56,7 +56,7 @@ def assert_flattened_outcome_as_expected(
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
         >>>                     '''
-        >>> outcome_df_str = '''dw_ek_borger,timestamp,val,
+        >>> outcome_df_str = '''dw_ek_borger,timestamp,value,
         >>>                     1,2021-12-30 23:59:59, 1
         >>>                     '''
         >>>
@@ -105,7 +105,7 @@ def assert_flattened_predictor_as_expected(
         >>> prediction_times_df_str =  '''dw_ek_borger,timestamp,
         >>>                            1,2021-12-31 00:00:00
         >>>                            '''
-        >>> predictor_df_str =  '''dw_ek_borger,timestamp,val,
+        >>> predictor_df_str =  '''dw_ek_borger,timestamp,value,
         >>>                     1,2022-01-01 00:00:01, 1
         >>>                     '''
         >>>
@@ -204,7 +204,7 @@ def assert_flattened_values_as_expected(
 
 @data_loaders.register("load_event_times")
 def load_event_times():
-    event_times_str = """dw_ek_borger,timestamp,val,
+    event_times_str = """dw_ek_borger,timestamp,value,
                     1,2021-12-30 00:00:01, 1
                     1,2021-12-29 00:00:02, 2
                     """
