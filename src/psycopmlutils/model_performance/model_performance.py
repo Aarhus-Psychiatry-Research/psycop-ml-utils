@@ -415,10 +415,12 @@ if __name__ == "__main__":
         }
     )
 
-    binary_res = performance_metrics_from_df(binary_df, 
+    binary_res = performance_metrics_from_df(
+        binary_df,
         label_col="label",
         predictions_col="scores",
         id_col="id",
         id2label=id2label,
         metadata_cols=None,
-        to_wide=True,)
+        to_wide=True,
+    )

@@ -89,6 +89,7 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
         == 1.0
     )
 
+
 def test_binary_transform_from_dataframe_with_float(binary_float_df):
 
     res = performance_metrics_from_df(binary_float_df)
@@ -123,5 +124,5 @@ def test_transform_folder():
         dfs.append(df)
 
     dfs = pd.concat(dfs)
-    assert len(dfs.columns) == 9 
+    assert len(dfs.columns) == 9
     assert len(dfs["model_name"]) > 1
