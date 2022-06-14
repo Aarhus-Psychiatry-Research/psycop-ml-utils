@@ -178,14 +178,14 @@ class ModelPlotter:
 
 
 if __name__ == "__main__":
-    from .model_comparison import ModelComparison
+    from .model_performance import ModelPerformance
 
-    model_comparer = ModelComparison(
+    model_comparer = ModelPerformance(
         id_col="id",
-        score_mapping={0: "ASD", 1: "TD"},
+        id2label={0: "ASD", 1: "TD"},
         metadata_cols=["type", "split", "model_name"],
     )
-    res = model_comparer.transform_data_from_folder(
+    res = model_comparer.performance_metrics_from_folder(
         "/Users/au554730/Desktop/Projects/psycop-ml-utils/tests/test_model_comparison/test_data"
     )
 

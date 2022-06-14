@@ -1,7 +1,7 @@
 from numpy import False_
 import streamlit as st
 import pandas as pd
-from psycopmlutils.model_comparison.model_comparison import ModelComparison
+from psycopmlutils.model_comparison.model_performance import ModelPerformance
 from psycopmlutils.model_comparison.model_plotter import ModelPlotter, plotly_plotter
 
 
