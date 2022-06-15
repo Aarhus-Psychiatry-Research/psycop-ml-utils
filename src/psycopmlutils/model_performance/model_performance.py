@@ -223,7 +223,7 @@ class ModelPerformance:
             label2id = {v: k for k, v in id2label.items()} if id2label else None
             probs = scores_to_probs(df[prediction_col_name])
             label_int = labels_to_int(df[label_col_name], label2id)
-            auc_df = ModelPerformance._calculate_roc_auc(label_int, probs, to_wide)
+            auc_df = ModelPerformance.calculate_roc_auc(label_int, probs, to_wide)
 
             if to_wide:
                 metrics = metrics.join(auc_df)
