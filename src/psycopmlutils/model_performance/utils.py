@@ -12,12 +12,10 @@ SeriesOfInt = TypeVar("pandas.core.series.Series(int)")
 
 
 def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series:
-    """Converts a series of lists of softmax scores to probabilities. Assumes input scores to be
-    a list of floats of maximum length 2.
+    """Converts a series of lists of probabilities for each class or a list of floats for binary classification a list of floats of maximum length 2.
 
     Args:
-        scores (Union[Series[List[float]], Series[float]]): Series containing output
-        from softmax from a binary classification or raw probabilities
+        scores (Union[Series[List[float]], Series[float]]): Series containing probabilities for each class or a list of floats for binary classification.
 
     Returns:
         Series: Probability of class 1

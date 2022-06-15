@@ -67,6 +67,7 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
         metadata_col_names="model_name",
         prediction_col_name="scores",
         label_col_name="label",
+        id2label=multiclass_score_mapping,
     )
 
     assert len(res["model_name"].unique()) == 1

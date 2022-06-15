@@ -30,9 +30,9 @@ class ModelPerformance:
 
     def performance_metrics_from_df(
         df: pd.DataFrame,
-        aggregate_by_id: bool,
         prediction_col_name: str,
         label_col_name: str,
+        aggregate_by_id: bool = False,
         id_col_name: str = None,
         metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
@@ -45,9 +45,9 @@ class ModelPerformance:
 
         Args:
             df (pd.DataFrame): Dataframe with 1 row per prediction.
-            aggregate_by_id (bool): Whether to only calculate predictions on row level or also aggregate by id
-            prediction_col_name (str): column containing softmaxed output or float of probabilities
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
+            aggregate_by_id (bool): Whether to only calculate predictions on row level or also aggregate by id. Defaults to False.
             id_col_name (str, optional): Column name for the id, used for grouping.
             metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
                 Each column should only contain 1 unique value. E.g. model_name, modality.. If set to "all" will auto-detect
@@ -103,7 +103,7 @@ class ModelPerformance:
 
         Args:
             path (Union[str, Path]): Path to .jsonl file
-            prediction_col_name (str): column containing softmaxed output or float of probabilities
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
             metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
@@ -150,8 +150,8 @@ class ModelPerformance:
 
         Args:
             folder (Union[str, Path]): Path to folder.
-            pattern (str, optional): Pattern to match.
-            prediction_col_name (str): column containing softmaxed output or float of probabilities
+            pattern (str, optional): Pattern to match on filename.
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
             to_wide (bool): Whether to return performance as wide format.
