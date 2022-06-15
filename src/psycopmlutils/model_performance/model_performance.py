@@ -233,7 +233,7 @@ class ModelPerformance:
         return metrics
 
     @staticmethod
-    def _calculate_roc_auc(
+    def calculate_roc_auc(
         labels: Union[pd.Series, List], predicted: Union[pd.Series, List], to_wide: bool
     ) -> pd.DataFrame:
         """Calculate the area under the receiver operating characteristic curve.
