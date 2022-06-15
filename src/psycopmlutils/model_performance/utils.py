@@ -1,10 +1,8 @@
-from typing import List, Union, TypeVar
-import pandas as pd
+from typing import List, TypeVar, Union
 
-
-from pandas import Series
 import numpy as np
-
+import pandas as pd
+from pandas import Series
 
 # To specify type hints for series
 SeriesListOfFloats = TypeVar("pandas.core.series.Series(List[float])")
@@ -105,6 +103,9 @@ def get_metadata_cols(
     """
 
     metadata = {}
+
+    if isinstance(cols, str):
+        cols = [cols]
 
     # if metadata not specified save all columns with only 1 unique value
     if cols[0] == "all":
