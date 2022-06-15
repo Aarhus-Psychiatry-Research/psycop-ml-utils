@@ -27,7 +27,7 @@ def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series
         return scores.apply(lambda x: x[1])
 
 
-def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict) -> Series:
+def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict[str, int]) -> Series:
     """Converts label to int mapping. Only makes sense for binary models. If
     already int will return as is.
 
