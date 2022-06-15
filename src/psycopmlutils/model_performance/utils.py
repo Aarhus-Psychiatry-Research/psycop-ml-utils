@@ -34,7 +34,7 @@ def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict[str, i
     Args:
         labels (Union[Series[str], Series[int]]): Series containing labels.
         Either as string (e.g. "ASD") or as int.
-        label2id (dict): Dictionary mapping the labels to 0 and 1
+        label2id (dict[str, int]): Dictionary mapping the labels to 0 and 1
 
     Returns:
         Series: _description_
