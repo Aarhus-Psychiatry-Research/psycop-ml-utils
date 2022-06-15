@@ -69,7 +69,7 @@ class ModelPerformance:
         performance["level"] = "overall"
 
         if id_col_name:
-            # Calculate performance id and add to the dataframe
+            # Calculate performance by id and add to the dataframe
             performance_by_id = ModelPerformance._evaluate_single_model(
                 df=df,
                 prediction_col_name=prediction_col_name,
