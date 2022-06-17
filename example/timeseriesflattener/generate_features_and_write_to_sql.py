@@ -52,7 +52,7 @@ if __name__ == "__main__":
     prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
 
     msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
+    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=20)
 
     # Predictors
     msg.info("Adding static predictors")
@@ -78,7 +78,6 @@ if __name__ == "__main__":
         incident=True,
     )
     msg.good("Finished adding outcome")
-
     end_time = time.time()
 
     # Finish
@@ -104,7 +103,7 @@ if __name__ == "__main__":
 
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
-        # Find IDs which are in split_ids, but not in flattened_df
+        # Find IDs which are in split_ids, but not in flattened_df.
         split_ids = df_split_ids["dw_ek_borger"].unique()
         flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
@@ -125,5 +124,4 @@ if __name__ == "__main__":
             if_exists="replace",
             rows_per_chunk=ROWS_PER_CHUNK,
         )
-
         msg.good(f"{dataset_name}: Succesfully wrote {dataset_name} to SQL server")
