@@ -67,13 +67,14 @@ if __name__ == "__main__":
             outcome_df_values_col_name="value",
             new_col_name="t2d",
             incident=True,
+            dichotomous=True,
         )
         msg.good("Finished adding outcome")
 
     # Predictors
     msg.info("Adding static predictors")
-    flattened_df.add_static_predictor(psycopmlutils.loaders.LoadDemographics.male())
-    flattened_df.add_age(psycopmlutils.loaders.LoadDemographics.birthdays())
+    flattened_df.add_static_predictor(psycopmlutils.loaders.LoadDemographic.male())
+    flattened_df.add_age(psycopmlutils.loaders.LoadDemographic.birthdays())
 
     start_time = time.time()
 
