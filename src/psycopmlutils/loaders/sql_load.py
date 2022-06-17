@@ -41,9 +41,7 @@ def sql_load(
         )
     )
 
-    engine = create_engine(
-        f"mssql+pyodbc:///?odbc_connect={params}"
-    )
+    engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
 
     conn = engine.connect().execution_options(
         stream_results=True, fast_executemany=True
@@ -57,7 +55,6 @@ def sql_load(
             for colname in df.columns
             if any(substr in colname.lower() for substr in ["datotid", "timestamp"])
         ]
-
 
         df[datetime_col_names] = df[datetime_col_names].apply(pd.to_datetime)
 
