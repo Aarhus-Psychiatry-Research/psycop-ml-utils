@@ -12,8 +12,8 @@ from psycopmlutils.writers.sql_writer import write_df_to_sql
 from wasabi import msg
 
 if __name__ == "__main__":
-    RESOLVE_MULTIPLE = ["mean", "latest", "earliest", "max", "min"]
-    LOOKBEHIND_DAYS = [365, 9999]
+    RESOLVE_MULTIPLE = ["mean", "max", "min"]
+    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     PREDICTOR_LIST = create_feature_combinations(
         [
@@ -125,5 +125,5 @@ if __name__ == "__main__":
             if_exists="replace",
             rows_per_chunk=ROWS_PER_CHUNK,
         )
-        
+
         msg.good(f"{dataset_name}: Succesfully wrote {dataset_name} to SQL server")

@@ -161,14 +161,6 @@ class LoadDiagnoses:
             }
         )
 
-    @data_loaders.register("t2d_times")
-    def t2d_times():
-        sql = f"SELECT * FROM [fct].[psycop_t2d_outcome_timestamps]"
-
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
-
-        return df
-
     @data_loaders.register("essential_hypertension")
     def essential_hypertension():
         return LoadDiagnoses.from_physical_visits(
