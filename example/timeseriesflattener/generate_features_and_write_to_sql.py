@@ -54,7 +54,6 @@ if __name__ == "__main__":
     msg.info("Initialising flattened dataset")
     flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=20)
 
-
     # Outcome
     msg.info("Adding outcome")
     flattened_df.add_temporal_outcome(
@@ -81,7 +80,7 @@ if __name__ == "__main__":
     )
 
     end_time = time.time()
-    
+
     msg.good(
         f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes"
     )
