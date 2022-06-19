@@ -58,7 +58,7 @@ def assert_flattened_outcome_as_expected(
             prediction_times that receive fallback is larger than threshold.
             Indicates unlikely to be a learnable feature. Defaults to 0.9.
         low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
-            Low valuyue indicates high risk of overfitting. Defaults to 0.01.
+            Low value indicates high risk of overfitting. Defaults to 0.01.
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00

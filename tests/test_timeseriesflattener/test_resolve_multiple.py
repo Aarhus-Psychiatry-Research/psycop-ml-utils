@@ -1,3 +1,4 @@
+from pandas import NA
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
     get_earliest_value_in_group,
     get_latest_value_in_group,
@@ -156,7 +157,7 @@ def test_resolve_multiple_count():
     )
 
 
-def test_resolve_multiple_slope():
+def test_resolve_multiple_change_per_day():
     prediction_times_str = """dw_ek_borger,timestamp,
                             1,2021-12-31 00:00:00
                             2,2021-12-31 00:00:00
@@ -165,13 +166,55 @@ def test_resolve_multiple_slope():
                         1,2022-01-01 00:00:00, 1
                         1,2022-01-02 00:00:00, 2
                         2,2022-01-01 00:00:00, 1
-                        2,2022-01-02 00:00:00, 2
+                        2,2022-01-08 00:00:00, 2
                         """
 
     assert_flattened_outcome_as_expected(
         prediction_times_df_str=prediction_times_str,
         outcome_df_str=event_times_str,
-        resolve_multiple="slope",
+        resolve_multiple="change_per_day",
+        lookahead_days=4,
+        expected_flattened_values=[1, NA],
+    )
+
+
+def test_resolve_multiple_change_per_day_unordered():
+    prediction_times_str = """dw_ek_borger,timestamp,
+                            1,2021-12-31 00:00:00
+                            2,2021-12-31 00:00:00
+                            """
+    event_times_str = """dw_ek_borger,timestamp,val,
+                        1,2022-01-02 00:00:00, 2
+                        1,2022-01-01 00:00:00, 1
+                        2,2022-01-02 00:00:00, 2
+                        2,2022-01-01 00:00:00, 1
+                        """
+
+    assert_flattened_outcome_as_expected(
+        prediction_times_df_str=prediction_times_str,
+        outcome_df_str=event_times_str,
+        resolve_multiple="change_per_day",
         lookahead_days=4,
         expected_flattened_values=[1, 1],
+    )
+
+
+def test_resolve_multiple_change_per_day_negative():
+    prediction_times_str = """dw_ek_borger,timestamp,
+                            1,2021-12-31 00:00:00
+                            2,2021-12-31 00:00:00
+                            """
+    event_times_str = """dw_ek_borger,timestamp,val,
+                        1,2022-01-02 00:00:00, 2
+                        1,2022-01-01 00:00:00, 1
+                        2,2022-01-02 00:00:00, 1
+                        2,2022-01-01 00:00:00, 2
+                        """
+
+    assert_flattened_outcome_as_expected(
+        prediction_times_df_str=prediction_times_str,
+        outcome_df_str=event_times_str,
+        resolve_multiple="change_per_day",
+        lookahead_days=4,
+        expected_flattened_values=[1, -1],
     )

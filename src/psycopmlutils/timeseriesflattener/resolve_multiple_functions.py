@@ -56,7 +56,7 @@ def get_count_in_group(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.count()
 
 
-@resolve_fns.register("slope")
+@resolve_fns.register("change_per_day")
 def get_change_in_value_per_day(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.apply(
         lambda x: Series({"value": stats.linregress(x.val, x.timestamp_val)[0]})
