@@ -156,7 +156,7 @@ def assert_flattened_values_as_expected(
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
     values_colname: str = "value",
-    fallback: List = 0,
+    fallback: List = np.NaN,
     is_fallback_prop_warning_threshold: float = 0.9,
     low_variance_threshold: float = None,
 ):

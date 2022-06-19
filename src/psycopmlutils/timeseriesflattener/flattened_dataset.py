@@ -2,6 +2,7 @@ from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Union
 
 import pandas as pd
+import numpy as np
 import datetime as dt
 from catalogue import Registry  # noqa
 from pandas import DataFrame
@@ -556,6 +557,9 @@ class FlattenedDataset:
             timestamp_col_name=timestamp_col_name,
             pred_time_uuid_colname=pred_time_uuid_col_name,
         )
+
+        # If no slope is calculated, replace with fallback
+        df["value"] = df["value"].fillna(fallback)
 
         df.rename({"value": full_col_str}, axis=1, inplace=True)
 
