@@ -250,8 +250,7 @@ def test_low_variance_threshold_outcome():
                         5,2025-01-03 00:00:00, 1.0
                         5,2022-01-05 00:00:01, 1.0
                         """
-
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"value_within_2_days_max_fallback_nan"):
         assert_flattened_outcome_as_expected(
             prediction_times_df_str=prediction_times_df_str,
             outcome_df_str=outcome_df_str,
@@ -276,7 +275,7 @@ def test_low_variance_threshold_predictor():
                         5,2022-01-05 00:00:01, 1.0
                         """
 
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"value_within_2_days_max_fallback_nan"):
         assert_flattened_predictor_as_expected(
             prediction_times_df_str=prediction_times_df_str,
             predictor_df_str=predictor_df_str,
@@ -301,7 +300,7 @@ def test_is_fallback_prop_warning_threshold():
                         5,2020-01-05 00:00:01, 1.0
                         """
 
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"value_within_2_days_max_fallback_0"):
         assert_flattened_outcome_as_expected(
             prediction_times_df_str=prediction_times_df_str,
             outcome_df_str=outcome_df_str,

@@ -9,6 +9,7 @@ from pandas import DataFrame
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
 from psycopmlutils.utils import data_loaders
 from wasabi import msg
+import warnings
 
 
 class FlattenedDataset:
@@ -551,6 +552,8 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         ).fillna(fallback)
 
+        df["timestamp_val"].replace({fallback: pd.NaT}, inplace=True)
+
         df = FlattenedDataset.resolve_multiple_values_within_interval_days(
             resolve_multiple=resolve_multiple,
             df=df,
@@ -558,7 +561,7 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         )
 
-        # If no slope is calculated, replace with fallback
+        # If no slope is calculated, replace with
         df["value"] = df["value"].fillna(fallback)
 
         df.rename({"value": full_col_str}, axis=1, inplace=True)
@@ -574,7 +577,6 @@ class FlattenedDataset:
                 msg.warn(
                     f"""{full_col_str}: Removed since {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None."""
                 )
-
                 do_return_col = False
 
         if low_variance_threshold is not None:
@@ -585,7 +587,10 @@ class FlattenedDataset:
                 msg.warn(
                     f"""{full_col_str}: Removed since variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None."""
                 )
-
+                # warnings.warn(
+                #     f"""{full_col_str}: Removed since variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None."""
+                # )
+                
                 do_return_col = False
 
         if do_return_col:
