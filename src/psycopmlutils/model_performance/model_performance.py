@@ -204,7 +204,9 @@ class ModelPerformance:
             a 1 row dataframe with columns with the naming convention: "metric-aggregation_level_or_class
         """
         if aggregate_by_id:
-            df = aggregate_predictions(df, id_col_name, prediction_col_name, label_col_name)
+            df = aggregate_predictions(
+                df, id_col_name, prediction_col_name, label_col_name
+            )
 
         # get predicted labels
         if df[prediction_col_name].dtype != "float":
@@ -213,7 +215,9 @@ class ModelPerformance:
         else:
             predictions = np.round(df[prediction_col_name])
 
-        metrics = ModelPerformance.compute_metrics(df[label_col_name], predictions, to_wide)
+        metrics = ModelPerformance.compute_metrics(
+            df[label_col_name], predictions, to_wide
+        )
 
         # calculate roc if binary model
         # convoluted way to take first element of scores column and test how how many items it contains
