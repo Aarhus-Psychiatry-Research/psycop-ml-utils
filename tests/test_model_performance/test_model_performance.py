@@ -65,7 +65,7 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
         multiclass_df,
         id_col="id",
         metadata_cols="model_name",
-        predictions_col="scores",
+        prediction_col="scores",
         label_col="label",
         id2label=multiclass_score_mapping,
     )
@@ -81,7 +81,7 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
         df=binary_df,
         id_col="id",
         metadata_cols="all",
-        predictions_col="scores",
+        prediction_col="scores",
         label_col="label",
         id2label=binary_score_mapping,
     )
@@ -103,7 +103,7 @@ def test_binary_transform_from_dataframe_with_float(
     res = ModelPerformance.performance_metrics_from_df(
         df=binary_float_df,
         metadata_cols="all",
-        predictions_col="scores",
+        prediction_col="scores",
         label_col="label",
     )
 
@@ -114,7 +114,7 @@ def test_binary_transform_from_dataframe_with_float_wide(binary_float_df):
     res = ModelPerformance.performance_metrics_from_df(
         binary_float_df,
         to_wide=True,
-        predictions_col="scores",
+        prediction_col="scores",
         label_col="label",
     )
     assert res["acc-overall"][0] == pytest.approx(0.666667)
@@ -135,7 +135,7 @@ def test_transform_folder():
         df = ModelPerformance.performance_metrics_from_folder(
             folder,
             pattern=f"*{diagnosis}*.jsonl",
-            predictions_col="scores",
+            prediction_col="scores",
             id2label=score_mapping,
             metadata_cols=metadata_cols,
             label_col="label",

@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Union
+from typing import List, TypeVar, Union, Dict
 
 import numpy as np
 import pandas as pd
@@ -27,7 +27,9 @@ def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series
         return scores.apply(lambda x: x[1])
 
 
-def labels_to_int(labels: Union[SeriesOfStr, SeriesOfInt], label2id: dict[str, int]) -> Series:
+def labels_to_int(
+    labels: Union[SeriesOfStr, SeriesOfInt], label2id: Dict[str, int]
+) -> Series:
     """Converts label to int mapping. Only makes sense for binary models. If
     already int will return as is.
 
@@ -90,7 +92,7 @@ def get_metadata_cols(
     Args:
         df (pd.DataFrame): Dataframe with predictions and metadata.
         cols (List[str]): Which columns contain metadata.
-            The columns should only contain a single value.
+            The columns should only contain a single value. If "all", will add all metadata.
         skip (List[str]): columns to definitely not include.
 
     Raises:
@@ -151,20 +153,3 @@ def add_metadata_cols(df: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
     meta_df = pd.DataFrame.from_records(meta_dict)
 
     return df.reset_index(drop=True).join(meta_df)
-
-
-if __name__ == "__main__":
-    df = pd.DataFrame(
-        {
-            "id": [1, 1, 2, 2],
-            "scores": [
-                [0.1, 0.7, 0.1, 0.1],
-                [0.1, 0.7, 0.1, 0.1],
-                [0.1, 0.1, 0.7, 0.1],
-                [0.1, 0.7, 0.1, 0.1],
-            ],
-            "label": ["ASD", "ASD", "TD", "TD"],
-        }
-    )
-
-    aggregate_predictions(df, "id")
