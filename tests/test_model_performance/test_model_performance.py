@@ -63,10 +63,10 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
 
     res = ModelPerformance.performance_metrics_from_df(
         multiclass_df,
-        id_col="id",
-        metadata_cols="model_name",
-        prediction_col="scores",
-        label_col="label",
+        id_col_name="id",
+        metadata_col_names="model_name",
+        prediction_col_name="scores",
+        label_col_name="label",
         id2label=multiclass_score_mapping,
     )
 
@@ -79,10 +79,10 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
 
     res = ModelPerformance.performance_metrics_from_df(
         df=binary_df,
-        id_col="id",
-        metadata_cols="all",
-        prediction_col="scores",
-        label_col="label",
+        id_col_name="id",
+        metadata_col_names="all",
+        prediction_col_name="scores",
+        label_col_name="label",
         id2label=binary_score_mapping,
     )
 
@@ -102,9 +102,9 @@ def test_binary_transform_from_dataframe_with_float(
 
     res = ModelPerformance.performance_metrics_from_df(
         df=binary_float_df,
-        metadata_cols="all",
-        prediction_col="scores",
-        label_col="label",
+        metadata_col_names="all",
+        prediction_col_name="scores",
+        label_col_name="label",
     )
 
     assert res[res["score_type"] == "acc"]["value"].values[0] == pytest.approx(0.666667)
@@ -114,8 +114,8 @@ def test_binary_transform_from_dataframe_with_float_wide(binary_float_df):
     res = ModelPerformance.performance_metrics_from_df(
         binary_float_df,
         to_wide=True,
-        prediction_col="scores",
-        label_col="label",
+        prediction_col_name="scores",
+        label_col_name="label",
     )
     assert res["acc-overall"][0] == pytest.approx(0.666667)
     assert res.shape[0] == 1
@@ -135,10 +135,10 @@ def test_transform_folder():
         df = ModelPerformance.performance_metrics_from_folder(
             folder,
             pattern=f"*{diagnosis}*.jsonl",
-            prediction_col="scores",
+            prediction_col_name="scores",
             id2label=score_mapping,
-            metadata_cols=metadata_cols,
-            label_col="label",
+            metadata_col_names=metadata_cols,
+            label_col_name="label",
         )
 
         dfs.append(df)

@@ -28,11 +28,11 @@ class ModelPerformance:
 
     def performance_metrics_from_df(
         df: pd.DataFrame,
-        prediction_col: str,
-        label_col: str,
+        prediction_col_name: str,
+        label_col_name: str,
         aggregate_by_id: bool = False,
-        id_col: str = None,
-        metadata_cols: Optional[List[str]] = None,
+        id_col_name: str = None,
+        metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
         to_wide: bool = False,
     ) -> pd.DataFrame:
@@ -43,11 +43,11 @@ class ModelPerformance:
 
         Args:
             df (pd.DataFrame): Dataframe with 1 row per prediction.
-            prediction_col (str): column containing probabilities for each class or a list of floats for binary classification.
-            label_col (str): column containing ground truth label
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
+            label_col_name (str): column containing ground truth label
             aggregate_by_id (bool): Whether to only calculate predictions on row level or also aggregate by id. Defaults to False.
-            id_col (str, optional): Column name for the id, used for grouping.
-            metadata_cols (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
+            id_col_name (str, optional): Column name for the id, used for grouping.
+            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
                 Each column should only contain 1 unique value. E.g. model_name, modality.. If set to "all" will auto-detect
                 metadata columns and add them all.
             id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
@@ -62,21 +62,21 @@ class ModelPerformance:
         performance = ModelPerformance._evaluate_single_model(
             df=df,
             aggregate_by_id=aggregate_by_id,
-            prediction_col=prediction_col,
-            label_col=label_col,
-            id_col=id_col,
+            prediction_col_name=prediction_col_name,
+            label_col_name=label_col_name,
+            id_col_name=id_col_name,
             to_wide=to_wide,
             id2label=id2label,
         )
         performance["level"] = "overall"
 
-        if id_col:
+        if id_col_name:
             # Calculate performance by id and add to the dataframe
             performance_by_id = ModelPerformance._evaluate_single_model(
                 df=df,
-                prediction_col=prediction_col,
-                label_col=label_col,
-                id_col=id_col,
+                prediction_col_name=prediction_col_name,
+                label_col_name=label_col_name,
+                id_col_name=id_col_name,
                 to_wide=to_wide,
                 aggregate_by_id=True,
                 id2label=id2label,
@@ -84,20 +84,20 @@ class ModelPerformance:
             performance_by_id["level"] = "id"
             performance = pd.concat([performance, performance_by_id], axis=concat_axis)
 
-        if metadata_cols:
+        if metadata_col_names:
             # Add metadata if specified
             metadata = get_metadata_cols(
-                df, metadata_cols, skip=[prediction_col, label_col]
+                df, metadata_col_names, skip=[prediction_col_name, label_col_name]
             )
             performance = add_metadata_cols(performance, metadata)
         return performance
 
     def performance_metrics_from_file(
         path: Union[str, Path],
-        prediction_col: str,
-        label_col: str,
-        id_col: str = None,
-        metadata_cols: Optional[List[str]] = None,
+        prediction_col_name: str,
+        label_col_name: str,
+        id_col_name: str = None,
+        metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
         to_wide=False,
     ) -> pd.DataFrame:
@@ -105,10 +105,10 @@ class ModelPerformance:
 
         Args:
             path (Union[str, Path]): Path to .jsonl file
-            prediction_col (str): column containing probabilities for each class or a list of floats for binary classification.
-            label_col (str): column containing ground truth label
-            id_col (str, optional): Column name for the id, used for grouping.
-            metadata_cols (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
+            label_col_name (str): column containing ground truth label
+            id_col_name (str, optional): Column name for the id, used for grouping.
+            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
                 Each column should only contain 1 unique value. E.g. model_name, modality.. If set to "all" will auto-detect
                 metadata columns and add them all.
             id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
@@ -128,22 +128,22 @@ class ModelPerformance:
         df = pd.read_json(path, orient="records", lines=True)
         return ModelPerformance.performance_metrics_from_df(
             df=df,
-            prediction_col=prediction_col,
-            label_col=label_col,
-            id_col=id_col,
+            prediction_col_name=prediction_col_name,
+            label_col_name=label_col_name,
+            id_col_name=id_col_name,
             to_wide=to_wide,
             aggregate_by_id=False,
             id2label=id2label,
-            metadata_cols=metadata_cols,
+            metadata_col_names=metadata_col_names,
         )
 
     def performance_metrics_from_folder(
         folder: Union[str, Path],
         pattern: str,
-        prediction_col: str,
-        label_col: str,
-        id_col: str = None,
-        metadata_cols: Optional[List[str]] = None,
+        prediction_col_name: str,
+        label_col_name: str,
+        id_col_name: str = None,
+        metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
         to_wide=False,
     ) -> pd.DataFrame:
@@ -154,9 +154,9 @@ class ModelPerformance:
         Args:
             folder (Union[str, Path]): Path to folder.
             pattern (str, optional): Pattern to match on filename.
-            prediction_col (str): column containing probabilities for each class or a list of floats for binary classification.
-            label_col (str): column containing ground truth label
-            id_col (str, optional): Column name for the id, used for grouping.
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
+            label_col_name (str): column containing ground truth label
+            id_col_name (str, optional): Column name for the id, used for grouping.
             to_wide (bool): Whether to return performance as wide format.
             id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
 
@@ -167,10 +167,10 @@ class ModelPerformance:
         dfs = [
             ModelPerformance.performance_metrics_from_file(
                 path=p,
-                prediction_col=prediction_col,
-                label_col=label_col,
-                id_col=id_col,
-                metadata_cols=metadata_cols,
+                prediction_col_name=prediction_col_name,
+                label_col_name=label_col_name,
+                id_col_name=id_col_name,
+                metadata_col_names=metadata_col_names,
                 id2label=id2label,
                 to_wide=to_wide,
             )
@@ -181,9 +181,9 @@ class ModelPerformance:
     def _evaluate_single_model(
         df: pd.DataFrame,
         aggregate_by_id: bool,
-        prediction_col: str,
-        label_col: str,
-        id_col: str,
+        prediction_col_name: str,
+        label_col_name: str,
+        id_col_name: str,
         to_wide: bool,
         id2label: Dict[int, str] = None,
     ) -> pd.DataFrame:
@@ -204,25 +204,25 @@ class ModelPerformance:
             a 1 row dataframe with columns with the naming convention: "metric-aggregation_level_or_class
         """
         if aggregate_by_id:
-            df = aggregate_predictions(df, id_col, prediction_col, label_col)
+            df = aggregate_predictions(df, id_col_name, prediction_col_name, label_col_name)
 
         # get predicted labels
-        if df[prediction_col].dtype != "float":
-            argmax_indices = df[prediction_col].apply(lambda x: np.argmax(x))
+        if df[prediction_col_name].dtype != "float":
+            argmax_indices = df[prediction_col_name].apply(lambda x: np.argmax(x))
             predictions = idx_to_class(argmax_indices, id2label)
         else:
-            predictions = np.round(df[prediction_col])
+            predictions = np.round(df[prediction_col_name])
 
-        metrics = ModelPerformance.compute_metrics(df[label_col], predictions, to_wide)
+        metrics = ModelPerformance.compute_metrics(df[label_col_name], predictions, to_wide)
 
         # calculate roc if binary model
         # convoluted way to take first element of scores column and test how how many items it contains
-        first_score = df[prediction_col].take([0]).values[0]
+        first_score = df[prediction_col_name].take([0]).values[0]
 
         if isinstance(first_score, float) or len(first_score) == 2:
             label2id = {v: k for k, v in id2label.items()} if id2label else None
-            probs = scores_to_probs(df[prediction_col])
-            label_int = labels_to_int(df[label_col], label2id)
+            probs = scores_to_probs(df[prediction_col_name])
+            label_int = labels_to_int(df[label_col_name], label2id)
             auc_df = ModelPerformance.calculate_roc_auc(label_int, probs, to_wide)
 
             if to_wide:
@@ -345,11 +345,11 @@ if __name__ == "__main__":
 
     multiclass_res = ModelPerformance.performance_metrics_from_df(
         multiclass_df,
-        label_col="label",
-        prediction_col="scores",
-        id_col="id",
+        label_col_name="label",
+        prediction_col_name="scores",
+        id_col_name="id",
         id2label=id2label,
-        metadata_cols="all",
+        metadata_col_names="all",
         to_wide=False,
     )
 
@@ -365,10 +365,10 @@ if __name__ == "__main__":
 
     binary_res = ModelPerformance.performance_metrics_from_df(
         binary_df,
-        label_col="label",
-        prediction_col="scores",
-        id_col="id",
+        label_col_name="label",
+        prediction_col_name="scores",
+        id_col_name="id",
         id2label=id2label,
-        metadata_cols=None,
+        metadata_col_names=None,
         to_wide=True,
     )
