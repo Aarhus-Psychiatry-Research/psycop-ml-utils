@@ -12,8 +12,8 @@ from psycopmlutils.writers.sql_writer import write_df_to_sql
 from wasabi import msg
 
 if __name__ == "__main__":
-    RESOLVE_MULTIPLE = ["mean", "latest", "earliest", "max", "min"]
-    LOOKBEHIND_DAYS = [365, 9999]
+    RESOLVE_MULTIPLE = ["mean", "max", "min"]
+    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     PREDICTOR_LIST = create_feature_combinations(
         [
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         ]
     )
 
-    event_times = psycopmlutils.loaders.LoadDiagnoses.t2d_times()
+    event_times = psycopmlutils.loaders.LoadOutcome.t2d()
 
     msg.info(f"Generating {len(PREDICTOR_LIST)} features")
 
@@ -52,20 +52,7 @@ if __name__ == "__main__":
     prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
 
     msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=20)
-
-    # Outcome
-    msg.info("Adding outcome")
-    flattened_df.add_temporal_outcome(
-        outcome_df=event_times,
-        lookahead_days=365.25 * 5,
-        resolve_multiple="max",
-        fallback=0,
-        outcome_df_values_col_name="value",
-        new_col_name="t2d",
-        incident=True,
-    )
-    msg.good("Finished adding outcome")
+    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
 
     # Predictors
     msg.info("Adding static predictors")
@@ -79,7 +66,26 @@ if __name__ == "__main__":
         predictors=PREDICTOR_LIST,
     )
 
+    # Outcome
+    msg.info("Adding outcome")
+    for i in [0.5, 1, 2, 3, 4, 5]:
+        lookahead_days = i * 365.25
+        msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
+        flattened_df.add_temporal_outcome(
+            outcome_df=event_times,
+            lookahead_days=lookahead_days,
+            resolve_multiple="max",
+            fallback=0,
+            outcome_df_values_col_name="value",
+            new_col_name="t2d",
+            incident=True,
+            dichotomous=True,
+        )
+        msg.good("Finished adding outcome")
+
     end_time = time.time()
+
+    # Finish
     msg.good(
         f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes"
     )
@@ -90,8 +96,7 @@ if __name__ == "__main__":
 
     msg.good("Done!")
 
-    midtx_path = Path("\\\\tsclient\\X\\MANBER01\\documentLibrary")
-
+    # Split and upload to SQL_server
     splits = ["test", "val", "train"]
 
     outcome_col_name = "t2d_within_1826.25_days_max_fallback_0"
@@ -103,7 +108,7 @@ if __name__ == "__main__":
 
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
-        # Find IDs which are in split_ids, but not in flattened_df.
+        # Find IDs which are in split_ids, but not in flattened_df
         split_ids = df_split_ids["dw_ek_borger"].unique()
         flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
@@ -117,21 +122,12 @@ if __name__ == "__main__":
 
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
-        split_features = split_df.loc[:, ~split_df.columns.str.startswith("t2d")]
-        msg.info(f"{dataset_name}: Writing features")
+        msg.info(f"{dataset_name}: Writing to SQL")
         write_df_to_sql(
-            df=split_features,
-            table_name=f"psycop_t2d_{dataset_name}_features",
+            df=split_df,
+            table_name=f"psycop_t2d_{dataset_name}",
             if_exists="replace",
             rows_per_chunk=ROWS_PER_CHUNK,
         )
 
-        split_events = split_df[["dw_ek_borger", "timestamp", outcome_col_name]]
-        msg.info(f"{dataset_name}: Writing events")
-        write_df_to_sql(
-            df=split_events,
-            table_name=f"psycop_t2d_{dataset_name}_events",
-            if_exists="replace",
-            rows_per_chunk=ROWS_PER_CHUNK,
-        )
         msg.good(f"{dataset_name}: Succesfully wrote {dataset_name} to SQL server")
