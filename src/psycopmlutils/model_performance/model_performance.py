@@ -192,9 +192,9 @@ class ModelPerformance:
         Args:
             df (pd.DataFrame): Dataframe with one prediction per row
             aggregate_by_id (bool): Whether to only calculate predictions on row level or also aggregate by id
-            prediction_col (str): column containing probabilities for each class or a list of floats for binary classification.
-            label_col (str): column containing ground truth label
-            id_col (str, optional): Column name for the id, used for grouping.
+            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
+            label_col_name (str): column containing ground truth label
+            id_col_name (str, optional): Column name for the id, used for grouping.
             to_wide (bool): Whether to return performance as wide format.
             id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
 
