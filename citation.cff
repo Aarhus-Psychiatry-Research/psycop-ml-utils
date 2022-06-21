@@ -1,11 +1,15 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
+- family-names: "Martin"
+  given-names: "Bernstorff"
+- family-names: "Lasse"
+  given-names: "Hansen"
 - family-names: "Enevoldsen"
   given-names: "Kenneth"
   orcid: "https://orcid.org/0000-0001-8733-0966"
 title: "PSYCOP machine learning utilities"
-version: 1.0.0
-doi: 10.5281/zenodo.6675315
+version: 0.1.1
+# doi: 10.5281/zenodo.6675315
 date-released: 2022-21-06
 url: "https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils"
