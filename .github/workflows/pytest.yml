@@ -28,16 +28,15 @@ jobs:
       run: |
         set -o pipefail
         python -m pytest --cov=src --cov-report term-missing | tee pytest-coverage.txt
-    - name: Output coverage
-      run: |
-        echo "Coverage Report - ${{ steps.coverage-comment.outputs.coverage }}"
-        echo "Coverage Color - ${{ steps.coverage-comment.outputs.color }}"
     - name: Coverage comment
       id: coverage-comment
       uses: MishaKav/pytest-coverage-comment@v1.1.24
       with:
         pytest-coverage-path: ./pytest-coverage.txt
-    
+    - name: Output coverage
+      run: |
+        echo "Coverage Report - ${{ steps.coverage-comment.outputs.coverage }}"
+        echo "Coverage Color - ${{ steps.coverage-comment.outputs.color }}"
     - name: Create Badge
       uses: schneegans/dynamic-badges-action@v1.1.0
       with:
