@@ -1,12 +1,9 @@
 import urllib
 import urllib.parse
-from multiprocessing.sharedctypes import Value
 
 import pandas as pd
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 from tqdm import tqdm
-from wasabi import msg
 
 
 def chunker(seq, size):
