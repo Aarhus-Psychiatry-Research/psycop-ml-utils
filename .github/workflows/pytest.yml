@@ -18,8 +18,8 @@ jobs:
     - name: Caching
       uses: actions/cache@v2
       with:
-        path: $/{/{ env.pythonLocation /}/}
-        key: $/{/{ env.pythonLocation /}/}-$/{/{ hashFiles('setup.py') /}/}-$/{/{ hashFiles('requirements.txt') /}/}
+        path: ${{ env.pythonLocation }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}
     - name: Install dependencies
       run: |
         python -m pip install -e . --no-cache-dir
