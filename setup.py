@@ -3,7 +3,7 @@ from setuptools import find_packages
 import os
 
 
-path = os.path.join("src", "about.py")
+path = os.path.join("src", "psycopmlutils", "about.py")
 
 with open(path) as f:
     v = f.read()
