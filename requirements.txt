@@ -1,16 +1,13 @@
 # Package dependencies
-## Data-wrangling
 pandas>=1.2.3,<1.5.0
+catalogue>=2.0.7,<2.1.0
+wasabi>=0.9.1,<0.10.0
+scikit-learn>=1.0.0,<1.1.0
+tqdm>=4.64.0,<4.65.0
 ## SQL
 sqlalchemy>=1.4.32,<1.5.0
 pyodbc>=4.0.32,<4.1.0
 pymssql
-## Util
-catalogue>=2.0.7,<2.1.0
-## Printing
-wasabi>=0.9.1,<0.10.0
-## Model comparison
-scikit-learn>=1.0.0,<1.1.0
 
 # documentation
 sphinx>=4.5.0
