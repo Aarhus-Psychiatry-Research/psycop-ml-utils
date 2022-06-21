@@ -16,6 +16,7 @@ jobs:
       cache: 'poetry'
       with:
         python-version: 3.7
+        cache: 'poetry'
     - name: Install dependencies
       run: |
         poetry install
