@@ -57,7 +57,6 @@ exclude_lines = [
 
 [tool.semantic_release]
 version_variable = [
-    "src/psycopmlutils/__init__.py:__version__",
     "pyproject.toml:version"
 ]
 branch = "main"
