@@ -3,6 +3,7 @@ name = "psycop-ml-utils"
 version = "0.1.0"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
+packages = [{include = "src/psycopmlutils"}]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
