@@ -1,9 +1,8 @@
 [tool.poetry]
-name = "psycop-ml-utils"
+name = "psycopmlutils"
 version = "0.1.0"
-description = "A collection of machine-learning utilities used across the psycop-projects."
+description = "A collection of machine-learnooing utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
-packages = [{include = "src/psycopmlutils"}]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
@@ -12,7 +11,7 @@ numpy = "^1.22.4"
 scipy = "^1.8.1"
 pandas = "^1.4.2"
 SQLAlchemy = "^1.4.37"
-pyodbc = "^4.0.32"
+pyodbc = { version = "^4.0.32", markers = "platform_machine == 'x86_64'" }
 pre-commit = "^2.19.0"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
