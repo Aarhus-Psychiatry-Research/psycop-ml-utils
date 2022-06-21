@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "psycop-ml-utils"
+version = "0.1.0"
+description = "A collection of machine-learning utilities used across the psycop-projects."
+authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+black = "^22.3.0"
+numpy = "^1.22.4"
+scipy = "^1.8.1"
+pandas = "^1.4.2"
+SQLAlchemy = "^1.4.37"
+pyodbc = "^4.0.32"
+pre-commit = "^2.19.0"
+pytest = "^7.1.2"
+pytest-cov = "^3.0.0"
+catalogue = "^2.0.7"
+wasabi = "^0.9.1"
+scikit-learn = "^1.1.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

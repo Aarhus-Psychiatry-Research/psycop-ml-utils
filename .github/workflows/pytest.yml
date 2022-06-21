@@ -13,17 +13,12 @@ jobs:
       uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v3
+      cache: 'poetry'
       with:
         python-version: 3.7
-    - name: Caching
-      uses: actions/cache@v2
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}
     - name: Install dependencies
       run: |
-        python -m pip install -e . --no-cache-dir
-        pip install -r requirements.txt
+        poetry install
     - name: Run and write pytest
       run: |
         set -o pipefail
