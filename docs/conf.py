@@ -11,7 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-from psycopmlutils.about import __version__
+from psycopmlutils import __version__
 
 # -- Project information -----------------------------------------------------
 
@@ -80,12 +80,12 @@ html_theme_options = {
     "light_logo": "icon_with_title.png",
     "dark_logo": "icon_with_title.png",
     "light_css_variables": {
-        "color-brand-primary": "#ff5454",
-        "color-brand-content": "#ff7575",
+        "color-brand-primary": "#204279",
+        "color-brand-content": "#204279",
     },
     "dark_css_variables": {
-        "color-brand-primary": "#ff8f8f",
-        "color-brand-content": "#ff8f8f",
+        "color-brand-primary": "#4872b8",
+        "color-brand-content": "#4872b8",
     },
     "sidebar_hide_name": True,
     "navigation_with_keys": True,
