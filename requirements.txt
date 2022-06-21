@@ -1,24 +1,29 @@
-# Formatting
-black>=22.3.0
-
-# Data-wrangling
+# Package dependencies
+## Data-wrangling
 pandas>=1.2.3,<1.5.0
-
-# SQL
+## SQL
 sqlalchemy>=1.4.32,<1.5.0
 pyodbc>=4.0.32,<4.1.0
 pymssql
+## Util
+catalogue>=2.0.7,<2.1.0
+## Printing
+wasabi>=0.9.1,<0.10.0
+## Model comparison
+scikit-learn>=1.0.0,<1.1.0
+
+# documentation
+sphinx>=4.5.0
+furo
+sphinx-copybutton
+sphinxext-opengraph
+myst-parser
+
+# Formatting
+black>=22.3.0
+flake8
 
 # Testing
 pre-commit>=2.17.0
 pytest>=7.1.1
 pytest-cov>=3.0.0
-
-# Util
-catalogue>=2.0.7
-
-# Printing
-wasabi>=0.9.1
-
-# Model comparison
-scikit-learn>=1.0.0
