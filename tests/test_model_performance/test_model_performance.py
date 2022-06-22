@@ -96,9 +96,7 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
     )
 
 
-def test_binary_transform_from_dataframe_with_float(
-    binary_float_df, binary_score_mapping
-):
+def test_binary_transform_from_dataframe_with_float(binary_float_df):
 
     res = ModelPerformance.performance_metrics_from_df(
         df=binary_float_df,
@@ -119,6 +117,19 @@ def test_binary_transform_from_dataframe_with_float_wide(binary_float_df):
     )
     assert res["acc-overall"][0] == pytest.approx(0.666667)
     assert res.shape[0] == 1
+
+
+def test_binary_transform_from_dataframe_wide_by_id(binary_df, binary_score_mapping):
+    res = ModelPerformance.performance_metrics_from_df(
+        binary_df,
+        to_wide=True,
+        prediction_col_name="scores",
+        label_col_name="label",
+        id_col_name="id",
+        id2label=binary_score_mapping,
+    )
+    assert "row-acc-overall" in res.columns
+    assert "id-auc-overall" in res.columns
 
 
 def test_transform_folder():
