@@ -17,7 +17,9 @@ pip install git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.gi
 
 or using poetry
 
-`poetry add git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git`
+```
+poetry add git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git
+```
 
 For more detailed instructions on installation e.g. including installation for development, see the [installation instructions](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/installation).
 
