@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-      - name: Build documentation
+    - name: Build documentation
       run: |
         mkdir gh-pages
         touch gh-pages/.nojekyll
