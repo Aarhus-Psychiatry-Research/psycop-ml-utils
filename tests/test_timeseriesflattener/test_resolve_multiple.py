@@ -1,14 +1,14 @@
+from utils_for_testing import (
+    assert_flattened_outcome_as_expected,
+    assert_flattened_predictor_as_expected,
+)
+
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
     get_earliest_value_in_group,
     get_latest_value_in_group,
     get_max_in_group,
     get_mean_in_group,
     get_min_in_group,
-)
-
-from utils_for_testing import (
-    assert_flattened_outcome_as_expected,
-    assert_flattened_predictor_as_expected,
 )
 
 

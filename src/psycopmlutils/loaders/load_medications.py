@@ -1,14 +1,17 @@
 import pandas as pd
+from wasabi import msg
+
 from psycopmlutils.loaders.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
-from wasabi import msg
 
 
 class LoadMedications:
     def aggregate_medications(
-        output_col_name: str, atc_code_prefixes: list
+        output_col_name: str,
+        atc_code_prefixes: list,
     ) -> pd.DataFrame:
-        """Aggregate multiple blood_sample_ids (typically NPU-codes) into one column.
+        """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
+        column.
 
         Args:
             output_col_name (str): Name for new column.
@@ -19,7 +22,8 @@ class LoadMedications:
         """
         dfs = [
             LoadMedications.load(
-                blood_sample_id=f"{id}", output_col_name=output_col_name
+                blood_sample_id=f"{id}",
+                output_col_name=output_col_name,
             )
             for id in atc_code_prefixes
         ]
@@ -33,8 +37,10 @@ class LoadMedications:
         load_administered: bool = True,
         wildcard_at_end: bool = True,
     ) -> pd.DataFrame:
-        """Load medications. Aggregates prescribed/administered if both true. If wildcard_atc_at_end, match from atc_code*.
-        Aggregates all that match. Beware that data is incomplete prior to sep. 2016 for prescribed medications.
+        """Load medications. Aggregates prescribed/administered if both true.
+        If wildcard_atc_at_end, match from atc_code*. Aggregates all that
+        match. Beware that data is incomplete prior to sep. 2016 for prescribed
+        medications.
 
         Args:
             atc_code (str): ATC-code prefix to load. Matches atc_code_prefix*. Aggregates all.
@@ -51,7 +57,7 @@ class LoadMedications:
 
         if load_prescribed:
             msg.warn(
-                "Beware, there are missing prescriptions until september 2019. Hereafter, data is complete."
+                "Beware, there are missing prescriptions until september 2019. Hereafter, data is complete.",
             )
 
         df = pd.DataFrame()
@@ -96,8 +102,10 @@ class LoadMedications:
         output_col_name: str = None,
         wildcard_atc_at_end: bool = False,
     ) -> pd.DataFrame:
-        """Load the prescribed medications that match atc. If wildcard_atc_at_end, match from atc_code*.
-        Aggregates all that match. Beware that data is incomplete prior to sep. 2016 for prescribed medications.
+        """Load the prescribed medications that match atc. If
+        wildcard_atc_at_end, match from atc_code*. Aggregates all that match.
+        Beware that data is incomplete prior to sep. 2016 for prescribed
+        medications.
 
         Args:
             atc_code (str): ATC string to match on.
@@ -130,5 +138,5 @@ class LoadMedications:
         return df.rename(
             columns={
                 source_timestamp_col_name: "timestamp",
-            }
+            },
         )

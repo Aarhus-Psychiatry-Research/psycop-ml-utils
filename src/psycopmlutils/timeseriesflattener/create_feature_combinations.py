@@ -2,7 +2,7 @@ from typing import Dict, List, Union
 
 
 def list_has_dict_with_list_as_value(
-    list_of_dicts: List[Dict[str, Union[str, list]]]
+    list_of_dicts: List[Dict[str, Union[str, list]]],
 ) -> bool:
     """Checks if any dict in a list of dicts has a value that is a list.
 
@@ -20,9 +20,7 @@ def list_has_dict_with_list_as_value(
 
 
 def dict_has_list_in_any_value(dict: Dict[str, Union[str, list]]) -> bool:
-    """
-    Checks if a dict has any values that are lists
-    """
+    """Checks if a dict has any values that are lists."""
     for value in dict.values():
         if type(value) == list:
             return True
@@ -32,7 +30,8 @@ def dict_has_list_in_any_value(dict: Dict[str, Union[str, list]]) -> bool:
 def create_feature_combinations(
     arg_sets: List[Dict[str, Union[str, list]]],
 ) -> List[Dict[str, Union[str, float, int]]]:
-    """Create feature combinations from a dictionary of feature specifications. See example for shape.
+    """Create feature combinations from a dictionary of feature specifications.
+    See example for shape.
 
     Args:
         arg_sets (List[Dict[str, Union[str, list]]]): A set of argument sets for .add_predictor. See example for shape.

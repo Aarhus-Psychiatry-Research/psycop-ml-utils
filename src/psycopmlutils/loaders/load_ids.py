@@ -1,12 +1,11 @@
 import pandas as pd
+
 from psycopmlutils.loaders.sql_load import sql_load
-from psycopmlutils.utils import data_loaders
-from wasabi import msg
 
 
 class LoadIDs:
     def load(split: str) -> pd.DataFrame:
-        """Loads ids for a given split
+        """Loads ids for a given split.
 
         Args:
             split (str): Which split to load IDs from. Takes either "train", "test" or "val".
