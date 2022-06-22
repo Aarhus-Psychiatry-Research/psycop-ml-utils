@@ -1,7 +1,7 @@
 import pytest
-from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
-
 from utils_for_testing import str_to_df
+
+from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 
 
 def test_col_does_not_exist_in_prediction_times():
@@ -12,7 +12,7 @@ def test_col_does_not_exist_in_prediction_times():
     prediction_times_df = str_to_df(prediction_times_str)
 
     with pytest.raises(ValueError):
-        flattened_df = FlattenedDataset(
+        flattened_df = FlattenedDataset(  # noqa
             prediction_times_df=prediction_times_df,
             timestamp_col_name="timestamp",
             id_col_name="dw_ek_borger",

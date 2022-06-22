@@ -5,14 +5,6 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from psycopmlutils.model_performance.utils import (
-    add_metadata_cols,
-    aggregate_predictions,
-    get_metadata_cols,
-    idx_to_class,
-    labels_to_int,
-    scores_to_probs,
-)
 from sklearn.metrics import (
     accuracy_score,
     confusion_matrix,
@@ -20,6 +12,15 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     roc_auc_score,
+)
+
+from psycopmlutils.model_performance.utils import (
+    add_metadata_cols,
+    aggregate_predictions,
+    get_metadata_cols,
+    idx_to_class,
+    labels_to_int,
+    scores_to_probs,
 )
 
 
@@ -88,7 +89,9 @@ class ModelPerformance:
         if metadata_col_names:
             # Add metadata if specified
             metadata = get_metadata_cols(
-                df, metadata_col_names, skip=[prediction_col_name, label_col_name]
+                df,
+                metadata_col_names,
+                skip=[prediction_col_name, label_col_name],
             )
             performance = add_metadata_cols(performance, metadata)
         return performance
@@ -124,7 +127,7 @@ class ModelPerformance:
         path = Path(path)
         if path.suffix != ".jsonl":
             raise ValueError(
-                f"Only .jsonl files are supported for import, not {path.suffix}"
+                f"Only .jsonl files are supported for import, not {path.suffix}",
             )
         df = pd.read_json(path, orient="records", lines=True)
         return ModelPerformance.performance_metrics_from_df(
@@ -147,7 +150,8 @@ class ModelPerformance:
         id2label: Optional[Dict[int, str]] = None,
         to_wide=False,
     ) -> pd.DataFrame:
-        """Load and calculates performance metrics for all files matching a pattern in a folder.
+        """Load and calculates performance metrics for all files matching a
+        pattern in a folder.
 
         Only supports jsonl for now.
 
@@ -187,7 +191,8 @@ class ModelPerformance:
         to_wide: bool,
         id2label: Dict[int, str] = None,
     ) -> pd.DataFrame:
-        """Calculate performance metrics from a dataframe. Optionally adds aggregated performance by id.
+        """Calculate performance metrics from a dataframe. Optionally adds
+        aggregated performance by id.
 
         Args:
             df (pd.DataFrame): Dataframe with one prediction per row
@@ -207,7 +212,10 @@ class ModelPerformance:
 
         if aggregate_by_id:
             df = aggregate_predictions(
-                df, id_col_name, prediction_col_name, label_col_name
+                df,
+                id_col_name,
+                prediction_col_name,
+                label_col_name,
             )
 
         # get predicted labels
@@ -221,7 +229,10 @@ class ModelPerformance:
             predictions = np.round(df[prediction_col_name])
 
         metrics = ModelPerformance.compute_metrics(
-            df[label_col_name], predictions, to_wide, level_prefix
+            df[label_col_name],
+            predictions,
+            to_wide,
+            level_prefix,
         )
 
         # calculate roc if binary model
@@ -232,7 +243,10 @@ class ModelPerformance:
             probs = scores_to_probs(df[prediction_col_name])
             label_int = labels_to_int(df[label_col_name], label2id)
             auc_df = ModelPerformance.calculate_roc_auc(
-                label_int, probs, to_wide, level_prefix
+                label_int,
+                probs,
+                to_wide,
+                level_prefix,
             )
 
             if to_wide:
@@ -249,7 +263,8 @@ class ModelPerformance:
         to_wide: bool,
         add_level_prefix: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Calculate the area under the receiver operating characteristic curve.
+        """Calculate the area under the receiver operating characteristic
+        curve.
 
         Potentially extendable to calculate other metrics that require probabilities
         instead of label predictions
@@ -280,8 +295,8 @@ class ModelPerformance:
                         "class": "overall",
                         "score_type": "auc",
                         "value": roc_auc,
-                    }
-                ]
+                    },
+                ],
             )
         return performance
 
@@ -292,7 +307,8 @@ class ModelPerformance:
         to_wide: bool,
         add_level_prefix: Optional[str] = None,
     ) -> pd.DataFrame:
-        """Compute a whole bunch of performance metrics for both binary and multiclass tasks.
+        """Compute a whole bunch of performance metrics for both binary and
+        multiclass tasks.
 
         Args:
             labels (Union[pd.Series, List]): True class
@@ -312,16 +328,24 @@ class ModelPerformance:
         performance["f1_macro-overall"] = f1_score(labels, predicted, average="macro")
         performance["f1_micro-overall"] = f1_score(labels, predicted, average="micro")
         performance["precision_macro-overall"] = precision_score(
-            labels, predicted, average="macro"
+            labels,
+            predicted,
+            average="macro",
         )
         performance["precision_micro-overall"] = precision_score(
-            labels, predicted, average="micro"
+            labels,
+            predicted,
+            average="micro",
         )
         performance["recall_macro-overall"] = recall_score(
-            labels, predicted, average="macro"
+            labels,
+            predicted,
+            average="macro",
         )
         performance["recall_micro-overall"] = recall_score(
-            labels, predicted, average="micro"
+            labels,
+            predicted,
+            average="micro",
         )
         performance["confusion_matrix-overall"] = confusion_matrix(labels, predicted)
 
@@ -354,7 +378,9 @@ class ModelPerformance:
             return performance[["level", "class", "score_type", "value"]]
         else:
             performance[["score_type", "class"]] = performance["variable"].str.split(
-                "-", 1, expand=True
+                "-",
+                1,
+                expand=True,
             )
             return performance[["class", "score_type", "value"]]
 
@@ -380,7 +406,7 @@ if __name__ == "__main__":
             ],
             "label": ["ASD", "ASD", "DEPR", "DEPR", "TD", "TD", "SCHZ", "SCHZ"],
             "model_name": ["test"] * 8,
-        }
+        },
     )
     id2label = {0: "ASD", 1: "DEPR", 2: "TD", 3: "SCHZ"}
 
@@ -401,7 +427,7 @@ if __name__ == "__main__":
             "label": ["TD", "TD", "DEPR", "DEPR"],
             "optional_grouping1": ["grouping1"] * 4,
             "optional_grouping2": ["grouping2"] * 4,
-        }
+        },
     )
 
     binary_res = ModelPerformance.performance_metrics_from_df(

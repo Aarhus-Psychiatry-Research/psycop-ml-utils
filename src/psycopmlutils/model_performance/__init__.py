@@ -1,1 +1,1 @@
-from .model_performance import ModelPerformance
+from .model_performance import ModelPerformance  # noqa

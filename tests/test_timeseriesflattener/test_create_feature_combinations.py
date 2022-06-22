@@ -13,7 +13,7 @@ def test_skip_all_if_no_need_to_process():
             "lookbehind_days": 1,
             "resolve_multiple": "max",
             "fallback": 0,
-        }
+        },
     ]
 
     assert create_feature_combinations(input) == input
@@ -64,7 +64,7 @@ def test_list_has_dict_with_list_as_val():
             "resolve_multiple": "max",
             "fallback": 0,
             "source_values_col_name": "val",
-        }
+        },
     ]
 
     assert list_has_dict_with_list_as_value(test_pos_dataset)
@@ -75,7 +75,7 @@ def test_list_has_dict_with_list_as_val():
             "resolve_multiple": "max",
             "fallback": 0,
             "source_values_col_name": "val",
-        }
+        },
     ]
 
     assert not list_has_dict_with_list_as_value(test_neg_dataset)
@@ -109,7 +109,7 @@ def test_create_feature_combinations():
             "lookbehind_days": [1, 30],
             "resolve_multiple": "max",
             "fallback": 0,
-        }
+        },
     ]
 
     expected_output = [

@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+
 from psycopmlutils.model_performance import ModelPerformance
-from sklearn.model_selection import PredefinedSplit
 
 
 @pytest.fixture(scope="function")
@@ -27,7 +27,7 @@ def multiclass_df():
             ],
             "label": ["ASD", "ASD", "DEPR", "DEPR", "TD", "TD", "SCHZ", "SCHZ"],
             "model_name": ["test"] * 8,
-        }
+        },
     )
 
 
@@ -40,7 +40,7 @@ def binary_df():
             "label": ["TD", "TD", "DEPR", "DEPR"],
             "optional_grouping1": ["grouping1"] * 4,
             "optional_grouping2": ["grouping2"] * 4,
-        }
+        },
     )
 
 
