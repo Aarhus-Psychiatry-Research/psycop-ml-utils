@@ -1,4 +1,4 @@
-<a href="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils"><img src="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/blob/main/docs/icon.png?raw=true" width="200" align="right" /></a>
+<a href="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils"><img src="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/blob/main/docs/_static/icon.png?raw=true" width="200" align="right" /></a>
 # PSYCOP Machine Learning Utilities
 
 ![python versions](https://img.shields.io/badge/Python-%3E=3.7-blue)
