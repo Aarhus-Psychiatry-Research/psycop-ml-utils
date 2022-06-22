@@ -68,6 +68,11 @@ class ModelPerformance:
         )
 
         if id_col_name:
+            # add identifier for row-level metrics
+            if to_wide:
+                performance = performance.add_prefix("row-")
+            else:
+                performance["level"] = "row"
             # Calculate performance by id and add to the dataframe
             performance_by_id = ModelPerformance._evaluate_single_model(
                 df=df,
@@ -128,7 +133,6 @@ class ModelPerformance:
             label_col_name=label_col_name,
             id_col_name=id_col_name,
             to_wide=to_wide,
-            aggregate_by_id=False,
             id2label=id2label,
             metadata_col_names=metadata_col_names,
         )
@@ -199,7 +203,7 @@ class ModelPerformance:
             ´class´, ´score_type`, and ´value´ if long format. If to_wide, returns
             a 1 row dataframe with columns with the naming convention: "metric-aggregation_level_or_class
         """
-        level_prefix = "id" if aggregate_by_id else "row"
+        level_prefix = "id" if aggregate_by_id else None
 
         if aggregate_by_id:
             df = aggregate_predictions(
@@ -209,7 +213,10 @@ class ModelPerformance:
         # get predicted labels
         if df[prediction_col_name].dtype != "float":
             argmax_indices = df[prediction_col_name].apply(lambda x: np.argmax(x))
-            predictions = idx_to_class(argmax_indices, id2label)
+            if id2label:
+                predictions = idx_to_class(argmax_indices, id2label)
+            else:
+                predictions = argmax_indices
         else:
             predictions = np.round(df[prediction_col_name])
 
