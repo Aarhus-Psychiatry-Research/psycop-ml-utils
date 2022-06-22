@@ -6,7 +6,38 @@
 [![github actions pytest](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/pytest.yml/badge.svg)](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions)
 [![github actions docs](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/documentation.yml/badge.svg)](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/)
 ![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/martbern/d6c40a5b5a3169c079e8b8f778b8e517/raw/badge-psycop-ml-utils-pytest-coverage.json)
+=======
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/martbern/d6c40a5b5a3169c079e8b8f778b8e517/raw/badge-psycop-ml-utils-pytest-coverage.json)
 
+# Installation
+## For development
+We use poetry for dependency management. Clone the repo, move into it, then run `poetry install`. I.e.:
+
+```bash
+git clone https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git
+cd psycop-ml-utils
+poetry install
+```
+
+To increase the version:
+`poetry version [patch|minor|major]` according to [semantic versioning](https://semver.org/).
+
+Adding new as dependencies:
+`poetry add (--dev) [packagename]`
+
+No need to update a `requirements.txt`. It's replace by `pyproject.toml`, and `poetry` manages it automatically.
+
+
+## When using
+Install using your preferred package manager, e.g.:
+`pip install git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git`
+
+or
+
+`poetry add git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git`
+
+# Usage
+- [ ] Update examples as API matures
 
 
 ## 🔧 Installation
