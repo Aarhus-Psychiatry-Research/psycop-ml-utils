@@ -15,7 +15,7 @@ poetry install
 To increase the version:
 `poetry version [patch|minor|major]` according to [semantic versioning](https://semver.org/).
 
-Adding new as dependnecies:
+Adding new as dependencies:
 `poetry add (--dev) [packagename]`
 
 No need to update a `requirements.txt`. It's replace by `pyproject.toml`, and `poetry` manages it automatically.
