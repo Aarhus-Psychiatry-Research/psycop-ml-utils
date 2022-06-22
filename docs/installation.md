@@ -11,7 +11,19 @@ or using peotry by running
 
 
 ## For development
-We use poetry for dependency management. To install poety following the instruction on their [website](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions).
+We use poetry for dependency management. 
+
+Install poetry with the following command:
+
+```
+curl -sSL https://install.python-poetry.org | python3 -
+```
+Add to your shell configuration as described in the output, then run:
+```
+poetry config virtualenvs.in-project true
+```
+To make poetry save venvs in your project directories.
+
 
 
 Clone the repo, move into it, then run `poetry install`. I.e.:
