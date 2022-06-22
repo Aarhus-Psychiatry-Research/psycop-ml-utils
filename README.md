@@ -8,6 +8,7 @@
 ![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/martbern/d6c40a5b5a3169c079e8b8f778b8e517/raw/badge-psycop-ml-utils-pytest-coverage.json)
 
 
+
 ## 🔧 Installation
 To get started using psycop-ml-utils simply install it using pip by running the following line in your terminal:
 
