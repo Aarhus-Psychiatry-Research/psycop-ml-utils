@@ -1,0 +1,718 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+<meta property="og:title" content="Time Series Flattener" />
+  
+<meta property="og:type" content="website" />
+  
+<meta property="og:url" content="api.timeseriesflattener.html" />
+  
+<meta property="og:description" content="timeseriesflattener.create_feature_combinations: timeseriesflattener.flattened_dataset: timeseriesflattener.resolve_multiple_functions:" />
+  <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Writers" href="api.writers.html" /><link rel="prev" title="Model Performance" href="api.model_performance.html" />
+
+    <link rel="shortcut icon" href="_static/favicon.ico"/><meta name="generator" content="sphinx-5.0.2, furo 2022.06.21"/>
+        <title>Time Series Flattener - psycop-ml-utils 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #204279;
+  --color-brand-content: #204279;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4872b8;
+  --color-brand-content: #4872b8;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4872b8;
+  --color-brand-content: #4872b8;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">psycop-ml-utils 0.1.1 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo only-light" src="_static/icon_with_title.png" alt="Light Logo"/>
+    <img class="sidebar-logo only-dark" src="_static/icon_with_title.png" alt="Dark Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">News and Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API references</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api.model_performance.html">Model Performance</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Time Series Flattener</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.writers.html">Writers</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils">GitHub Repository</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="time-series-flattener">
+<h1>Time Series Flattener<a class="headerlink" href="#time-series-flattener" title="Permalink to this heading">#</a></h1>
+<section id="module-psycopmlutils.timeseriesflattener.create_feature_combinations">
+<span id="timeseriesflattener-create-feature-combinations"></span><h2>timeseriesflattener.create_feature_combinations<a class="headerlink" href="#module-psycopmlutils.timeseriesflattener.create_feature_combinations" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.create_feature_combinations.create_feature_combinations">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.create_feature_combinations.</span></span><span class="sig-name descname"><span class="pre">create_feature_combinations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg_sets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/create_feature_combinations.html#create_feature_combinations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.create_feature_combinations.create_feature_combinations" title="Permalink to this definition">#</a></dt>
+<dd><p>Create feature combinations from a dictionary of feature specifications.
+See example for shape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg_sets</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>str</em><em>, </em><em>list</em><em>]</em><em>]</em><em>]</em>) – A set of argument sets for .add_predictor. See example for shape.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of all possible combinations of the arguments.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Dict[str, Union[str, float, int]]]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">input</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;predictor_df&quot;</span><span class="p">:</span> <span class="s2">&quot;prediction_times_df&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;source_values_col_name&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;lookbehind_days&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;resolve_multiple&quot;</span><span class="p">:</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;fallback&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">create_feature_combinations</span><span class="p">(</span><span class="n">arg_sets</span><span class="o">=</span><span class="nb">input</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;predictor_df&quot;</span><span class="p">:</span> <span class="s2">&quot;prediction_times_df&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;lookbehind_days&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;resolve_multiple&quot;</span><span class="p">:</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;fallback&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;source_values_col_name&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;predictor_df&quot;</span><span class="p">:</span> <span class="s2">&quot;prediction_times_df&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;lookbehind_days&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;resolve_multiple&quot;</span><span class="p">:</span> <span class="s2">&quot;max&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;fallback&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;source_values_col_name&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.create_feature_combinations.dict_has_list_in_any_value">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.create_feature_combinations.</span></span><span class="sig-name descname"><span class="pre">dict_has_list_in_any_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/create_feature_combinations.html#dict_has_list_in_any_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.create_feature_combinations.dict_has_list_in_any_value" title="Permalink to this definition">#</a></dt>
+<dd><p>Checks if a dict has any values that are lists.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.create_feature_combinations.list_has_dict_with_list_as_value">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.create_feature_combinations.</span></span><span class="sig-name descname"><span class="pre">list_has_dict_with_list_as_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">list_of_dicts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/create_feature_combinations.html#list_has_dict_with_list_as_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.create_feature_combinations.list_has_dict_with_list_as_value" title="Permalink to this definition">#</a></dt>
+<dd><p>Checks if any dict in a list of dicts has a value that is a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>list_of_dicts</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>str</em><em>, </em><em>list</em><em>]</em><em>]</em><em>]</em>) – A list of dicts.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-psycopmlutils.timeseriesflattener.flattened_dataset">
+<span id="timeseriesflattener-flattened-dataset"></span><h2>timeseriesflattener.flattened_dataset<a class="headerlink" href="#module-psycopmlutils.timeseriesflattener.flattened_dataset" title="Permalink to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.flattened_dataset.</span></span><span class="sig-name descname"><span class="pre">FlattenedDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_times_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dw_ek_borger'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'timestamp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Turn a set of time-series into tabular prediction-time data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_age">
+<span class="sig-name descname"><span class="pre">add_age</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_to_date_of_birth_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_of_birth_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'date_of_birth'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_age"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_age" title="Permalink to this definition">#</a></dt>
+<dd><p>Add age at prediction time to each prediction time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_to_date_of_birth_mapping</strong> (<em>DataFrame</em>) – Two columns, id and date_of_birth.</p></li>
+<li><p><strong>date_of_birth_col_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the date_of_birth column in id_to_date_of_birth_mapping.</p></li>
+<li><p><strong>&quot;date_of_birth&quot;.</strong> (<em>Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – _description_</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_back_prediction_times_without_value">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_back_prediction_times_without_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_times_with_uuid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_time_uuid_colname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_back_prediction_times_without_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_back_prediction_times_without_value" title="Permalink to this definition">#</a></dt>
+<dd><p>Ensure all prediction times are represented in the returned
+dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>DataFrame</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_static_predictor">
+<span class="sig-name descname"><span class="pre">add_static_predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictor_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_static_predictor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_static_predictor" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a static predictor to each prediction time, e.g. age, sex etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>predictor_df</strong> (<em>DataFrame</em>) – Contains an id_column and a value column.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_col_to_flattened_dataset">
+<span class="sig-name descname"><span class="pre">add_temporal_col_to_flattened_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataFrame</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_multiple</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_values_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_fallback_prop_warning_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_val_timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_temporal_col_to_flattened_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_col_to_flattened_dataset" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a column to the dataset (either predictor or outcome depending
+on the value of “direction”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>values_df</strong> (<em>DataFrame</em>) – A table in wide format. Required columns: patient_id, timestamp, value.</p></li>
+<li><p><strong>direction</strong> (<em>str</em>) – Whether to look “ahead” or “behind”.</p></li>
+<li><p><strong>interval_days</strong> (<em>float</em>) – How far to look in direction.</p></li>
+<li><p><strong>resolve_multiple</strong> (<em>Callable</em><em>, </em><em>str</em>) – How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</p></li>
+<li><p><strong>fallback</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – What to do if no value within the lookahead.</p></li>
+<li><p><strong>new_col_name</strong> (<em>str</em>) – Name to use for new column. Automatically generated as ‘{new_col_name}_within_{lookahead_days}_days’.</p></li>
+<li><p><strong>source_values_col_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Column name of the values column in values_df. Defaults to “val”.</p></li>
+<li><p><strong>is_fallback_prop_warning_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Triggers a ValueError if proportion of
+prediction_times that receive fallback is larger than threshold.
+Indicates unlikely to be a learnable feature. Defaults to 0.9.</p></li>
+<li><p><strong>keep_val_timestamp</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to keep the timestamp for the temporal value as a separate column. Defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_outcome">
+<span class="sig-name descname"><span class="pre">add_temporal_outcome</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">outcome_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookahead_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_multiple</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incident</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome_df_values_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_fallback_prop_warning_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_outcome_timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dichotomous</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_temporal_outcome"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_outcome" title="Permalink to this definition">#</a></dt>
+<dd><p>Add an outcome-column to the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>outcome_df</strong> (<em>DataFrame</em>) – A table in wide format. Required columns: patient_id, timestamp, value.</p></li>
+<li><p><strong>lookahead_days</strong> (<em>float</em>) – How far ahead to look for an outcome in days. If none found, use fallback.</p></li>
+<li><p><strong>resolve_multiple</strong> (<em>Callable</em><em>, </em><em>str</em>) – How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</p></li>
+<li><p><strong>fallback</strong> (<em>float</em>) – What to do if no value within the lookahead.</p></li>
+<li><p><strong>incident</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em><em>, </em><em>optional</em>) – Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.</p></li>
+<li><p><strong>outcome_df_values_col_name</strong> (<em>str</em>) – Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to “value”.</p></li>
+<li><p><strong>new_col_name</strong> (<em>str</em>) – Name to use for new col. Automatically generated as ‘{new_col_name}_within_{lookahead_days}_days’.</p></li>
+<li><p><strong>is_fallback_prop_warning_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Triggers a ValueError if proportion of
+prediction_times that receive fallback is larger than threshold.
+Indicates unlikely to be a learnable feature. Defaults to 0.9.</p></li>
+<li><p><strong>keep_outcome</strong> – timestamp (bool, optional): Whether to keep the timestamp for the outcome value as a separate column. Defaults to False.</p></li>
+<li><p><strong>dichotomous</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictor">
+<span class="sig-name descname"><span class="pre">add_temporal_predictor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictor_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookbehind_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_multiple</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_values_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_temporal_predictor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictor" title="Permalink to this definition">#</a></dt>
+<dd><p>Add a column with predictor values to the flattened dataset (e.g.
+“average value of bloodsample within n days”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictor_df</strong> (<em>DataFrame</em>) – A table in wide format. Required columns: patient_id, timestamp, value.</p></li>
+<li><p><strong>lookbehind_days</strong> (<em>float</em>) – How far behind to look for a predictor value in days. If none found, use fallback.</p></li>
+<li><p><strong>resolve_multiple</strong> (<em>Callable</em><em>, </em><em>str</em>) – How to handle multiple values within the lookbehind window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</p></li>
+<li><p><strong>fallback</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – What to do if no value within the lookahead.</p></li>
+<li><p><strong>source_values_col_name</strong> (<em>str</em>) – Column name for the predictor values in predictor_df, e.g. the patient’s most recent blood-sample value. Defaults to “value”.</p></li>
+<li><p><strong>new_col_name</strong> (<em>str</em>) – Name to use for new col. Automatically generated as ‘{new_col_name}_within_{lookahead_days}_days’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictors_from_list_of_argument_dictionaries">
+<span class="sig-name descname"><span class="pre">add_temporal_predictors_from_list_of_argument_dictionaries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictor_dfs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_multiple_fns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.add_temporal_predictors_from_list_of_argument_dictionaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictors_from_list_of_argument_dictionaries" title="Permalink to this definition">#</a></dt>
+<dd><p>Add predictors to the flattened dataframe from a list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>predictors</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – A list of dictionaries describing the prediction_features you’d like to generate.</p></li>
+<li><p><strong>predictor_dfs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>DataFrame</em><em>]</em><em>, </em><em>optional</em>) – If wanting to pass already resolved dataframes.
+By default, you should add your dataframes to the &#64;data_loaders registry.
+Then the the predictor_df value in the predictor dict will map to a callable which returns the dataframe.
+Optionally, you can map the string to a dataframe in predictor_dfs.</p></li>
+<li><p><strong>resolve_multiple_fns</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Callable</em><em>]</em><em>, </em><em>optional</em>) – If wanting to use manually defined resolve_multiple strategies
+I.e. ones that aren’t in the resolve_fns catalogue require a dictionary mapping the
+resolve_multiple string to a Callable object. Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">predictor_list</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;predictor_df&quot;</span><span class="p">:</span> <span class="s2">&quot;df_name&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;lookbehind_days&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;resolve_multiple&quot;</span><span class="p">:</span> <span class="s2">&quot;resolve_multiple_strat_name&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;fallback&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;source_values_col_name&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;predictor_df&quot;</span><span class="p">:</span> <span class="s2">&quot;df_name&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;lookbehind_days&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;resolve_multiple_fns&quot;</span><span class="p">:</span> <span class="s2">&quot;min&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;fallback&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;source_values_col_name&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictor_dfs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;df_name&quot;</span><span class="p">:</span> <span class="n">df_object</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolve_multiple_strategies</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;resolve_multiple_strat_name&quot;</span><span class="p">:</span> <span class="n">resolve_multiple_func</span><span class="p">}</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">add_predictors_from_list</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">predictor_list</span><span class="o">=</span><span class="n">predictor_list</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">predictor_dfs</span><span class="o">=</span><span class="n">predictor_dfs</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">resolve_multiple_fn_dict</span><span class="o">=</span><span class="n">resolve_multiple_strategies</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.drop_records_outside_interval_days">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">drop_records_outside_interval_days</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp_pred_colname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp_value_colname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.drop_records_outside_interval_days"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.drop_records_outside_interval_days" title="Permalink to this definition">#</a></dt>
+<dd><p>Keep only rows where timestamp_value is within interval_days in
+direction of timestamp_pred.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<em>str</em>) – Whether to look ahead or behind.</p></li>
+<li><p><strong>interval_days</strong> (<em>float</em>) – How far to look</p></li>
+<li><p><strong>df</strong> (<em>DataFrame</em>) – Source dataframe</p></li>
+<li><p><strong>timestamp_pred_colname</strong> (<em>str</em>) – </p></li>
+<li><p><strong>timestamp_value_colname</strong> (<em>str</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If direction is niether ahead nor behind.</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.flatten_temporal_values_to_df">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flatten_temporal_values_to_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_times_with_uuid_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolve_multiple</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_time_uuid_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_values_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_fallback_prop_warning_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_variance_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_val_timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.flatten_temporal_values_to_df"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.flatten_temporal_values_to_df" title="Permalink to this definition">#</a></dt>
+<dd><p>Create a dataframe with flattened values (either predictor or
+outcome depending on the value of “direction”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prediction_times_with_uuid_df</strong> (<em>DataFrame</em>) – Dataframe with id_col and
+timestamps for each prediction time.</p></li>
+<li><p><strong>values_df</strong> (<em>Union</em><em>[</em><em>Callable</em><em>, </em><em>DataFrame</em><em>]</em>) – A dataframe or callable resolving to
+a dataframe containing id_col, timestamp and value cols.</p></li>
+<li><p><strong>direction</strong> (<em>str</em>) – Whether to look “ahead” or “behind” the prediction time.</p></li>
+<li><p><strong>interval_days</strong> (<em>float</em>) – How far to look in each direction.</p></li>
+<li><p><strong>resolve_multiple</strong> (<em>Union</em><em>[</em><em>Callable</em><em>, </em><em>str</em><em>]</em>) – How to handle multiple values
+within interval_days. Takes either
+i) a function that takes a list as an argument and returns a float, or
+ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</p></li>
+<li><p><strong>fallback</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>str</em><em>]</em>) – Which value to put if no value within the
+lookahead. “NaN” for Pandas NA.</p></li>
+<li><p><strong>id_col_name</strong> (<em>str</em>) – Name of id_column in prediction_times_with_uuid_df and
+values_df. Required because this is a static method.</p></li>
+<li><p><strong>timestamp_col_name</strong> (<em>str</em>) – Name of timestamp column in
+prediction_times_with_uuid_df and values_df. Required because this is a
+static method.</p></li>
+<li><p><strong>pred_time_uuid_col_name</strong> (<em>str</em>) – Name of uuid column in
+prediction_times_with_uuid_df. Required because this is a static method.</p></li>
+<li><p><strong>new_col_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Name of new column in returned
+dataframe.</p></li>
+<li><p><strong>source_values_col_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of column containing values in
+values_df. Defaults to “value”.</p></li>
+<li><p><strong>is_fallback_prop_warning_threshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Triggers a ValueError
+if proportion of prediction_times that receive fallback is larger than
+threshold. Indicates unlikely to be a learnable feature. Defaults to
+0.9.</p></li>
+<li><p><strong>keep_val_timestamp</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to keep the timestamp for the
+temporal value as a separate column. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.resolve_multiple_values_within_interval_days">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resolve_multiple_values_within_interval_days</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolve_multiple</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp_col_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_time_uuid_colname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#FlattenedDataset.resolve_multiple_values_within_interval_days"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.resolve_multiple_values_within_interval_days" title="Permalink to this definition">#</a></dt>
+<dd><p>Apply the resolve_multiple function to prediction_times where there
+are multiple values within the interval_days lookahead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resolve_multiple</strong> (<em>Callable</em>) – Takes a grouped df and collapses each group to one record (e.g. sum, count etc.).</p></li>
+<li><p><strong>df</strong> (<em>DataFrame</em>) – Source dataframe with all prediction time x val combinations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame with one row pr. prediction time.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.flattened_dataset.select_and_assert_keys">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.flattened_dataset.</span></span><span class="sig-name descname"><span class="pre">select_and_assert_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/flattened_dataset.html#select_and_assert_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.flattened_dataset.select_and_assert_keys" title="Permalink to this definition">#</a></dt>
+<dd><p>Keep only the keys in the dictionary that are in key_order, and orders
+them as in the lsit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dict</strong> (<em>Dict</em>) – Dictionary to process</p></li>
+<li><p><strong>keys_to_keep</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of keys to keep</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict with only the selected keys</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-psycopmlutils.timeseriesflattener.resolve_multiple_functions">
+<span id="timeseriesflattener-resolve-multiple-functions"></span><h2>timeseriesflattener.resolve_multiple_functions<a class="headerlink" href="#module-psycopmlutils.timeseriesflattener.resolve_multiple_functions" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_count_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_count_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_count_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_count_in_group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_earliest_value_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_earliest_value_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_earliest_value_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_earliest_value_in_group" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the earliest value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grouped_df</strong> (<em>DataFrame</em>) – A dataframe sorted by descending timestamp, grouped by citizen.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataframe with only the earliest value in each group.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_latest_value_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_latest_value_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_latest_value_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_latest_value_in_group" title="Permalink to this definition">#</a></dt>
+<dd><p>Get the latest value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>grouped_df</strong> (<em>DataFrame</em>) – A dataframe sorted by descending timestamp, grouped by citizen.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dataframe with only the latest value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_max_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_max_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_max_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_max_in_group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_mean_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_mean_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_mean_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_mean_in_group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_min_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_min_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_min_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_min_in_group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_sum_in_group">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.timeseriesflattener.resolve_multiple_functions.</span></span><span class="sig-name descname"><span class="pre">get_sum_in_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="_modules/psycopmlutils/timeseriesflattener/resolve_multiple_functions.html#get_sum_in_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_sum_in_group" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="api.writers.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Writers</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="api.model_performance.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Model Performance</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Time Series Flattener</a><ul>
+<li><a class="reference internal" href="#module-psycopmlutils.timeseriesflattener.create_feature_combinations">timeseriesflattener.create_feature_combinations</a></li>
+<li><a class="reference internal" href="#module-psycopmlutils.timeseriesflattener.flattened_dataset">timeseriesflattener.flattened_dataset</a></li>
+<li><a class="reference internal" href="#module-psycopmlutils.timeseriesflattener.resolve_multiple_functions">timeseriesflattener.resolve_multiple_functions</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/scripts/furo.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    </body>
+</html>
