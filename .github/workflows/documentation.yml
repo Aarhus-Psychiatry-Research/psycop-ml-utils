@@ -22,7 +22,6 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-        pip install -e .
     - name: Build and Commit
       uses: sphinx-notes/pages@v2
       with:
