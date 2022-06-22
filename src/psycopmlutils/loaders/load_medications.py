@@ -2,7 +2,6 @@ import pandas as pd
 from wasabi import msg
 
 from psycopmlutils.loaders.sql_load import sql_load
-from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
@@ -43,21 +42,26 @@ class LoadMedications:
         medications.
 
         Args:
-            atc_code (str): ATC-code prefix to load. Matches atc_code_prefix*. Aggregates all.
-            output_col_name (str, optional): Name of output_col_name. Contains 1 if atc_code matches atc_code_prefix, 0 if not.Defaults to {atc_code_prefix}_value.
-            load_prescribed (bool, optional): Whether to load prescriptions. Defaults to True. Beware incomplete until sep 2016.
-            load_administered (bool, optional): Whether to load administrations. Defaults to True.
-            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or atc_code.
+            atc_code (str): ATC-code prefix to load. Matches atc_code_prefix*.
+                Aggregates all.
+            output_col_name (str, optional): Name of output_col_name. Contains 1 if
+                atc_code matches atc_code_prefix, 0 if not.Defaults to
+                {atc_code_prefix}_value.
+            load_prescribed (bool, optional): Whether to load prescriptions. Defaults to
+                True. Beware incomplete until sep 2016.
+            load_administered (bool, optional): Whether to load administrations.
+                Defaults to True.
+            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or
+                atc_code.
 
         Returns:
             pd.DataFrame: Cols: dw_ek_borger, timestamp, {atc_code_prefix}_value = 1
         """
-        print_str = f"medications matching NPU-code {atc_code}"
-        # msg.info(f"Loading {print_str}")
 
         if load_prescribed:
             msg.warn(
-                "Beware, there are missing prescriptions until september 2019. Hereafter, data is complete.",
+                "Beware, there are missing prescriptions until september 2019. "
+                "Hereafter, data is complete.",
             )
 
         df = pd.DataFrame()
@@ -82,17 +86,16 @@ class LoadMedications:
             )
             df = pd.concat([df, df_medication_administered])
 
-        if output_col_name == None:
+        if output_col_name is None:
             output_col_name = atc_code
 
         df.rename(
             columns={
-                atc_code: f"value",
+                atc_code: "value",
             },
             inplace=True,
         )
 
-        # msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
     def _load_one_source(
@@ -109,22 +112,30 @@ class LoadMedications:
 
         Args:
             atc_code (str): ATC string to match on.
-            source_timestamp_col_name (str): Name of the timestamp column in the SQL table.
-            view (str): Which view to use, e.g. "FOR_Medicin_ordineret_inkl_2021_feb2022"
-            output_col_name (str, optional): Name of new column string. Defaults to None.
-            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or atc_code.
+            source_timestamp_col_name (str): Name of the timestamp column in the SQL
+                table.
+            view (str): Which view to use, e.g.
+                "FOR_Medicin_ordineret_inkl_2021_feb2022"
+            output_col_name (str, optional): Name of new column string. Defaults to
+                None.
+            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or
+                atc_code.
 
         Returns:
-            pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and output_col_name = 1
+            pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
+                output_col_name = 1
         """
 
         if wildcard_atc_at_end:
             end_of_sql = "%"
         else:
-            end_of_sql = ""
+            end_of_sql = ""  # noqa
 
         view = f"[{view}]"
-        sql = f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view} WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+        sql = (
+            f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
+            + " WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+        )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 

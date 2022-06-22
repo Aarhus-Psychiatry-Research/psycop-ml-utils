@@ -73,7 +73,7 @@ class FlattenedDataset:
                 self.df[self.timestamp_col_name] = pd.to_datetime(
                     self.df[self.timestamp_col_name],
                 )
-            except:
+            except Exception:
                 raise ValueError(
                     f"prediction_times_df: {self.timestamp_col_name} is of type {timestamp_col_type}, and could not be converted to 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset.",
                 )
@@ -145,12 +145,12 @@ class FlattenedDataset:
                         resolved_func = resolve_multiple_fns.get(
                             [arg_dict["resolve_multiple"]],
                         )
-                    except:
+                    except Exception:
                         pass
 
                 try:
                     resolved_func = resolve_fns.get(arg_dict["resolve_multiple"])
-                except:
+                except Exception:
                     pass
 
                 if not isinstance(resolved_func, Callable):
@@ -183,7 +183,7 @@ class FlattenedDataset:
 
             try:
                 arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
-            except:
+            except Exception:
                 # Error handling in _validate_processed_arg_dicts
                 # to handle in bulk
                 pass
@@ -294,7 +294,7 @@ class FlattenedDataset:
                     id_to_date_of_birth_mapping[date_of_birth_col_name],
                     format="%Y-%m-%d",
                 )
-            except:
+            except Exception:
                 raise ValueError(
                     f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding.",
                 )
@@ -511,19 +511,24 @@ class FlattenedDataset:
                 lookahead. "NaN" for Pandas NA.
             id_col_name (str): Name of id_column in prediction_times_with_uuid_df and
                 values_df. Required because this is a static method.
-            timestamp_col_name (str): Name of timestamp column in prediction_times_with_uuid_df and values_df.
-                Required because this is a static method.
-            pred_time_uuid_col_name (str): Name of uuid column in prediction_times_with_uuid_df.
-                Required because this is a static method.
-            new_col_name (Optional[str], optional): Name of new column in returned dataframe. .
-            source_values_col_name (str, optional): Name of column containing values in values_df. Defaults to "value".
-            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-                prediction_times that receive fallback is larger than threshold.
-                Indicates unlikely to be a learnable feature. Defaults to 0.9.
-            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the temporal value as a separate column. Defaults to False.
+            timestamp_col_name (str): Name of timestamp column in
+                prediction_times_with_uuid_df and values_df. Required because this is a
+                static method.
+            pred_time_uuid_col_name (str): Name of uuid column in
+                prediction_times_with_uuid_df. Required because this is a static method.
+            new_col_name (Optional[str], optional): Name of new column in returned
+                dataframe.
+            source_values_col_name (str, optional): Name of column containing values in
+                values_df. Defaults to "value".
+            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError
+                if proportion of prediction_times that receive fallback is larger than
+                threshold. Indicates unlikely to be a learnable feature. Defaults to
+                0.9.
+            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the
+                temporal value as a separate column. Defaults to False.
 
         Returns:
-            DataFrame:
+            DataFrame
         """
 
         # Resolve values_df if not already a dataframe.
@@ -719,7 +724,7 @@ class FlattenedDataset:
         else:
             raise ValueError("direction can only be 'ahead' or 'behind'")
 
-        return df[df["is_in_interval"] == True].drop(
+        return df[df["is_in_interval"]].drop(
             ["is_in_interval", "time_from_pred_to_val_in_days"],
             axis=1,
         )

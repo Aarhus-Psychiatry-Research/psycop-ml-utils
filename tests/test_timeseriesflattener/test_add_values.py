@@ -11,9 +11,6 @@ from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
 )
-from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
-    get_max_in_group,
-)
 
 
 # Predictors

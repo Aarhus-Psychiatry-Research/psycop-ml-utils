@@ -3,7 +3,7 @@ from utils_for_testing import (
     assert_flattened_predictor_as_expected,
 )
 
-from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
+from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (  # noqa
     get_earliest_value_in_group,
     get_latest_value_in_group,
     get_max_in_group,
