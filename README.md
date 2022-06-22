@@ -6,8 +6,6 @@
 [![github actions pytest](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/pytest.yml/badge.svg)](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions)
 [![github actions docs](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/documentation.yml/badge.svg)](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/)
 ![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/martbern/d6c40a5b5a3169c079e8b8f778b8e517/raw/badge-psycop-ml-utils-pytest-coverage.json)
-=======
-![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/martbern/d6c40a5b5a3169c079e8b8f778b8e517/raw/badge-psycop-ml-utils-pytest-coverage.json)
 
 # Installation
 ## For development
