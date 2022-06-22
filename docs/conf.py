@@ -89,4 +89,5 @@ html_theme_options = {
     },
     "sidebar_hide_name": True,
     "navigation_with_keys": True,
+    "top_of_page_button": "edit",
 }
