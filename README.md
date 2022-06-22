@@ -4,15 +4,30 @@
 
 # Installation
 ## For development
-`pip install . -e`
+We use poetry for dependency management. Clone the repo, move into it, then run `poetry install`. I.e.:
 
-The `-e` flag marks the install as editable, "overwriting" the package as you edit the source files.
+```bash
+git clone https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git
+cd psycop-ml-utils
+poetry install
+```
 
-Recommended to also add black as a pre-commit hook:
-`pre-commit install`
+To increase the version:
+`poetry version [patch|minor|major]` according to [semantic versioning](https://semver.org/).
 
-## For use
+Adding new as dependnecies:
+`poetry add (--dev) [packagename]`
+
+No need to update a `requirements.txt`. It's replace by `pyproject.toml`, and `poetry` manages it automatically.
+
+
+## When using
+Install using your preferred package manager, e.g.:
 `pip install git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git`
+
+or
+
+`poetry add git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git`
 
 # Usage
 - [ ] Update examples as API matures
