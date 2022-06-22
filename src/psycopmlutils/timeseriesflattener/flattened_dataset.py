@@ -6,9 +6,10 @@ import numpy as np
 import pandas as pd
 from catalogue import Registry  # noqa
 from pandas import DataFrame
+from wasabi import msg
+
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
 from psycopmlutils.utils import data_loaders
-from wasabi import msg
 
 
 class FlattenedDataset:
@@ -21,7 +22,8 @@ class FlattenedDataset:
         timestamp_col_name: str = "timestamp",
         n_workers: int = 60,
     ):
-        """Class containing a time-series, flattened. A 'flattened' version is a tabular representation for each prediction time.
+        """Class containing a time-series, flattened. A 'flattened' version is
+        a tabular representation for each prediction time.
 
         A prediction time is every timestamp where you want your model to issue a prediction.
 
@@ -60,7 +62,7 @@ class FlattenedDataset:
         for col_name in [self.timestamp_col_name, self.id_col_name]:
             if col_name not in self.df.columns:
                 raise ValueError(
-                    f"{col_name} does not exist in prediction_times_df, change the df or set another argument"
+                    f"{col_name} does not exist in prediction_times_df, change the df or set another argument",
                 )
 
         # Check timestamp col type
@@ -69,16 +71,16 @@ class FlattenedDataset:
         if timestamp_col_type not in ["Timestamp"]:
             try:
                 self.df[self.timestamp_col_name] = pd.to_datetime(
-                    self.df[self.timestamp_col_name]
+                    self.df[self.timestamp_col_name],
                 )
-            except:
+            except Exception:
                 raise ValueError(
-                    f"prediction_times_df: {self.timestamp_col_name} is of type {timestamp_col_type}, and could not be converted to 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset."
+                    f"prediction_times_df: {self.timestamp_col_name} is of type {timestamp_col_type}, and could not be converted to 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset.",
                 )
 
         # Create pred_time_uuid_columne
         self.df[self.pred_time_uuid_col_name] = self.df[self.id_col_name].astype(
-            str
+            str,
         ) + self.df[self.timestamp_col_name].dt.strftime("-%Y-%m-%d-%H-%M-%S")
 
         self.loaders_catalogue = data_loaders
@@ -141,19 +143,19 @@ class FlattenedDataset:
                 if resolve_multiple_fns is not None:
                     try:
                         resolved_func = resolve_multiple_fns.get(
-                            [arg_dict["resolve_multiple"]]
+                            [arg_dict["resolve_multiple"]],
                         )
-                    except:
+                    except Exception:
                         pass
 
                 try:
                     resolved_func = resolve_fns.get(arg_dict["resolve_multiple"])
-                except:
+                except Exception:
                     pass
 
                 if not isinstance(resolved_func, Callable):
                     raise ValueError(
-                        "resolve_function neither is nor resolved to a Callable"
+                        "resolve_function neither is nor resolved to a Callable",
                     )
 
             # Rename arguments for create_flattened_df_for_val
@@ -181,7 +183,7 @@ class FlattenedDataset:
 
             try:
                 arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
-            except:
+            except Exception:
                 # Error handling in _validate_processed_arg_dicts
                 # to handle in bulk
                 pass
@@ -197,7 +199,7 @@ class FlattenedDataset:
             ]
 
             processed_arg_dicts.append(
-                select_and_assert_keys(dictionary=arg_dict, key_list=required_keys)
+                select_and_assert_keys(dictionary=arg_dict, key_list=required_keys),
             )
 
         # Validate dicts before starting pool, saves time if errors!
@@ -206,7 +208,8 @@ class FlattenedDataset:
         pool = Pool(self.n_workers)
 
         flattened_predictor_dfs = pool.map(
-            self._flatten_temporal_values_to_df_wrapper, processed_arg_dicts
+            self._flatten_temporal_values_to_df_wrapper,
+            processed_arg_dicts,
         )
 
         flattened_predictor_dfs = [
@@ -235,7 +238,7 @@ class FlattenedDataset:
         for d in arg_dicts:
             if not isinstance(d["values_df"], (DataFrame, Callable)):
                 msg.warn(
-                    f"values_df resolves to neither a Callable nor a DataFrame in {d}"
+                    f"values_df resolves to neither a Callable nor a DataFrame in {d}",
                 )
                 warn = True
 
@@ -249,11 +252,12 @@ class FlattenedDataset:
 
         if warn:
             raise ValueError(
-                "Errors in argument dictionaries, didn't generate any features."
+                "Errors in argument dictionaries, didn't generate any features.",
             )
 
     def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
-        """Wrap flatten_temporal_values_to_df with kwargs for multithreading pool.
+        """Wrap flatten_temporal_values_to_df with kwargs for multithreading
+        pool.
 
         Args:
             kwargs_dict (Dict): Dictionary of kwargs
@@ -290,9 +294,9 @@ class FlattenedDataset:
                     id_to_date_of_birth_mapping[date_of_birth_col_name],
                     format="%Y-%m-%d",
                 )
-            except:
+            except Exception:
                 raise ValueError(
-                    f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding."
+                    f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding.",
                 )
 
         self.add_static_predictor(id_to_date_of_birth_mapping)
@@ -397,7 +401,8 @@ class FlattenedDataset:
         source_values_col_name: str = "value",
         new_col_name: str = None,
     ):
-        """Add a column with predictor values to the flattened dataset (e.g. "average value of bloodsample within n days").
+        """Add a column with predictor values to the flattened dataset (e.g.
+        "average value of bloodsample within n days").
 
         Args:
             predictor_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
@@ -429,7 +434,8 @@ class FlattenedDataset:
         is_fallback_prop_warning_threshold: float = 0.9,
         keep_val_timestamp: bool = False,
     ):
-        """Add a column to the dataset (either predictor or outcome depending on the value of "direction").
+        """Add a column to the dataset (either predictor or outcome depending
+        on the value of "direction").
 
         Args:
             values_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
@@ -448,7 +454,7 @@ class FlattenedDataset:
 
         if timestamp_col_type not in ["Timestamp"]:
             raise ValueError(
-                f"{self.timestamp_col_name} is of type {timestamp_col_type}, not 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset."
+                f"{self.timestamp_col_name} is of type {timestamp_col_type}, not 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset.",
             )
 
         df = FlattenedDataset.flatten_temporal_values_to_df(
@@ -487,32 +493,42 @@ class FlattenedDataset:
         keep_val_timestamp: bool = False,
     ) -> DataFrame:
 
-        """Create a dataframe with flattened values (either predictor or outcome depending on the value of "direction").
+        """Create a dataframe with flattened values (either predictor or
+        outcome depending on the value of "direction").
 
         Args:
-            prediction_times_with_uuid_df (DataFrame): Dataframe with id_col and timestamps for each prediction time.
-            values_df (Union[Callable, DataFrame]): A dataframe or callable resolving to a dataframe containing id_col, timestamp and value cols.
+            prediction_times_with_uuid_df (DataFrame): Dataframe with id_col and
+                timestamps for each prediction time.
+            values_df (Union[Callable, DataFrame]): A dataframe or callable resolving to
+                a dataframe containing id_col, timestamp and value cols.
             direction (str): Whether to look "ahead" or "behind" the prediction time.
             interval_days (float): How far to look in each direction.
-            resolve_multiple (Union[Callable, str]): How to handle multiple values within interval_days. Takes either
+            resolve_multiple (Union[Callable, str]): How to handle multiple values
+                within interval_days. Takes either
                 i) a function that takes a list as an argument and returns a float, or
                 ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-            fallback (Union[float, str]): Which value to put if no value within the lookahead. "NaN" for Pandas NA.
-            id_col_name (str): Name of id_column in prediction_times_with_uuid_df and values_df.
-                Required because this is a static method.
-            timestamp_col_name (str): Name of timestamp column in prediction_times_with_uuid_df and values_df.
-                Required because this is a static method.
-            pred_time_uuid_col_name (str): Name of uuid column in prediction_times_with_uuid_df.
-                Required because this is a static method.
-            new_col_name (Optional[str], optional): Name of new column in returned dataframe. .
-            source_values_col_name (str, optional): Name of column containing values in values_df. Defaults to "value".
-            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-                prediction_times that receive fallback is larger than threshold.
-                Indicates unlikely to be a learnable feature. Defaults to 0.9.
-            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the temporal value as a separate column. Defaults to False.
+            fallback (Union[float, str]): Which value to put if no value within the
+                lookahead. "NaN" for Pandas NA.
+            id_col_name (str): Name of id_column in prediction_times_with_uuid_df and
+                values_df. Required because this is a static method.
+            timestamp_col_name (str): Name of timestamp column in
+                prediction_times_with_uuid_df and values_df. Required because this is a
+                static method.
+            pred_time_uuid_col_name (str): Name of uuid column in
+                prediction_times_with_uuid_df. Required because this is a static method.
+            new_col_name (Optional[str], optional): Name of new column in returned
+                dataframe.
+            source_values_col_name (str, optional): Name of column containing values in
+                values_df. Defaults to "value".
+            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError
+                if proportion of prediction_times that receive fallback is larger than
+                threshold. Indicates unlikely to be a learnable feature. Defaults to
+                0.9.
+            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the
+                temporal value as a separate column. Defaults to False.
 
         Returns:
-            DataFrame:
+            DataFrame
         """
 
         # Resolve values_df if not already a dataframe.
@@ -525,7 +541,7 @@ class FlattenedDataset:
         for col_name in [timestamp_col_name, id_col_name]:
             if col_name not in values_df.columns:
                 raise ValueError(
-                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument"
+                    f"{col_name} does not exist in df_prediction_times, change the df or set another argument",
                 )
 
         # Rename column
@@ -584,7 +600,7 @@ class FlattenedDataset:
                     > is_fallback_prop_warning_threshold
                 ):
                     msg.warn(
-                        f"""{full_col_str}: Beware, {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None."""
+                        f"""{full_col_str}: Beware, {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None.""",
                     )
 
             if low_variance_threshold is not None:
@@ -593,7 +609,7 @@ class FlattenedDataset:
                 )
                 if variance_as_fraction_of_mean < low_variance_threshold:
                     msg.warn(
-                        f"""{full_col_str}: Beware, variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None."""
+                        f"""{full_col_str}: Beware, variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None.""",
                     )
 
         msg.good(f"Returning flattened dataframe with {full_col_str}")
@@ -619,7 +635,8 @@ class FlattenedDataset:
         pred_times_with_uuid: DataFrame,
         pred_time_uuid_colname: str,
     ) -> DataFrame:
-        """Ensure all prediction times are represented in the returned dataframe.
+        """Ensure all prediction times are represented in the returned
+        dataframe.
 
         Args:
             df (DataFrame):
@@ -642,7 +659,8 @@ class FlattenedDataset:
         timestamp_col_name: str,
         pred_time_uuid_colname: str,
     ) -> DataFrame:
-        """Apply the resolve_multiple function to prediction_times where there are multiple values within the interval_days lookahead.
+        """Apply the resolve_multiple function to prediction_times where there
+        are multiple values within the interval_days lookahead.
 
         Args:
             resolve_multiple (Callable): Takes a grouped df and collapses each group to one record (e.g. sum, count etc.).
@@ -672,7 +690,8 @@ class FlattenedDataset:
         timestamp_pred_colname: str,
         timestamp_value_colname: str,
     ) -> DataFrame:
-        """Keep only rows where timestamp_value is within interval_days in direction of timestamp_pred.
+        """Keep only rows where timestamp_value is within interval_days in
+        direction of timestamp_pred.
 
         Args:
             direction (str): Whether to look ahead or behind.
@@ -705,13 +724,15 @@ class FlattenedDataset:
         else:
             raise ValueError("direction can only be 'ahead' or 'behind'")
 
-        return df[df["is_in_interval"] == True].drop(
-            ["is_in_interval", "time_from_pred_to_val_in_days"], axis=1
+        return df[df["is_in_interval"]].drop(
+            ["is_in_interval", "time_from_pred_to_val_in_days"],
+            axis=1,
         )
 
 
 def select_and_assert_keys(dictionary: Dict, key_list: List[str]) -> Dict:
-    """Keep only the keys in the dictionary that are in key_order, and orders them as in the lsit.
+    """Keep only the keys in the dictionary that are in key_order, and orders
+    them as in the lsit.
 
     Args:
         dict (Dict): Dictionary to process

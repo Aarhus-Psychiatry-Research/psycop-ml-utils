@@ -1,15 +1,15 @@
 import time
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from wasabi import msg
+
 import psycopmlutils.loaders  # noqa
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
 )
 from psycopmlutils.writers.sql_writer import write_df_to_sql
-from wasabi import msg
 
 if __name__ == "__main__":
     RESOLVE_MULTIPLE = ["mean", "max", "min"]
@@ -41,7 +41,7 @@ if __name__ == "__main__":
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
             },
-        ]
+        ],
     )
 
     event_times = psycopmlutils.loaders.LoadOutcome.t2d()
@@ -87,11 +87,11 @@ if __name__ == "__main__":
 
     # Finish
     msg.good(
-        f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes"
+        f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
     )
 
     msg.info(
-        f"Dataframe size is {flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 1024} MiB"
+        f"Dataframe size is {flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 1024} MiB",
     )
 
     msg.good("Done!")
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         ]
 
         msg.warn(
-            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge"
+            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge",
         )
 
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")

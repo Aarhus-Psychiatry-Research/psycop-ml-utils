@@ -2,6 +2,7 @@ from typing import Callable, List, Union
 
 import pandas as pd
 from pandas import DataFrame
+
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 from psycopmlutils.utils import data_loaders
 
@@ -19,7 +20,8 @@ def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:
 
 
 def convert_cols_with_matching_colnames_to_datetime(
-    df: DataFrame, colname_substr: str
+    df: DataFrame,
+    colname_substr: str,
 ) -> DataFrame:
     """Convert columns that contain colname_substr in their name to datetimes
     Args:
@@ -143,6 +145,7 @@ def assert_flattened_values_as_expected(
     is_fallback_prop_warning_threshold: float = 0.9,
 ):
     """Run tests from string representations of dataframes.
+
     Args:
         Args:
         prediction_times_df_str (str): A string-representation of prediction-times df
@@ -190,13 +193,13 @@ def assert_flattened_values_as_expected(
     flattened_values_colname = f"{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
     expected_flattened_values = pd.DataFrame(
-        {flattened_values_colname: expected_flattened_values}
+        {flattened_values_colname: expected_flattened_values},
     )
 
     pd.testing.assert_series_equal(
         left=dataset.df[flattened_values_colname].reset_index(drop=True),
         right=expected_flattened_values[flattened_values_colname].reset_index(
-            drop=True
+            drop=True,
         ),
         check_dtype=False,
     )

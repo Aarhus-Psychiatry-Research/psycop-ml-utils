@@ -1,11 +1,9 @@
-from pathlib import Path
 from typing import List, Union
 
-import catalogue
 import pandas as pd
+
 from psycopmlutils.loaders.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
-from wasabi import msg
 
 
 class LoadDiagnoses:
@@ -14,7 +12,8 @@ class LoadDiagnoses:
         output_col_name: str,
         wildcard_icd_10_end: bool = False,
     ) -> pd.DataFrame:
-        """Load all diagnoses matching any icd_code in icd_codes. Create output_col_name and set to 1.
+        """Load all diagnoses matching any icd_code in icd_codes. Create
+        output_col_name and set to 1.
 
         Args:
             icd_codes (List[str]): List of icd_codes.
@@ -24,8 +23,6 @@ class LoadDiagnoses:
         Returns:
             pd.DataFrame
         """
-        print_str = f"diagnoses matching any of {icd_codes}"
-        # msg.info(f"Loading {print_str}")
 
         diagnoses_source_table_info = {
             "lpr3": {
@@ -55,8 +52,6 @@ class LoadDiagnoses:
         ]
 
         df = pd.concat(dfs)
-
-        # msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
     def from_physical_visits(
@@ -64,7 +59,9 @@ class LoadDiagnoses:
         output_col_name: str = "value",
         wildcard_icd_10_end: bool = False,
     ) -> pd.DataFrame:
-        """Load diagnoses from all physical visits. If icd_code is a list, will aggregate as one column (e.g. ["E780", "E785"] into a ypercholesterolemia column).
+        """Load diagnoses from all physical visits. If icd_code is a list, will
+        aggregate as one column (e.g. ["E780", "E785"] into a
+        ypercholesterolemia column).
 
         Args:
             icd_code (str): Substring to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
@@ -74,9 +71,6 @@ class LoadDiagnoses:
         Returns:
             pd.DataFrame
         """
-        print_str = f"diagnoses matching ICD-code {icd_code}"
-        # msg.info(f"Loading {print_str}")
-
         diagnoses_source_table_info = {
             "lpr3": {
                 "fct": "FOR_LPR3kontakter_psyk_somatik_inkl_2021",
@@ -104,7 +98,6 @@ class LoadDiagnoses:
 
         df = pd.concat(dfs)
 
-        # msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
     def _load(
@@ -114,18 +107,24 @@ class LoadDiagnoses:
         output_col_name: str = None,
         wildcard_icd_10_end: bool = True,
     ) -> pd.DataFrame:
-        """Load the visits that have diagnoses that match icd_code from the beginning of their adiagnosekode string.
-        Aggregates all that match.
+        """Load the visits that have diagnoses that match icd_code from the
+        beginning of their adiagnosekode string. Aggregates all that match.
 
         Args:
-            icd_code (Union[List[str], str]): Substring(s) to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
-            source_timestamp_col_name (str): Name of the timestamp column in the SQL table.
-            view (str): Which view to use, e.g. "FOR_Medicin_ordineret_inkl_2021_feb2022"
-            output_col_name (str, optional): Name of new column string. Defaults to None.
-            wildcard_icd_10_end (bool, optional): Whether to match on icd_code*. Defaults to true.
+            icd_code (Union[List[str], str]): Substring(s) to match diagnoses for.
+                Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
+            source_timestamp_col_name (str): Name of the timestamp column in the SQL
+                table.
+            view (str): Which view to use, e.g.
+                "FOR_Medicin_ordineret_inkl_2021_feb2022"
+            output_col_name (str, optional): Name of new column string. Defaults to
+                None.
+            wildcard_icd_10_end (bool, optional): Whether to match on icd_code*.
+                Defaults to true.
 
         Returns:
-            pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and output_col_name = 1
+            pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
+                output_col_name = 1
         """
         fct = f"[{fct}]"
 
@@ -140,11 +139,14 @@ class LoadDiagnoses:
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
-            match_col_sql_str = (
+            match_col_sql_str = (  # noqa
                 f"lower(diagnosegruppestreng) LIKE lower('%{icd_code}{sql_ending}')"
             )
 
-        sql = f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng FROM [fct].{fct} WHERE ({match_col_sql_str})"
+        sql = (
+            f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
+            + " FROM [fct].{fct} WHERE ({match_col_sql_str})"
+        )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
@@ -158,7 +160,7 @@ class LoadDiagnoses:
         return df.rename(
             columns={
                 source_timestamp_col_name: "timestamp",
-            }
+            },
         )
 
     @data_loaders.register("essential_hypertension")

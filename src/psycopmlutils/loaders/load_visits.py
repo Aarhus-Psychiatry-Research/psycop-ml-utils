@@ -1,5 +1,6 @@
-from psycopmlutils.loaders.sql_load import sql_load
 from wasabi import msg
+
+from psycopmlutils.loaders.sql_load import sql_load
 
 
 class LoadVisits:

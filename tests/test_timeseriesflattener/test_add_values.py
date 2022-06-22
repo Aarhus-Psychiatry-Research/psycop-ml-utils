@@ -1,18 +1,15 @@
 import numpy as np
 import pandas as pd
 import pytest
-from psycopmlutils.timeseriesflattener import (
-    FlattenedDataset,
-    create_feature_combinations,
-)
-from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (
-    get_max_in_group,
-)
-
 from utils_for_testing import (
     assert_flattened_outcome_as_expected,
     assert_flattened_predictor_as_expected,
     str_to_df,
+)
+
+from psycopmlutils.timeseriesflattener import (
+    FlattenedDataset,
+    create_feature_combinations,
 )
 
 
@@ -124,7 +121,8 @@ def test_raise_error_if_timestamp_col_not_timestamp_type():
                         """
 
     df_prediction_times = str_to_df(
-        prediction_times_df_str, convert_timestamp_to_datetime=True
+        prediction_times_df_str,
+        convert_timestamp_to_datetime=True,
     )
     df_event_times = str_to_df(outcome_df_str, convert_timestamp_to_datetime=False)
 
@@ -136,7 +134,10 @@ def test_raise_error_if_timestamp_col_not_timestamp_type():
 
     with pytest.raises(ValueError):
         dataset.add_temporal_outcome(
-            df_event_times, lookahead_days=5, resolve_multiple="max", fallback=0
+            df_event_times,
+            lookahead_days=5,
+            resolve_multiple="max",
+            fallback=0,
         )
 
 
@@ -201,8 +202,8 @@ def test_static_predictor():
                 "1994-12-31 00:00:01",
                 "1994-12-31 00:00:01",
                 "1994-12-31 00:00:01",
-            ]
-        }
+            ],
+        },
     )
 
     pd.testing.assert_series_equal(
@@ -234,8 +235,8 @@ def test_add_age():
                 0.0,
                 27.0,
                 27.0,
-            ]
-        }
+            ],
+        },
     )
 
     pd.testing.assert_series_equal(
@@ -417,11 +418,12 @@ def test_add_temporal_predictors_then_temporal_outcome():
                 "resolve_multiple": "min",
                 "fallback": np.nan,
             },
-        ]
+        ],
     )
 
     flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_LIST, predictor_dfs={"predictors": predictors_df}
+        predictors=PREDICTOR_LIST,
+        predictor_dfs={"predictors": predictors_df},
     )
 
     flattened_dataset.add_temporal_outcome(

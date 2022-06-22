@@ -19,7 +19,6 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-black = "^22.3.0"
 numpy = "^1.22.4"
 scipy = "^1.8.1"
 pandas = "^1.4.2"
@@ -30,9 +29,18 @@ wasabi = "^0.9.1"
 scikit-learn = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
+black = "^22.3.0"
 pre-commit = "^2.19.0"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
+Sphinx = "^5.0.2"
+furo = "^2022.6.21"
+sphinx-copybutton = "^0.5.0"
+sphinxext-opengraph = "^0.6.3"
+myst-parser = "^0.18.0"
+flake8 = "^4.0.1"
+docformatter = "^1.4"
+
 
 [tool.coverage.run]
 omit = [

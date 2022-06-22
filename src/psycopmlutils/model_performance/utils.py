@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Union, Dict
+from typing import Dict, List, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,8 @@ SeriesOfInt = TypeVar("pandas.core.series.Series(int)")
 
 
 def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series:
-    """Converts a series of lists of probabilities for each class or a list of floats for binary classification a list of floats of maximum length 2.
+    """Converts a series of lists of probabilities for each class or a list of
+    floats for binary classification a list of floats of maximum length 2.
 
     Args:
         scores (Union[Series[List[float]], Series[float]]): Series containing probabilities for each class or a list of floats for binary classification.
@@ -28,7 +29,8 @@ def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series
 
 
 def labels_to_int(
-    labels: Union[SeriesOfStr, SeriesOfInt], label2id: Dict[str, int]
+    labels: Union[SeriesOfStr, SeriesOfInt],
+    label2id: Dict[str, int],
 ) -> Series:
     """Converts label to int mapping. Only makes sense for binary models. If
     already int will return as is.
@@ -48,7 +50,10 @@ def labels_to_int(
 
 
 def aggregate_predictions(
-    df: pd.DataFrame, id_col: str, predictions_col: str, label_col: str
+    df: pd.DataFrame,
+    id_col: str,
+    predictions_col: str,
+    label_col: str,
 ):
     """Calculates the mean prediction by a grouping col (id_col).
 
@@ -67,12 +72,12 @@ def aggregate_predictions(
         return x.unique()[0]
 
     return df.groupby(id_col).agg(
-        {predictions_col: mean_scores, label_col: get_first_entry}
+        {predictions_col: mean_scores, label_col: get_first_entry},
     )
 
 
 def idx_to_class(idx: List[int], mapping: dict) -> List[str]:
-    """Returns the label from an id2label mapping
+    """Returns the label from an id2label mapping.
 
     Args:
         idx (List[int]): index
@@ -85,9 +90,11 @@ def idx_to_class(idx: List[int], mapping: dict) -> List[str]:
 
 
 def get_metadata_cols(
-    df: pd.DataFrame, cols: List[str], skip: List[str]
+    df: pd.DataFrame,
+    cols: List[str],
+    skip: List[str],
 ) -> pd.DataFrame:
-    """Extracts model metadata to a 1 row dataframe
+    """Extracts model metadata to a 1 row dataframe.
 
     Args:
         df (pd.DataFrame): Dataframe with predictions and metadata.
@@ -125,18 +132,19 @@ def get_metadata_cols(
                 val = df[col].unique()
                 if len(val) > 1:
                     raise ValueError(
-                        f"The column '{col}' contains more than one unique value."
+                        f"The column '{col}' contains more than one unique value.",
                     )
                 metadata[col] = val[0]
             else:
                 raise ValueError(
-                    f"The metadata column '{col}' is not contained in the data"
+                    f"The metadata column '{col}' is not contained in the data",
                 )
     return pd.DataFrame.from_records([metadata])
 
 
 def add_metadata_cols(df: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
-    """Adds 1 row dataframe with metadata to the long format performance dataframe
+    """Adds 1 row dataframe with metadata to the long format performance
+    dataframe.
 
     Args:
         df (pd.DataFrame): Dataframe to add metadata to.

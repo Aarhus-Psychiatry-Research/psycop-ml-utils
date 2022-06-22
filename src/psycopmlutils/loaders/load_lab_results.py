@@ -1,8 +1,7 @@
-import catalogue
 import pandas as pd
+
 from psycopmlutils.loaders.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
-from wasabi import msg
 
 
 class LoadLabResults:
@@ -15,11 +14,11 @@ class LoadLabResults:
         Returns:
             pd.DataFrame
         """
-        print_str = f"blood samples matching NPU-code {blood_sample_id}"
-        # msg.info(f"Loading {print_str}")
-
         view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
-        sql = f"SELECT dw_ek_borger, datotid_sidstesvar, numerisksvar FROM [fct].{view} WHERE NPUkode = '{blood_sample_id}'"
+        sql = (
+            f"SELECT dw_ek_borger, datotid_sidstesvar, numerisksvar FROM [fct].{view}"
+            + " WHERE NPUkode = '{blood_sample_id}'"
+        )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
@@ -32,7 +31,8 @@ class LoadLabResults:
         return df.reset_index(drop=True)
 
     def _aggregate_blood_samples(blood_sample_ids: list) -> pd.DataFrame:
-        """Aggregate multiple blood_sample_ids (typically NPU-codes) into one column.
+        """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
+        column.
 
         Args:
             blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes.
@@ -118,7 +118,7 @@ class LoadLabResults:
         blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
         return LoadLabResults._aggregate_blood_samples(
-            blood_sample_ids=blood_sample_ids
+            blood_sample_ids=blood_sample_ids,
         )
 
     @data_loaders.register("triglycerides")
@@ -142,7 +142,7 @@ class LoadLabResults:
     @data_loaders.register("fasting_ldl")
     def fasting_ldl():
         return LoadLabResults._aggregate_blood_samples(
-            blood_sample_ids=["NPU10171", "AAB00102"]
+            blood_sample_ids=["NPU10171", "AAB00102"],
         )
 
     @data_loaders.register("alat")
@@ -168,13 +168,13 @@ class LoadLabResults:
     @data_loaders.register("creatinine")
     def creatinine():
         return LoadLabResults._aggregate_blood_samples(
-            blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"]
+            blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
         )
 
     @data_loaders.register("egfr")
     def egfr():
         return LoadLabResults._aggregate_blood_samples(
-            blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"]
+            blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
         )
 
     @data_loaders.register("albumine_creatinine_ratio")
