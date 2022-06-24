@@ -235,6 +235,8 @@
         <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
         <span class="n">min_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="n">predictor_col_name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pred&quot;</span><span class="p">,</span>
+        <span class="n">outcome_col_name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;outc&quot;</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Class containing a time-series, flattened. A &#39;flattened&#39; version is</span>
 <span class="sd">        a tabular representation for each prediction time.</span>
@@ -264,6 +266,8 @@
 <span class="sd">            timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to &quot;timestamp&quot;.</span>
 <span class="sd">            min_date (Optional[pd.Timestamp], optional): Drop all prediction times before this date. Defaults to None.</span>
 <span class="sd">            id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to &quot;dw_ek_borger&quot;.</span>
+<span class="sd">            predictor_col_name_prefix (str, optional): Prefix for predictor col names. Defaults to &quot;pred_&quot;.</span>
+<span class="sd">            outcome_col_name_prefix (str, optional): Prefix for outcome col names. Defaults to &quot;outc_&quot;.</span>
 <span class="sd">            n_workers (int): Number of subprocesses to spawn for parallellisation. Defaults to 60.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span> <span class="o">=</span> <span class="n">n_workers</span>
@@ -271,6 +275,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span> <span class="o">=</span> <span class="n">timestamp_col_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span> <span class="o">=</span> <span class="n">id_col_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span> <span class="o">=</span> <span class="s2">&quot;prediction_time_uuid&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span> <span class="o">=</span> <span class="n">predictor_col_name_prefix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span> <span class="o">=</span> <span class="n">outcome_col_name_prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span> <span class="o">=</span> <span class="n">min_date</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">prediction_times_df</span>
@@ -343,7 +349,7 @@
 <span class="sd">            &gt;&gt;&gt; ]</span>
 <span class="sd">            &gt;&gt;&gt; predictor_dfs = {&quot;df_name&quot;: df_object}</span>
 <span class="sd">            &gt;&gt;&gt; resolve_multiple_strategies = {&quot;resolve_multiple_strat_name&quot;: resolve_multiple_func}</span>
-<span class="sd">            &gt;&gt;&gt;</span>
+
 <span class="sd">            &gt;&gt;&gt; dataset.add_predictors_from_list(</span>
 <span class="sd">            &gt;&gt;&gt;     predictor_list=predictor_list,</span>
 <span class="sd">            &gt;&gt;&gt;     predictor_dfs=predictor_dfs,</span>
@@ -386,6 +392,7 @@
             <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;id_col_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span>
             <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;timestamp_col_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span>
             <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;pred_time_uuid_col_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span>
+            <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;new_col_name_prefix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span>
 
             <span class="k">if</span> <span class="s2">&quot;new_col_name&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">arg_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;new_col_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;values_df&quot;</span><span class="p">]</span>
@@ -417,6 +424,7 @@
                 <span class="s2">&quot;fallback&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;new_col_name&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;source_values_col_name&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;new_col_name_prefix&quot;</span><span class="p">,</span>
             <span class="p">]</span>
 
             <span class="n">processed_arg_dicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -496,23 +504,23 @@
 
 <div class="viewcode-block" id="FlattenedDataset.add_age"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_age">[docs]</a>    <span class="k">def</span> <span class="nf">add_age</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">id_to_date_of_birth_mapping</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">id2date_of_birth</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">date_of_birth_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;date_of_birth&quot;</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add age at prediction time to each prediction time.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            id_to_date_of_birth_mapping (DataFrame): Two columns, id and date_of_birth.</span>
-<span class="sd">            date_of_birth_col_name (str, optional): Name of the date_of_birth column in id_to_date_of_birth_mapping.</span>
+<span class="sd">            id2date_of_birth (DataFrame): Two columns, id and date_of_birth.</span>
+<span class="sd">            date_of_birth_col_name (str, optional): Name of the date_of_birth column in id2date_of_birth.</span>
 <span class="sd">            Defaults to &quot;date_of_birth&quot;.</span>
 
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: _description_</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">id_to_date_of_birth_mapping</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;&lt;M8[ns]&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">id2date_of_birth</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;&lt;M8[ns]&quot;</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">id_to_date_of_birth_mapping</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span>
-                    <span class="n">id_to_date_of_birth_mapping</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">],</span>
+                <span class="n">id2date_of_birth</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span>
+                    <span class="n">id2date_of_birth</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">],</span>
                     <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
@@ -520,16 +528,23 @@
                     <span class="sa">f</span><span class="s2">&quot;Conversion of </span><span class="si">{</span><span class="n">date_of_birth_col_name</span><span class="si">}</span><span class="s2"> to datetime failed, doesn&#39;t match format %Y-%m-%d. Recommend converting to datetime before adding.&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_static_predictor</span><span class="p">(</span><span class="n">id_to_date_of_birth_mapping</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_static_predictor</span><span class="p">(</span><span class="n">id2date_of_birth</span><span class="p">)</span>
 
         <span class="n">age</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="n">date_of_birth_col_name</span><span class="p">])</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span>
+            <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">]</span>
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">date_of_birth_col_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span>
             <span class="o">/</span> <span class="p">(</span><span class="mf">365.25</span><span class="p">)</span>
         <span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">date_of_birth_col_name</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">date_of_birth_col_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;age_in_years&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">age</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span><span class="si">}</span><span class="s2">_age_in_years&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">age</span></div>
 
 <div class="viewcode-block" id="FlattenedDataset.add_static_predictor"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_static_predictor">[docs]</a>    <span class="k">def</span> <span class="nf">add_static_predictor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictor_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a static predictor to each prediction time, e.g. age, sex etc.</span>
@@ -537,6 +552,18 @@
 <span class="sd">        Args:</span>
 <span class="sd">            predictor_df (DataFrame): Contains an id_column and a value column.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">value_col_name</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">predictor_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span>
+        <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Add pred_prefix to value_col_name</span>
+        <span class="n">predictor_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">value_col_name</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">value_col_name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">},</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
             <span class="n">predictor_df</span><span class="p">,</span>
@@ -553,7 +580,7 @@
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">incident</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">outcome_df_values_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
         <span class="n">is_fallback_prop_warning_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
         <span class="n">keep_outcome_timestamp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">dichotomous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -567,7 +594,7 @@
 <span class="sd">            fallback (float): What to do if no value within the lookahead.</span>
 <span class="sd">            incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.</span>
 <span class="sd">            outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to &quot;value&quot;.</span>
-<span class="sd">            new_col_name (str): Name to use for new col. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;.</span>
+<span class="sd">            new_col_name (str): Name to use for new col. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;. Defaults to &quot;value&quot;.</span>
 <span class="sd">            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of</span>
 <span class="sd">                prediction_times that receive fallback is larger than threshold.</span>
 <span class="sd">                Indicates unlikely to be a learnable feature. Defaults to 0.9.</span>
@@ -586,7 +613,7 @@
             <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_outcome&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_prediction&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">dichotomous</span><span class="p">:</span>
-                <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">lookahead_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span><span class="si">}</span><span class="s2">_dichotomous_</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">lookahead_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
 
                 <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_prediction&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">lookahead_days</span><span class="p">)</span>
@@ -600,17 +627,17 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">dichotomous</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dichotomous</span> <span class="ow">and</span> <span class="n">incident</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_temporal_col_to_flattened_dataset</span><span class="p">(</span>
                 <span class="n">values_df</span><span class="o">=</span><span class="n">outcome_df</span><span class="p">,</span>
                 <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;ahead&quot;</span><span class="p">,</span>
                 <span class="n">interval_days</span><span class="o">=</span><span class="n">lookahead_days</span><span class="p">,</span>
                 <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
                 <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-                <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
                 <span class="n">source_values_col_name</span><span class="o">=</span><span class="n">outcome_df_values_col_name</span><span class="p">,</span>
                 <span class="n">is_fallback_prop_warning_threshold</span><span class="o">=</span><span class="n">is_fallback_prop_warning_threshold</span><span class="p">,</span>
                 <span class="n">keep_val_timestamp</span><span class="o">=</span><span class="n">keep_outcome_timestamp</span><span class="p">,</span>
+                <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="FlattenedDataset.add_temporal_predictor"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictor">[docs]</a>    <span class="k">def</span> <span class="nf">add_temporal_predictor</span><span class="p">(</span>
@@ -639,8 +666,8 @@
             <span class="n">interval_days</span><span class="o">=</span><span class="n">lookbehind_days</span><span class="p">,</span>
             <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
             <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-            <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
             <span class="n">source_values_col_name</span><span class="o">=</span><span class="n">source_values_col_name</span><span class="p">,</span>
+            <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="FlattenedDataset.add_temporal_col_to_flattened_dataset"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_col_to_flattened_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">add_temporal_col_to_flattened_dataset</span><span class="p">(</span>
@@ -678,6 +705,11 @@
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="si">}</span><span class="s2"> is of type </span><span class="si">{</span><span class="n">timestamp_col_type</span><span class="si">}</span><span class="s2">, not &#39;Timestamp&#39; from Pandas. Will cause problems. Convert before initialising FlattenedDataset.&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;behind&quot;</span><span class="p">:</span>
+            <span class="n">new_col_name_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span>
+        <span class="k">elif</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;ahead&quot;</span><span class="p">:</span>
+            <span class="n">new_col_name_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span>
+
         <span class="n">df</span> <span class="o">=</span> <span class="n">FlattenedDataset</span><span class="o">.</span><span class="n">flatten_temporal_values_to_df</span><span class="p">(</span>
             <span class="n">prediction_times_with_uuid_df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
             <span class="n">values_df</span><span class="o">=</span><span class="n">values_df</span><span class="p">,</span>
@@ -685,13 +717,14 @@
             <span class="n">interval_days</span><span class="o">=</span><span class="n">interval_days</span><span class="p">,</span>
             <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
             <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
+            <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
             <span class="n">id_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">,</span>
             <span class="n">timestamp_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">,</span>
             <span class="n">pred_time_uuid_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
-            <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
             <span class="n">source_values_col_name</span><span class="o">=</span><span class="n">source_values_col_name</span><span class="p">,</span>
             <span class="n">is_fallback_prop_warning_threshold</span><span class="o">=</span><span class="n">is_fallback_prop_warning_threshold</span><span class="p">,</span>
             <span class="n">keep_val_timestamp</span><span class="o">=</span><span class="n">keep_val_timestamp</span><span class="p">,</span>
+            <span class="n">new_col_name_prefix</span><span class="o">=</span><span class="n">new_col_name_prefix</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">)</span></div>
@@ -707,11 +740,12 @@
         <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">pred_time_uuid_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">source_values_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
         <span class="n">is_fallback_prop_warning_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
         <span class="n">low_variance_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
         <span class="n">keep_val_timestamp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">new_col_name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
 
         <span class="sd">&quot;&quot;&quot;Create a dataframe with flattened values (either predictor or</span>
@@ -737,7 +771,7 @@
 <span class="sd">                static method.</span>
 <span class="sd">            pred_time_uuid_col_name (str): Name of uuid column in</span>
 <span class="sd">                prediction_times_with_uuid_df. Required because this is a static method.</span>
-<span class="sd">            new_col_name (Optional[str], optional): Name of new column in returned</span>
+<span class="sd">            new_col_name (str): Name of new column in returned</span>
 <span class="sd">                dataframe.</span>
 <span class="sd">            source_values_col_name (str, optional): Name of column containing values in</span>
 <span class="sd">                values_df. Defaults to &quot;value&quot;.</span>
@@ -748,9 +782,15 @@
 <span class="sd">            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the</span>
 <span class="sd">                temporal value as a separate column. Defaults to False.</span>
 
+
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Rename column</span>
+        <span class="k">if</span> <span class="n">new_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No name for new colum&quot;</span><span class="p">)</span>
+
+        <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_col_name_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">interval_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="c1"># Resolve values_df if not already a dataframe.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values_df</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
@@ -764,12 +804,6 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2"> does not exist in df_prediction_times, change the df or set another argument&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
-
-        <span class="c1"># Rename column</span>
-        <span class="k">if</span> <span class="n">new_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">new_col_name</span> <span class="o">=</span> <span class="n">source_values_col_name</span>
-
-        <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">interval_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="c1"># Generate df with one row for each prediction time x event time combination</span>
         <span class="c1"># Drop dw_ek_borger for faster merge</span>
@@ -963,7 +997,8 @@
 <span class="sd">        Dict: Dict with only the selected keys</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_list</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> not in dict&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_list</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">}</span></div>
 </pre></div>
