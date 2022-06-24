@@ -52,7 +52,7 @@ if __name__ == "__main__":
     prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
 
     msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
+    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=120)
 
     # Predictors
     msg.info("Adding static predictors")
