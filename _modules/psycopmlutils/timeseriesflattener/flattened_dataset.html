@@ -233,6 +233,7 @@
         <span class="n">prediction_times_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dw_ek_borger&quot;</span><span class="p">,</span>
         <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+        <span class="n">min_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">n_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Class containing a time-series, flattened. A &#39;flattened&#39; version is</span>
@@ -261,13 +262,16 @@
 <span class="sd">        Args:</span>
 <span class="sd">            prediction_times_df (DataFrame): Dataframe with prediction times, required cols: patient_id, .</span>
 <span class="sd">            timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to &quot;timestamp&quot;.</span>
+<span class="sd">            min_date (Optional[pd.Timestamp], optional): Drop all prediction times before this date. Defaults to None.</span>
 <span class="sd">            id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to &quot;dw_ek_borger&quot;.</span>
+<span class="sd">            n_workers (int): Number of subprocesses to spawn for parallellisation. Defaults to 60.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span> <span class="o">=</span> <span class="n">n_workers</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span> <span class="o">=</span> <span class="n">timestamp_col_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span> <span class="o">=</span> <span class="n">id_col_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span> <span class="o">=</span> <span class="s2">&quot;prediction_time_uuid&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span> <span class="o">=</span> <span class="n">min_date</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">prediction_times_df</span>
 
@@ -290,6 +294,10 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;prediction_times_df: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="si">}</span><span class="s2"> is of type </span><span class="si">{</span><span class="n">timestamp_col_type</span><span class="si">}</span><span class="s2">, and could not be converted to &#39;Timestamp&#39; from Pandas. Will cause problems. Convert before initialising FlattenedDataset.&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
+
+        <span class="c1"># Drop prediction times before min_date</span>
+        <span class="k">if</span> <span class="n">min_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span><span class="p">]</span>
 
         <span class="c1"># Create pred_time_uuid_columne</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
