@@ -20,6 +20,7 @@ class FlattenedDataset:
         prediction_times_df: DataFrame,
         id_col_name: str = "dw_ek_borger",
         timestamp_col_name: str = "timestamp",
+        min_date: Optional[pd.Timestamp] = None,
         n_workers: int = 60,
         predictor_col_name_prefix: str = "pred",
         outcome_col_name_prefix: str = "outc",
@@ -50,9 +51,11 @@ class FlattenedDataset:
         Args:
             prediction_times_df (DataFrame): Dataframe with prediction times, required cols: patient_id, .
             timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
+            min_date (Optional[pd.Timestamp], optional): Drop all prediction times before this date. Defaults to None.
             id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
             predictor_col_name_prefix (str, optional): Prefix for predictor col names. Defaults to "pred_".
             outcome_col_name_prefix (str, optional): Prefix for outcome col names. Defaults to "outc_".
+            n_workers (int): Number of subprocesses to spawn for parallellisation. Defaults to 60.
         """
         self.n_workers = n_workers
 
@@ -61,6 +64,7 @@ class FlattenedDataset:
         self.pred_time_uuid_col_name = "prediction_time_uuid"
         self.predictor_col_name_prefix = predictor_col_name_prefix
         self.outcome_col_name_prefix = outcome_col_name_prefix
+        self.min_date = min_date
 
         self.df = prediction_times_df
 
@@ -83,6 +87,10 @@ class FlattenedDataset:
                 raise ValueError(
                     f"prediction_times_df: {self.timestamp_col_name} is of type {timestamp_col_type}, and could not be converted to 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset.",
                 )
+
+        # Drop prediction times before min_date
+        if min_date is not None:
+            self.df = self.df[self.df[self.timestamp_col_name] > self.min_date]
 
         # Create pred_time_uuid_columne
         self.df[self.pred_time_uuid_col_name] = self.df[self.id_col_name].astype(
