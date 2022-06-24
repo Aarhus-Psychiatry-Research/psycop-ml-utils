@@ -198,7 +198,7 @@ def test_static_predictor():
 
     expected_values = pd.DataFrame(
         {
-            "date_of_birth": [
+            "pred_date_of_birth": [
                 "1994-12-31 00:00:01",
                 "1994-12-31 00:00:01",
                 "1994-12-31 00:00:01",
@@ -207,8 +207,8 @@ def test_static_predictor():
     )
 
     pd.testing.assert_series_equal(
-        left=dataset.df["date_of_birth"].reset_index(drop=True),
-        right=expected_values["date_of_birth"].reset_index(drop=True),
+        left=dataset.df["pred_date_of_birth"].reset_index(drop=True),
+        right=expected_values["pred_date_of_birth"].reset_index(drop=True),
         check_dtype=False,
     )
 
@@ -225,13 +225,13 @@ def test_add_age():
 
     dataset = FlattenedDataset(prediction_times_df=str_to_df(prediction_times_df_str))
     dataset.add_age(
-        id_to_date_of_birth_mapping=str_to_df(static_predictor),
+        id2date_of_birth=str_to_df(static_predictor),
         date_of_birth_col_name="date_of_birth",
     )
 
     expected_values = pd.DataFrame(
         {
-            "age_in_years": [
+            "pred_age_in_years": [
                 0.0,
                 27.0,
                 27.0,
@@ -240,8 +240,8 @@ def test_add_age():
     )
 
     pd.testing.assert_series_equal(
-        left=dataset.df["age_in_years"].reset_index(drop=True),
-        right=expected_values["age_in_years"].reset_index(drop=True),
+        left=dataset.df["pred_age_in_years"].reset_index(drop=True),
+        right=expected_values["pred_age_in_years"].reset_index(drop=True),
         check_dtype=False,
     )
 
@@ -260,7 +260,7 @@ def test_add_age_error():
 
     with pytest.raises(ValueError):
         dataset.add_age(
-            id_to_date_of_birth_mapping=str_to_df(static_predictor),
+            id2date_of_birth=str_to_df(static_predictor),
             date_of_birth_col_name="date_of_birth",
         )
 
@@ -279,7 +279,7 @@ def test_incident_outcome_removing_prediction_times():
                         2,2021-12-31 00:00:01, 1
                         """
 
-    expected_df_str = """dw_ek_borger,timestamp,value_within_2_days_max_fallback_0,
+    expected_df_str = """dw_ek_borger,timestamp,outc_value_within_2_days_max_fallback_0,
                         1,2021-12-31 00:00:00, 1.0
                         2,2021-12-31 00:00:00, 1.0
                         3,2023-12-31 00:00:00, 0.0
@@ -306,7 +306,7 @@ def test_incident_outcome_removing_prediction_times():
 
     outcome_df = flattened_dataset.df
 
-    for col in ["dw_ek_borger", "timestamp", "value_within_2_days_max_fallback_0"]:
+    for col in ["dw_ek_borger", "timestamp", "outc_value_within_2_days_max_fallback_0"]:
         pd.testing.assert_series_equal(outcome_df[col], expected_df[col])
 
 
@@ -324,7 +324,7 @@ def test_add_multiple_static_predictors():
                         2,2021-12-31 00:00:01, 1
                         """
 
-    expected_df_str = """dw_ek_borger,timestamp,value_within_2_days_max_fallback_0,age_in_years,male
+    expected_df_str = """dw_ek_borger,timestamp,outc_value_within_2_days_max_fallback_0,pred_age_in_years,pred_male
                         1,2021-12-31 00:00:00, 1.0,22.00,1
                         2,2021-12-31 00:00:00, 1.0,22.00,0
                         3,2023-12-31 00:00:00, 0.0,23.99,1
@@ -369,9 +369,9 @@ def test_add_multiple_static_predictors():
     for col in [
         "dw_ek_borger",
         "timestamp",
-        "value_within_2_days_max_fallback_0",
-        "age_in_years",
-        "male",
+        "outc_value_within_2_days_max_fallback_0",
+        "pred_age_in_years",
+        "pred_male",
     ]:
         pd.testing.assert_series_equal(outcome_df[col], expected_df[col])
 
@@ -455,7 +455,7 @@ def test_add_temporal_incident_binary_outcome():
                         1,2021-11-06 00:00:01, 1
                         """
 
-    expected_df_str = """t2d_within_2_days_max_fallback_0,
+    expected_df_str = """outc_dichotomous_t2d_within_2_days_max_fallback_0,
     1
     0"""
 
@@ -483,6 +483,6 @@ def test_add_temporal_incident_binary_outcome():
     outcome_df = flattened_dataset.df
 
     for col in [
-        "t2d_within_2_days_max_fallback_0",
+        "outc_dichotomous_t2d_within_2_days_max_fallback_0",
     ]:
         pd.testing.assert_series_equal(outcome_df[col], expected_df[col])

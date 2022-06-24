@@ -2,6 +2,7 @@ from typing import Callable, List, Union
 
 import pandas as pd
 from pandas import DataFrame
+from sqlalchemy import values
 
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 from psycopmlutils.utils import data_loaders
@@ -173,24 +174,28 @@ def assert_flattened_values_as_expected(
     )
 
     if direction == "behind":
+        new_col_name_prefix = "pred"
         dataset.add_temporal_predictor(
             predictor_df=df_event_times,
             lookbehind_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            new_col_name=values_colname,
         )
     elif direction == "ahead":
+        new_col_name_prefix = "outc"
         dataset.add_temporal_outcome(
             outcome_df=df_event_times,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
             lookahead_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            new_col_name=values_colname,
         )
     else:
         raise ValueError("direction only takes look ahead or behind")
 
-    flattened_values_colname = f"{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+    flattened_values_colname = f"{new_col_name_prefix}_{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
     expected_flattened_values = pd.DataFrame(
         {flattened_values_colname: expected_flattened_values},

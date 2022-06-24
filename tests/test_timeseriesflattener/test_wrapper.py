@@ -21,7 +21,7 @@ def test_generate_two_features_from_dict():
                         1,2021-12-29 00:00:02, 2
                         """
 
-    expected_df_str = """dw_ek_borger,timestamp,event_times_df_within_1_days_max_fallback_0,event_times_df_within_2_days_max_fallback_0,event_times_df_within_3_days_max_fallback_0,event_times_df_within_4_days_max_fallback_0
+    expected_df_str = """dw_ek_borger,timestamp,pred_event_times_df_within_1_days_max_fallback_0,pred_event_times_df_within_2_days_max_fallback_0,pred_event_times_df_within_3_days_max_fallback_0,pred_event_times_df_within_4_days_max_fallback_0
                         1,2021-12-31 00:00:00,1,2,2,2
     """
 
@@ -56,8 +56,8 @@ def test_generate_two_features_from_dict():
     for col in [
         "dw_ek_borger",
         "timestamp",
-        "event_times_df_within_1_days_max_fallback_0",
-        "event_times_df_within_2_days_max_fallback_0",
+        "pred_event_times_df_within_1_days_max_fallback_0",
+        "pred_event_times_df_within_2_days_max_fallback_0",
     ]:
         pd.testing.assert_series_equal(flattened_dataset.df[col], expected_df[col])
 
@@ -159,8 +159,8 @@ def test_add_df_from_catalogue():
                             1,2021-12-31 00:00:00
                             """
 
-    expected_df_str = """dw_ek_borger,timestamp,load_event_times_within_1_days_max_fallback_0,load_event_times_within_2_days_max_fallback_0,load_event_times_within_3_days_max_fallback_0,load_event_times_within_4_days_max_fallback_0
-                        1,2021-12-31 00:00:00,1,2,2,2
+    expected_df_str = """dw_ek_borger,timestamp,pred_load_event_times_within_1_days_max_fallback_0,pred_load_event_times_within_2_days_max_fallback_0,
+                        1,2021-12-31 00:00:00,1,2,
     """
 
     prediction_times_df = str_to_df(prediction_times_str)
@@ -192,8 +192,8 @@ def test_add_df_from_catalogue():
     for col in [
         "dw_ek_borger",
         "timestamp",
-        "load_event_times_within_1_days_max_fallback_0",
-        "load_event_times_within_2_days_max_fallback_0",
+        "pred_load_event_times_within_1_days_max_fallback_0",
+        "pred_load_event_times_within_2_days_max_fallback_0",
     ]:
         pd.testing.assert_series_equal(flattened_dataset.df[col], expected_df[col])
 
