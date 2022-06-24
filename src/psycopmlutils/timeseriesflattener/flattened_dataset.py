@@ -21,6 +21,8 @@ class FlattenedDataset:
         id_col_name: str = "dw_ek_borger",
         timestamp_col_name: str = "timestamp",
         n_workers: int = 60,
+        predictor_col_name_prefix: str = "pred",
+        outcome_col_name_prefix: str = "outc",
     ):
         """Class containing a time-series, flattened. A 'flattened' version is
         a tabular representation for each prediction time.
@@ -49,12 +51,16 @@ class FlattenedDataset:
             prediction_times_df (DataFrame): Dataframe with prediction times, required cols: patient_id, .
             timestamp_col_name (str, optional): Column name name for timestamps. Is used across outcomes and predictors. Defaults to "timestamp".
             id_col_name (str, optional): Column namn name for patients ids. Is used across outcome and predictors. Defaults to "dw_ek_borger".
+            predictor_col_name_prefix (str, optional): Prefix for predictor col names. Defaults to "pred_".
+            outcome_col_name_prefix (str, optional): Prefix for outcome col names. Defaults to "outc_".
         """
         self.n_workers = n_workers
 
         self.timestamp_col_name = timestamp_col_name
         self.id_col_name = id_col_name
         self.pred_time_uuid_col_name = "prediction_time_uuid"
+        self.predictor_col_name_prefix = predictor_col_name_prefix
+        self.outcome_col_name_prefix = outcome_col_name_prefix
 
         self.df = prediction_times_df
 
@@ -122,7 +128,7 @@ class FlattenedDataset:
             >>> ]
             >>> predictor_dfs = {"df_name": df_object}
             >>> resolve_multiple_strategies = {"resolve_multiple_strat_name": resolve_multiple_func}
-            >>>
+
             >>> dataset.add_predictors_from_list(
             >>>     predictor_list=predictor_list,
             >>>     predictor_dfs=predictor_dfs,
@@ -165,6 +171,7 @@ class FlattenedDataset:
             arg_dict["id_col_name"] = self.id_col_name
             arg_dict["timestamp_col_name"] = self.timestamp_col_name
             arg_dict["pred_time_uuid_col_name"] = self.pred_time_uuid_col_name
+            arg_dict["new_col_name_prefix"] = self.predictor_col_name_prefix
 
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = arg_dict["values_df"]
@@ -196,6 +203,7 @@ class FlattenedDataset:
                 "fallback",
                 "new_col_name",
                 "source_values_col_name",
+                "new_col_name_prefix",
             ]
 
             processed_arg_dicts.append(
@@ -275,23 +283,23 @@ class FlattenedDataset:
 
     def add_age(
         self,
-        id_to_date_of_birth_mapping: DataFrame,
+        id2date_of_birth: DataFrame,
         date_of_birth_col_name: str = "date_of_birth",
     ):
         """Add age at prediction time to each prediction time.
 
         Args:
-            id_to_date_of_birth_mapping (DataFrame): Two columns, id and date_of_birth.
-            date_of_birth_col_name (str, optional): Name of the date_of_birth column in id_to_date_of_birth_mapping.
+            id2date_of_birth (DataFrame): Two columns, id and date_of_birth.
+            date_of_birth_col_name (str, optional): Name of the date_of_birth column in id2date_of_birth.
             Defaults to "date_of_birth".
 
         Raises:
             ValueError: _description_
         """
-        if id_to_date_of_birth_mapping[date_of_birth_col_name].dtype != "<M8[ns]":
+        if id2date_of_birth[date_of_birth_col_name].dtype != "<M8[ns]":
             try:
-                id_to_date_of_birth_mapping[date_of_birth_col_name] = pd.to_datetime(
-                    id_to_date_of_birth_mapping[date_of_birth_col_name],
+                id2date_of_birth[date_of_birth_col_name] = pd.to_datetime(
+                    id2date_of_birth[date_of_birth_col_name],
                     format="%Y-%m-%d",
                 )
             except Exception:
@@ -299,16 +307,23 @@ class FlattenedDataset:
                     f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding.",
                 )
 
-        self.add_static_predictor(id_to_date_of_birth_mapping)
+        self.add_static_predictor(id2date_of_birth)
 
         age = (
-            (self.df[self.timestamp_col_name] - self.df[date_of_birth_col_name]).dt.days
+            (
+                self.df[self.timestamp_col_name]
+                - self.df[f"{self.predictor_col_name_prefix}_{date_of_birth_col_name}"]
+            ).dt.days
             / (365.25)
         ).round(2)
 
-        self.df.drop(date_of_birth_col_name, axis=1, inplace=True)
+        self.df.drop(
+            f"{self.predictor_col_name_prefix}_{date_of_birth_col_name}",
+            axis=1,
+            inplace=True,
+        )
 
-        self.df["age_in_years"] = age
+        self.df[f"{self.predictor_col_name_prefix}_age_in_years"] = age
 
     def add_static_predictor(self, predictor_df: DataFrame):
         """Add a static predictor to each prediction time, e.g. age, sex etc.
@@ -316,6 +331,18 @@ class FlattenedDataset:
         Args:
             predictor_df (DataFrame): Contains an id_column and a value column.
         """
+        value_col_name = [
+            col for col in predictor_df.columns if col not in self.id_col_name
+        ][0]
+
+        # Add pred_prefix to value_col_name
+        predictor_df.rename(
+            columns={
+                value_col_name: f"{self.predictor_col_name_prefix}_{value_col_name}"
+            },
+            inplace=True,
+        )
+
         self.df = pd.merge(
             self.df,
             predictor_df,
@@ -332,7 +359,7 @@ class FlattenedDataset:
         fallback: float,
         incident: Optional[bool] = False,
         outcome_df_values_col_name: str = "value",
-        new_col_name: str = None,
+        new_col_name: str = "value",
         is_fallback_prop_warning_threshold: float = 0.9,
         keep_outcome_timestamp: bool = True,
         dichotomous: bool = False,
@@ -346,7 +373,7 @@ class FlattenedDataset:
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
             outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "value".
-            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
             is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
                 prediction_times that receive fallback is larger than threshold.
                 Indicates unlikely to be a learnable feature. Defaults to 0.9.
@@ -365,7 +392,7 @@ class FlattenedDataset:
             df = df.drop(df[df["timestamp_outcome"] < df["timestamp_prediction"]].index)
 
             if dichotomous:
-                full_col_str = f"{new_col_name}_within_{lookahead_days}_days_{resolve_multiple}_fallback_{fallback}"
+                full_col_str = f"{self.outcome_col_name_prefix}_dichotomous_{new_col_name}_within_{lookahead_days}_days_{resolve_multiple}_fallback_{fallback}"
 
                 df[full_col_str] = (
                     df["timestamp_prediction"] + timedelta(days=lookahead_days)
@@ -379,17 +406,17 @@ class FlattenedDataset:
 
             self.df = df
 
-        if not dichotomous:
+        if not (dichotomous and incident):
             self.add_temporal_col_to_flattened_dataset(
                 values_df=outcome_df,
                 direction="ahead",
                 interval_days=lookahead_days,
                 resolve_multiple=resolve_multiple,
                 fallback=fallback,
-                new_col_name=new_col_name,
                 source_values_col_name=outcome_df_values_col_name,
                 is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
                 keep_val_timestamp=keep_outcome_timestamp,
+                new_col_name=new_col_name,
             )
 
     def add_temporal_predictor(
@@ -418,8 +445,8 @@ class FlattenedDataset:
             interval_days=lookbehind_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            new_col_name=new_col_name,
             source_values_col_name=source_values_col_name,
+            new_col_name=new_col_name,
         )
 
     def add_temporal_col_to_flattened_dataset(
@@ -457,6 +484,11 @@ class FlattenedDataset:
                 f"{self.timestamp_col_name} is of type {timestamp_col_type}, not 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset.",
             )
 
+        if direction == "behind":
+            new_col_name_prefix = self.predictor_col_name_prefix
+        elif direction == "ahead":
+            new_col_name_prefix = self.outcome_col_name_prefix
+
         df = FlattenedDataset.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.df,
             values_df=values_df,
@@ -464,13 +496,14 @@ class FlattenedDataset:
             interval_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            new_col_name=new_col_name,
             id_col_name=self.id_col_name,
             timestamp_col_name=self.timestamp_col_name,
             pred_time_uuid_col_name=self.pred_time_uuid_col_name,
-            new_col_name=new_col_name,
             source_values_col_name=source_values_col_name,
             is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
             keep_val_timestamp=keep_val_timestamp,
+            new_col_name_prefix=new_col_name_prefix,
         )
 
         self.df = pd.merge(self.df, df, how="left", on=self.pred_time_uuid_col_name)
@@ -486,11 +519,12 @@ class FlattenedDataset:
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
-        new_col_name: Optional[str],
+        new_col_name: str,
         source_values_col_name: str = "value",
         is_fallback_prop_warning_threshold: float = 0.9,
         low_variance_threshold: float = 0.01,
         keep_val_timestamp: bool = False,
+        new_col_name_prefix: str = None,
     ) -> DataFrame:
 
         """Create a dataframe with flattened values (either predictor or
@@ -516,7 +550,7 @@ class FlattenedDataset:
                 static method.
             pred_time_uuid_col_name (str): Name of uuid column in
                 prediction_times_with_uuid_df. Required because this is a static method.
-            new_col_name (Optional[str], optional): Name of new column in returned
+            new_col_name (str): Name of new column in returned
                 dataframe.
             source_values_col_name (str, optional): Name of column containing values in
                 values_df. Defaults to "value".
@@ -527,9 +561,15 @@ class FlattenedDataset:
             keep_val_timestamp (bool, optional): Whether to keep the timestamp for the
                 temporal value as a separate column. Defaults to False.
 
+
         Returns:
             DataFrame
         """
+        # Rename column
+        if new_col_name is None:
+            raise ValueError("No name for new colum")
+
+        full_col_str = f"{new_col_name_prefix}_{new_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
@@ -543,12 +583,6 @@ class FlattenedDataset:
                 raise ValueError(
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument",
                 )
-
-        # Rename column
-        if new_col_name is None:
-            new_col_name = source_values_col_name
-
-        full_col_str = f"{new_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
         # Generate df with one row for each prediction time x event time combination
         # Drop dw_ek_borger for faster merge
@@ -742,6 +776,7 @@ def select_and_assert_keys(dictionary: Dict, key_list: List[str]) -> Dict:
         Dict: Dict with only the selected keys
     """
     for key in key_list:
-        assert key in dictionary
+        if key not in dictionary:
+            raise KeyError(f"{key} not in dict")
 
     return {key: dictionary[key] for key in key_list if key in dictionary}
