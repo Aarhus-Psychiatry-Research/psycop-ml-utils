@@ -56,8 +56,10 @@ if __name__ == "__main__":
 
     # Predictors
     msg.info("Adding static predictors")
-    flattened_df.add_static_predictor(psycopmlutils.loaders.LoadDemographics.male())
-    flattened_df.add_age(psycopmlutils.loaders.LoadDemographics.birthdays())
+    flattened_df.add_static_predictor(
+        psycopmlutils.loaders.LoadDemographic.sex_female(),
+    )
+    flattened_df.add_age(psycopmlutils.loaders.LoadDemographic.birthdays())
 
     start_time = time.time()
 
