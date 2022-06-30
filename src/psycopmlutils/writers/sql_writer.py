@@ -45,7 +45,7 @@ def insert_with_progress(
 def write_df_to_sql(
     df: pd.DataFrame,
     table_name: str,
-    rows_per_chunk: int,
+    rows_per_chunk: int = 5000,
     server: str = "BI-DPA-PROD",
     database: str = "USR_PS_Forsk",
     if_exists: str = "fail",
@@ -54,7 +54,8 @@ def write_df_to_sql(
 
     Args:
         df (pd.DataFrame): dataframe to write
-        name (str): _description_
+        table_name (str): name of table to write to
+        rows_per_chunk (int): rows per chunk for loading bar
         server (str, optional): The SQL server. Defaults to "BI-DPA_PROD".
         database (str, optional): The SQL database. Defaults to "USR_PS_Forsk".
         if_exists (str, optional): What to do if the table already exists. Takes {'fail’, 'replace’, 'append’}. Defaults to "fail".
