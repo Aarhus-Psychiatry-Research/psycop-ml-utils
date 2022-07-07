@@ -21,6 +21,14 @@ poetry add git+https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git
 
 For more detailed instructions on installation e.g. including installation for development, see the [installation instructions](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/installation).
 
+## 🎓 Project
+PSYCOP projects which use `psycop-ml-utils`.
+
+| Project                | Publications |     |
+| -----------------------|----------| ---------------------------------------------------------------------------------- |
+| **[Type 2 Diabetes]** |          | Prediction of type 2 diabetes among patients with visits to psychiatric hospital departments |
+
+[Type 2 diabetes]: https://github.com/Aarhus-Psychiatry-Research/psycop-t2d
 
 ## 📖 Documentation
 
