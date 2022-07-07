@@ -39,6 +39,10 @@ myst-parser = "^0.18.0"
 flake8 = "^4.0.1"
 docformatter = "^1.4"
 
+# Dependencies for catalogue
+pydantic = "^1.9.1"
+srsly = "^2.4.3"
+
 [tool.poetry.extras] # Install with --extras "sql"
 sql = ["SQLAlchemy", "pyodbc"]
 
