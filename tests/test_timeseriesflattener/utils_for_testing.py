@@ -2,7 +2,6 @@ from typing import Callable, List, Union
 
 import pandas as pd
 from pandas import DataFrame
-from sqlalchemy import values
 
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 from psycopmlutils.utils import data_loaders
@@ -30,7 +29,8 @@ def convert_cols_with_matching_colnames_to_datetime(
         colname_substr (str): Substring to match on.
     """
     df.loc[:, df.columns.str.contains(colname_substr)] = df.loc[
-        :, df.columns.str.contains(colname_substr)
+        :,
+        df.columns.str.contains(colname_substr),
     ].apply(pd.to_datetime)
 
     return df
