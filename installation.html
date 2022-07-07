@@ -246,6 +246,13 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">poetry</span> <span class="n">config</span> <span class="n">virtualenvs</span><span class="o">.</span><span class="ow">in</span><span class="o">-</span><span class="n">project</span> <span class="n">true</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You might get the error <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">not</span> <span class="pre">found:</span> <span class="pre">poetry</span></code> in which case you need to export the path to poetry using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;$HOME/.poetry/bin:$PATH&quot;</span>
+</pre></div>
+</div>
+</div>
 <p>To make poetry save venvs in your project directories.</p>
 <p>Clone the repo, move into it, then run <code class="docutils literal notranslate"><span class="pre">poetry</span> <span class="pre">install</span></code>. I.e.:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils.git
