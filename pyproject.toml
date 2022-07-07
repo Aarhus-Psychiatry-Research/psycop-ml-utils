@@ -22,8 +22,6 @@ python = ">=3.8,<3.11"
 numpy = "^1.22.4"
 scipy = "^1.8.1"
 pandas = "^1.4.2"
-SQLAlchemy = "^1.4.37"
-pyodbc = "^4.0.32"
 catalogue = "^2.0.7"
 wasabi = "^0.9.1"
 scikit-learn = "^1.1.1"
@@ -41,6 +39,8 @@ myst-parser = "^0.18.0"
 flake8 = "^4.0.1"
 docformatter = "^1.4"
 
+[tool.poetry.extras] # Install with --extras "sql"
+sql = ["SQLAlchemy", "pyodbc"]
 
 [tool.coverage.run]
 omit = [
