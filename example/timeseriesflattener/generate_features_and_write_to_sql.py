@@ -52,12 +52,14 @@ if __name__ == "__main__":
     prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
 
     msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
+    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=120)
 
     # Predictors
     msg.info("Adding static predictors")
-    flattened_df.add_static_predictor(psycopmlutils.loaders.LoadDemographics.male())
-    flattened_df.add_age(psycopmlutils.loaders.LoadDemographics.birthdays())
+    flattened_df.add_static_predictor(
+        psycopmlutils.loaders.LoadDemographic.sex_female(),
+    )
+    flattened_df.add_age(psycopmlutils.loaders.LoadDemographic.birthdays())
 
     start_time = time.time()
 
@@ -98,8 +100,6 @@ if __name__ == "__main__":
 
     # Split and upload to SQL_server
     splits = ["test", "val", "train"]
-
-    outcome_col_name = "t2d_within_1826.25_days_max_fallback_0"
 
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
