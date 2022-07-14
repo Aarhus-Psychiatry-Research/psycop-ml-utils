@@ -111,35 +111,35 @@ if __name__ == "__main__":
 
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
-    for dataset_name in splits:
-        ROWS_PER_CHUNK = 5_000
+for dataset_name in splits:
+    ROWS_PER_CHUNK = 150
 
-        df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
+    df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
-        # Find IDs which are in split_ids, but not in flattened_df
-        split_ids = df_split_ids["dw_ek_borger"].unique()
-        flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
+    # Find IDs which are in split_ids, but not in flattened_df
+    split_ids = df_split_ids["dw_ek_borger"].unique()
+    flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
-        ids_in_split_but_not_in_flattened_df = split_ids[
-            ~np.isin(split_ids, flattened_df_ids)
-        ]
+    ids_in_split_but_not_in_flattened_df = split_ids[
+        ~np.isin(split_ids, flattened_df_ids)
+    ]
 
-        msg.warn(
-            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge",
-        )
+    msg.warn(
+        f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge",
+    )
 
-        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
+    split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
-        msg.info(f"{dataset_name}: Writing to SQL")
+    msg.info(f"{dataset_name}: Writing to SQL")
 
-        # Version table with current date and time
-        table_name = f"psycop_t2d_{dataset_name}_{time.strftime('%Y_%m_%d_%H_%M')}"
+    # Version table with current date and time
+    table_name = f"psycop_t2d_{dataset_name}_{time.strftime('%Y_%m_%d_%H_%M')}"
 
-        write_df_to_sql(
-            df=split_df,
-            table_name=table_name,
-            if_exists="replace",
-            rows_per_chunk=ROWS_PER_CHUNK,
-        )
+    write_df_to_sql(
+        df=split_df,
+        table_name=table_name,
+        if_exists="replace",
+        rows_per_chunk=ROWS_PER_CHUNK,
+    )
 
-        msg.good(f"{dataset_name}: Succesfully wrote {table_name} to SQL server")
+    msg.good(f"{dataset_name}: Succesfully wrote {table_name} to SQL server")
