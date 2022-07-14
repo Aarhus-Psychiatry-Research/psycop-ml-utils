@@ -1,5 +1,8 @@
-import ceODBC
+import urllib
+import urllib.parse
+
 import pandas as pd
+from sqlalchemy import create_engine
 from tqdm import tqdm
 
 
@@ -58,13 +61,16 @@ def write_df_to_sql(
         if_exists (str, optional): What to do if the table already exists. Takes {'fail’, 'replace’, 'append’}. Defaults to "fail".
     """
 
-    conn = ceODBC.connect(
-        driver="{ODBC Driver 17 for SQL Server}",
-        server=server,
-        timeout=1,
-        TDS_Version=7.2,
-        autocommit=False,
+    driver = "ODBC Driver 17 for SQL Server"
+
+    params = urllib.parse.quote(
+        f"DRIVER={driver};SERVER={server};DATABASE={database};Trusted_Connection=yes",
     )
+
+    url = f"mssql+pyodbc:///?odbc_connect={params}"
+
+    engine = create_engine(url=url, fast_executemany=True)
+    conn = engine.connect()
 
     insert_with_progress(
         df=df,
@@ -75,3 +81,4 @@ def write_df_to_sql(
     )
 
     conn.close()
+    engine.dispose()
