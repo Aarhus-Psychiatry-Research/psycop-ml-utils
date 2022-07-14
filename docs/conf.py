@@ -77,6 +77,9 @@ html_static_path = ["_static"]
 html_favicon = "_static/favicon.ico"
 
 html_theme_options = {
+    "source_repository": "https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils",
+    "source_branch": "main",
+    "source_directory": "docs/",
     "light_logo": "icon_with_title.png",
     "dark_logo": "icon_with_title.png",
     "light_css_variables": {

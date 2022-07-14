@@ -18,10 +18,22 @@ Install poetry with the following command:
 ```
 curl -sSL https://install.python-poetry.org | python3 -
 ```
+
 Add to your shell configuration as described in the output, then run:
 ```
 poetry config virtualenvs.in-project true
 ```
+
+````{note}
+You might get the error `command not found: poetry` in which case you need to export the path to poetry using:
+
+```
+export PATH="$HOME/.poetry/bin:$PATH"
+```
+
+````  
+  
+
 To make poetry save venvs in your project directories.
 
 

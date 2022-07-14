@@ -2,7 +2,7 @@ FAQ
 -------
 
 
-How do I test the code and run the test suite?
+How do I test the code and run the test suite?    
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Augmenty comes with an extensive test suite. To run the tests, you should clone the repository, then build augmenty from the source. 
@@ -12,7 +12,7 @@ This will also install the required development dependencies and test utilities 
 .. code-block::
    
    # install test dependencies
-   pip install -r requirements.txt
+   poetry install
 
    python -m pytest
 
@@ -30,8 +30,6 @@ If you want to check code coverage you can run the following:
 
 .. code-block::
 
-   pip install pytest-cov
-
    python -m pytest --cov=.
 
 
@@ -45,7 +43,7 @@ To make the documentation you can run:
 .. code-block::
 
   # install sphinx, themes and extensions
-  pip install requirements.txt
+  poetry install
 
   # generate html from documentations
 
@@ -59,4 +57,9 @@ If you use this library in your research, we please cite:
 
 .. code-block::
    
-   add citation here
+   @software{Martin_PSYCOP_machine_learning,
+      author = {Martin, Bernstorff and Lasse, Hansen and Enevoldsen, Kenneth},
+      title = {{PSYCOP machine learning utilities}},
+      url = {https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils},
+      version = {0.1.1}
+   }

@@ -346,7 +346,7 @@ class FlattenedDataset:
         # Add pred_prefix to value_col_name
         predictor_df.rename(
             columns={
-                value_col_name: f"{self.predictor_col_name_prefix}_{value_col_name}"
+                value_col_name: f"{self.predictor_col_name_prefix}_{value_col_name}",
             },
             inplace=True,
         )

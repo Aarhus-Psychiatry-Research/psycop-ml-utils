@@ -1,15 +1,7 @@
-import numpy as np
 import pandas as pd
-from utils_for_testing import (
-    assert_flattened_outcome_as_expected,
-    assert_flattened_predictor_as_expected,
-    str_to_df,
-)
+from utils_for_testing import str_to_df
 
-from psycopmlutils.timeseriesflattener import (
-    FlattenedDataset,
-    create_feature_combinations,
-)
+from psycopmlutils.timeseriesflattener import FlattenedDataset
 
 
 def test_min_date():

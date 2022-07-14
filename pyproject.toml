@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psycopmlutils"
-version = "0.1.1"
+version = "0.1.2"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
 classifiers = [
@@ -19,28 +19,32 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-numpy = "^1.22.4"
-scipy = "^1.8.1"
-pandas = "^1.4.2"
-SQLAlchemy = "^1.4.37"
-pyodbc = { version = "^4.0.32", markers = "platform_machine == 'x86_64'" }
-catalogue = "^2.0.7"
-wasabi = "^0.9.1"
-scikit-learn = "^1.1.1"
+numpy = "1.22.*"
+scipy = "1.8.*"
+pandas = "1.4.*"
+catalogue = "2.0.*"
+wasabi = "0.9.*"
+scikit-learn = "1.1.*"
+
+# Manually specify catalogue dependencies
+pydantic = "1.9.*"
+srsly = "2.4.*"
 
 [tool.poetry.dev-dependencies]
-black = "^22.3.0"
-pre-commit = "^2.19.0"
-pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
-Sphinx = "^5.0.2"
-furo = "^2022.6.21"
-sphinx-copybutton = "^0.5.0"
-sphinxext-opengraph = "^0.6.3"
-myst-parser = "^0.18.0"
-flake8 = "^4.0.1"
-docformatter = "^1.4"
+black = "22.3.*"
+pre-commit = "2.19.*"
+pytest = "7.1.*"
+pytest-cov = "3.0.*"
+Sphinx = "5.0.*"
+furo = "2022.6.*"
+sphinx-copybutton = "0.5.*"
+sphinxext-opengraph = "0.6.*"
+myst-parser = "0.18.*"
+flake8 = "4.0.*"
+docformatter = "1.4"
 
+[tool.poetry.extras] # Install with --extras "sql"
+sql = ["SQLAlchemy", "pyodbc"]
 
 [tool.coverage.run]
 omit = [
