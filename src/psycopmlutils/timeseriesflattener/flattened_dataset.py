@@ -315,7 +315,10 @@ class FlattenedDataset:
                     f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding.",
                 )
 
-        self.add_static_predictor(id2date_of_birth)
+        self.add_static_info(
+            info_df=id2date_of_birth,
+            input_col_name=date_of_birth_col_name,
+        )
 
         age = (
             (
@@ -333,27 +336,39 @@ class FlattenedDataset:
 
         self.df[f"{self.predictor_col_name_prefix}_age_in_years"] = age
 
-    def add_static_predictor(self, predictor_df: DataFrame):
-        """Add a static predictor to each prediction time, e.g. age, sex etc.
+    def add_static_info(
+        self,
+        info_df: DataFrame,
+        prefix: str = None,
+        input_col_name="value",
+        output_col_name: str = None,
+    ):
+        """Add static info to each prediction time, e.g. age, sex etc.
 
         Args:
             predictor_df (DataFrame): Contains an id_column and a value column.
+            prefix (str): Prefix for column. Defaults to self.predictor_col_name_prefix.
+            value_col_name (str, optional): Column names for the values you want to add. Defaults to "value".
+            output_col_name (str, optional): Name of the output column. Defaults to None.
         """
-        value_col_name = [
-            col for col in predictor_df.columns if col not in self.id_col_name
-        ][0]
+
+        if prefix is None:
+            prefix = self.predictor_col_name_prefix
 
         # Add pred_prefix to value_col_name
-        predictor_df.rename(
+        if output_col_name is None:
+            output_col_name = f"{prefix}_{input_col_name}"
+
+        info_df.rename(
             columns={
-                value_col_name: f"{self.predictor_col_name_prefix}_{value_col_name}",
+                input_col_name: output_col_name,
             },
             inplace=True,
         )
 
         self.df = pd.merge(
             self.df,
-            predictor_df,
+            info_df,
             how="left",
             on=self.id_col_name,
             suffixes=("", ""),
@@ -388,6 +403,8 @@ class FlattenedDataset:
             keep_outcome:timestamp (bool, optional): Whether to keep the timestamp for the outcome value as a separate column. Defaults to False.
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
+        prediction_timestamp_col_name = f"{self.timestamp_col_name}_prediction"
+        outcome_timestamp_col_name = f"{self.timestamp_col_name}_outcome"
         if incident:
             df = pd.merge(
                 self.df,
@@ -397,18 +414,26 @@ class FlattenedDataset:
                 suffixes=("_prediction", "_outcome"),
             )
 
-            df = df.drop(df[df["timestamp_outcome"] < df["timestamp_prediction"]].index)
+            df = df.drop(
+                df[
+                    df[outcome_timestamp_col_name] < df[prediction_timestamp_col_name]
+                ].index,
+            )
 
             if dichotomous:
                 full_col_str = f"{self.outcome_col_name_prefix}_dichotomous_{new_col_name}_within_{lookahead_days}_days_{resolve_multiple}_fallback_{fallback}"
 
                 df[full_col_str] = (
-                    df["timestamp_prediction"] + timedelta(days=lookahead_days)
-                    > df["timestamp_outcome"]
+                    df[prediction_timestamp_col_name] + timedelta(days=lookahead_days)
+                    > df[outcome_timestamp_col_name]
                 ).astype(int)
 
-            df.rename({"timestamp_prediction": "timestamp"}, axis=1, inplace=True)
-            df.drop(["timestamp_outcome"], axis=1, inplace=True)
+            df.rename(
+                {prediction_timestamp_col_name: "timestamp"},
+                axis=1,
+                inplace=True,
+            )
+            df.drop([outcome_timestamp_col_name], axis=1, inplace=True)
 
             df.drop(["value"], axis=1, inplace=True)
 
