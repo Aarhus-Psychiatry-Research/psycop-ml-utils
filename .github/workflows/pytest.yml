@@ -5,42 +5,57 @@ on:
   pull_request:
     branches: [ main, dev ]
 
+concurrency:
+  # New commit on branch cancels running workflows of the same branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pytest:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
-    - name: Install poetry
-      run: pipx install poetry
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: 3.8
-        cache: 'poetry'
-    - name: Install dependencies
+
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    ### Caching
+    - name: Load cached $HOME/.local (cache poetry)
+      uses: actions/cache@v2.1.6
+      with:
+        path: ~/.local
+        key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/pytest.yml') }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v2.1.6
+      with:
+        path: |
+          .venv
+          poetry.lock
+        # Cache the complete venv dir for a given os, python version, pyproject.toml
+        key: venv-${{ runner.os }}-python-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('.github/workflows/cache_version') }}
+
+    ### Installing
+    - name: Install Project
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install
+    
+    ### Run tests
+    - name: Source .venv
       run: |
-        poetry install
+        source $VENV
+
     - name: Run and write pytest
       run: |
         set -o pipefail
-        poetry run pytest --cov=src --cov-report term-missing | tee pytest-coverage.txt
-    - name: Coverage comment
-      id: coverage-comment
-      uses: MishaKav/pytest-coverage-comment@v1.1.24
-      with:
-        pytest-coverage-path: ./pytest-coverage.txt
-    - name: Output coverage
-      run: |
-        echo "Coverage Report - ${{ steps.coverage-comment.outputs.coverage }}"
-        echo "Coverage Color - ${{ steps.coverage-comment.outputs.color }}"
-    - name: Create Badge
-      uses: schneegans/dynamic-badges-action@v1.1.0
-      with:
-        auth: ${{ secrets.PYTEST_COVERAGE }}
-        gistID: d6c40a5b5a3169c079e8b8f778b8e517
-        filename: badge-psycop-ml-utils-pytest-coverage.json
-        label: Coverage
-        message: ${{ steps.coverage-comment.outputs.coverage }}
-        color: ${{ steps.coverage-comment.outputs.color }}
-        namedLogo: python
+        poetry run pytest --cov=src --cov-report term-missing --color=yes | tee pytest-coverage.txt
