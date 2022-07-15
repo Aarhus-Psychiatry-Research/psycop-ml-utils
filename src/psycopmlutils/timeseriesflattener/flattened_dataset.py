@@ -318,6 +318,7 @@ class FlattenedDataset:
         self.add_static_info(
             info_df=id2date_of_birth,
             input_col_name=date_of_birth_col_name,
+            prefix="pred_",
         )
 
         age = (
@@ -369,12 +370,12 @@ class FlattenedDataset:
 
         # Find output_col_name
         if prefix == "self.predictor_col_name_prefix":
-            prefix = self.predictor_col_name_prefix
+            prefix = f"{self.predictor_col_name_prefix}_"
 
         if output_col_name is None:
-            output_col_name = f"{prefix}_{value_col_name}"
+            output_col_name = f"{prefix}{value_col_name}"
         else:
-            output_col_name = f"{prefix}_{output_col_name}"
+            output_col_name = f"{prefix}{output_col_name}"
 
         df = pd.DataFrame(
             {

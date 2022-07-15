@@ -86,7 +86,7 @@ if __name__ == "__main__":
     msg.info("Adding static predictors")
     flattened_df.add_static_info(
         info_df=psycopmlutils.loaders.LoadDemographic.sex_female(),
-        prefix="pred",
+        prefix="pred_",
     )
 
     start_time = time.time()
