@@ -528,7 +528,10 @@
                     <span class="sa">f</span><span class="s2">&quot;Conversion of </span><span class="si">{</span><span class="n">date_of_birth_col_name</span><span class="si">}</span><span class="s2"> to datetime failed, doesn&#39;t match format %Y-%m-%d. Recommend converting to datetime before adding.&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_static_predictor</span><span class="p">(</span><span class="n">id2date_of_birth</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_static_info</span><span class="p">(</span>
+            <span class="n">info_df</span><span class="o">=</span><span class="n">id2date_of_birth</span><span class="p">,</span>
+            <span class="n">input_col_name</span><span class="o">=</span><span class="n">date_of_birth_col_name</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">age</span> <span class="o">=</span> <span class="p">(</span>
             <span class="p">(</span>
@@ -546,27 +549,56 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span><span class="si">}</span><span class="s2">_age_in_years&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">age</span></div>
 
-<div class="viewcode-block" id="FlattenedDataset.add_static_predictor"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_static_predictor">[docs]</a>    <span class="k">def</span> <span class="nf">add_static_predictor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictor_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add a static predictor to each prediction time, e.g. age, sex etc.</span>
+<div class="viewcode-block" id="FlattenedDataset.add_static_info"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_static_info">[docs]</a>    <span class="k">def</span> <span class="nf">add_static_info</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">info_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;self.predictor_col_name_prefix&quot;</span><span class="p">,</span>
+        <span class="n">input_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">output_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add static info to each prediction time, e.g. age, sex etc.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            predictor_df (DataFrame): Contains an id_column and a value column.</span>
+<span class="sd">            prefix (str): Prefix for column. Defaults to self.predictor_col_name_prefix.</span>
+<span class="sd">            value_col_name (str, optional): Column names for the values you want to add. Defaults to &quot;value&quot;.</span>
+<span class="sd">            output_col_name (str, optional): Name of the output column. Defaults to None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">value_col_name</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">predictor_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span>
-        <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="c1"># Add pred_prefix to value_col_name</span>
-        <span class="n">predictor_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
-            <span class="n">columns</span><span class="o">=</span><span class="p">{</span>
-                <span class="n">value_col_name</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">value_col_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">value_col_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">info_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">]</span>
+
+        <span class="c1"># Try to infer value col name if not provided</span>
+        <span class="k">if</span> <span class="n">input_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">value_col_name</span> <span class="o">=</span> <span class="n">value_col_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Only one value column can be added to static info, found multiple: </span><span class="si">{</span><span class="n">value_col_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No value column found in info_df, please check.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value_col_name</span> <span class="o">=</span> <span class="n">input_col_name</span>
+
+        <span class="c1"># Find output_col_name</span>
+        <span class="k">if</span> <span class="n">prefix</span> <span class="o">==</span> <span class="s2">&quot;self.predictor_col_name_prefix&quot;</span><span class="p">:</span>
+            <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span>
+
+        <span class="k">if</span> <span class="n">output_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output_col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">value_col_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output_col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">output_col_name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">:</span> <span class="n">info_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">],</span>
+                <span class="n">output_col_name</span><span class="p">:</span> <span class="n">info_df</span><span class="p">[</span><span class="n">value_col_name</span><span class="p">],</span>
             <span class="p">},</span>
-            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
-            <span class="n">predictor_df</span><span class="p">,</span>
+            <span class="n">df</span><span class="p">,</span>
             <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
             <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">,</span>
             <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
@@ -601,6 +633,8 @@
 <span class="sd">            keep_outcome:timestamp (bool, optional): Whether to keep the timestamp for the outcome value as a separate column. Defaults to False.</span>
 <span class="sd">            dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prediction_timestamp_col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="si">}</span><span class="s2">_prediction&quot;</span>
+        <span class="n">outcome_timestamp_col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="si">}</span><span class="s2">_outcome&quot;</span>
         <span class="k">if</span> <span class="n">incident</span><span class="p">:</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
@@ -610,18 +644,26 @@
                 <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;_prediction&quot;</span><span class="p">,</span> <span class="s2">&quot;_outcome&quot;</span><span class="p">),</span>
             <span class="p">)</span>
 
-            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_outcome&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_prediction&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+                <span class="n">df</span><span class="p">[</span>
+                    <span class="n">df</span><span class="p">[</span><span class="n">outcome_timestamp_col_name</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">df</span><span class="p">[</span><span class="n">prediction_timestamp_col_name</span><span class="p">]</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">dichotomous</span><span class="p">:</span>
                 <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span><span class="si">}</span><span class="s2">_dichotomous_</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">lookahead_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
 
                 <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_prediction&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">lookahead_days</span><span class="p">)</span>
-                    <span class="o">&gt;</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_outcome&quot;</span><span class="p">]</span>
+                    <span class="n">df</span><span class="p">[</span><span class="n">prediction_timestamp_col_name</span><span class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">lookahead_days</span><span class="p">)</span>
+                    <span class="o">&gt;</span> <span class="n">df</span><span class="p">[</span><span class="n">outcome_timestamp_col_name</span><span class="p">]</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-            <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">&quot;timestamp_prediction&quot;</span><span class="p">:</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;timestamp_outcome&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">prediction_timestamp_col_name</span><span class="p">:</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">},</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="n">outcome_timestamp_col_name</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
             <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
