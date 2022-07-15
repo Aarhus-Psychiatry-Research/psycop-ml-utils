@@ -111,8 +111,12 @@ if __name__ == "__main__":
 
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
+    # Version table with current date and time
+    table_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+    msg.info(f"Table prefix is: {table_prefix}")
+
     for dataset_name in splits:
-        ROWS_PER_CHUNK = 5_000
+        ROWS_PER_CHUNK = 8_000
 
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
@@ -133,7 +137,7 @@ if __name__ == "__main__":
         msg.info(f"{dataset_name}: Writing to SQL")
 
         # Version table with current date and time
-        table_name = f"psycop_t2d_{dataset_name}_{time.strftime('%Y_%m_%d_%H_%M')}"
+        table_name = f"{table_prefix}_{dataset_name}"
 
         write_df_to_sql(
             df=split_df,
