@@ -20,7 +20,7 @@ if __name__ == "__main__":
             {
                 "predictor_df": "hba1c",
                 "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
+                "resolve_multiple": ["mean", "max", "min", "count"],
                 "fallback": np.nan,
             },
             {
@@ -52,21 +52,8 @@ if __name__ == "__main__":
     prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
 
     msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=120)
-
-    # Predictors
-    msg.info("Adding static predictors")
-    flattened_df.add_static_predictor(
-        psycopmlutils.loaders.LoadDemographic.sex_female(),
-    )
+    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
     flattened_df.add_age(psycopmlutils.loaders.LoadDemographic.birthdays())
-
-    start_time = time.time()
-
-    msg.info("Adding temporal predictors")
-    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_LIST,
-    )
 
     # Outcome
     msg.info("Adding outcome")
@@ -83,9 +70,28 @@ if __name__ == "__main__":
             incident=True,
             dichotomous=True,
         )
-        msg.good("Finished adding outcome")
+
+    # Add timestamp from outcomes
+    flattened_df.add_static_info(
+        info_df=event_times,
+        prefix="",
+        input_col_name="timestamp",
+        output_col_name="timestamp_first_t2d",
+    )
+    msg.good("Finished adding outcome")
 
     end_time = time.time()
+
+    # Predictors
+    msg.info("Adding static predictors")
+    flattened_df.add_static_info(psycopmlutils.loaders.LoadDemographic.sex_female())
+
+    start_time = time.time()
+
+    msg.info("Adding temporal predictors")
+    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
+        predictors=PREDICTOR_LIST,
+    )
 
     # Finish
     msg.good(
@@ -103,8 +109,12 @@ if __name__ == "__main__":
 
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
+    # Version table with current date and time
+    table_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+    msg.info(f"Table prefix is: {table_prefix}")
+
     for dataset_name in splits:
-        ROWS_PER_CHUNK = 5_000
+        ROWS_PER_CHUNK = 8_000
 
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
@@ -123,11 +133,15 @@ if __name__ == "__main__":
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
         msg.info(f"{dataset_name}: Writing to SQL")
+
+        # Version table with current date and time
+        table_name = f"{table_prefix}_{dataset_name}"
+
         write_df_to_sql(
             df=split_df,
-            table_name=f"psycop_t2d_{dataset_name}",
+            table_name=table_name,
             if_exists="replace",
             rows_per_chunk=ROWS_PER_CHUNK,
         )
 
-        msg.good(f"{dataset_name}: Succesfully wrote {dataset_name} to SQL server")
+        msg.good(f"{dataset_name}: Succesfully wrote {table_name} to SQL server")

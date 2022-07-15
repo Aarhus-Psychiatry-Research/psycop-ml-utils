@@ -194,7 +194,9 @@ def test_static_predictor():
                         """
 
     dataset = FlattenedDataset(prediction_times_df=str_to_df(prediction_times_df_str))
-    dataset.add_static_predictor(str_to_df(static_predictor))
+    dataset.add_static_info(
+        info_df=str_to_df(static_predictor),
+    )
 
     expected_values = pd.DataFrame(
         {
@@ -362,7 +364,7 @@ def test_add_multiple_static_predictors():
     )
 
     flattened_dataset.add_age(birthdates_df)
-    flattened_dataset.add_static_predictor(male_df)
+    flattened_dataset.add_static_info(info_df=male_df)
 
     outcome_df = flattened_dataset.df
 
