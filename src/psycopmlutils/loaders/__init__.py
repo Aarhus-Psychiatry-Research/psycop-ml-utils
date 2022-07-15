@@ -1,4 +1,4 @@
-from .load_demographics import LoadDemographic  # noqa
+from .load_demographic import LoadDemographic  # noqa
 from .load_diagnoses import LoadDiagnoses  # noqa
 from .load_ids import LoadIDs  # noqa
 from .load_lab_results import LoadLabResults  # noqa

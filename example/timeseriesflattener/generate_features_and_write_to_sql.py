@@ -107,8 +107,6 @@ if __name__ == "__main__":
     # Split and upload to SQL_server
     splits = ["test", "val", "train"]
 
-    outcome_col_name = "t2d_within_1826.25_days_max_fallback_0"
-
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
     # Version table with current date and time
