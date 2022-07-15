@@ -76,7 +76,7 @@ if __name__ == "__main__":
         info_df=event_times,
         prefix="",
         input_col_name="timestamp",
-        output_col_name="timestamp_first_t2d",
+        output_col_name="timestamp_first_confirmed_t2d_from_bloodsamples",
     )
     msg.good("Finished adding outcome")
 
@@ -84,7 +84,10 @@ if __name__ == "__main__":
 
     # Predictors
     msg.info("Adding static predictors")
-    flattened_df.add_static_info(psycopmlutils.loaders.LoadDemographic.sex_female())
+    flattened_df.add_static_info(
+        info_df=psycopmlutils.loaders.LoadDemographic.sex_female(),
+        prefix="pred",
+    )
 
     start_time = time.time()
 
