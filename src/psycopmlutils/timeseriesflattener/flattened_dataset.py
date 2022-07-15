@@ -339,8 +339,8 @@ class FlattenedDataset:
     def add_static_info(
         self,
         info_df: DataFrame,
-        prefix: str = None,
-        input_col_name="value",
+        prefix: str = "self.predictor_col_name_prefix",
+        input_col_name: str = None,
         output_col_name: str = None,
     ):
         """Add static info to each prediction time, e.g. age, sex etc.
@@ -352,23 +352,40 @@ class FlattenedDataset:
             output_col_name (str, optional): Name of the output column. Defaults to None.
         """
 
-        if prefix is None:
+        value_col_name = [col for col in info_df.columns if col not in self.id_col_name]
+
+        # Try to infer value col name if not provided
+        if input_col_name is None:
+            if len(value_col_name) == 1:
+                value_col_name = value_col_name[0]
+            elif len(value_col_name) > 1:
+                raise ValueError(
+                    f"Only one value column can be added to static info, found multiple: {value_col_name}",
+                )
+            elif len(value_col_name) == 0:
+                raise ValueError("No value column found in info_df, please check.")
+        else:
+            value_col_name = input_col_name
+
+        # Find output_col_name
+        if prefix == "self.predictor_col_name_prefix":
             prefix = self.predictor_col_name_prefix
 
-        # Add pred_prefix to value_col_name
         if output_col_name is None:
-            output_col_name = f"{prefix}_{input_col_name}"
+            output_col_name = f"{prefix}_{value_col_name}"
+        else:
+            output_col_name = f"{prefix}_{output_col_name}"
 
-        info_df.rename(
-            columns={
-                input_col_name: output_col_name,
+        df = pd.DataFrame(
+            {
+                self.id_col_name: info_df[self.id_col_name],
+                output_col_name: info_df[value_col_name],
             },
-            inplace=True,
         )
 
         self.df = pd.merge(
             self.df,
-            info_df,
+            df,
             how="left",
             on=self.id_col_name,
             suffixes=("", ""),
