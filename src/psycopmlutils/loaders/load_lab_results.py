@@ -18,7 +18,6 @@ class LoadLabResults:
 
         sql = f"SELECT dw_ek_borger, datotid_sidstesvar, numerisksvar FROM [fct].{view} WHERE npukode = '{blood_sample_id}'"
 
-
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
         df.rename(
