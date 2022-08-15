@@ -1,5 +1,6 @@
 import catalogue
-from pandas import DataFrame
+from pandas import DataFrame, Series
+from scipy import stats
 
 resolve_fns = catalogue.create("timeseriesflattener", "resolve_strategies")
 
@@ -53,3 +54,10 @@ def get_sum_in_group(grouped_df: DataFrame) -> DataFrame:
 @resolve_fns.register("count")
 def get_count_in_group(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.count()
+
+
+@resolve_fns.register("change_per_day")
+def get_change_in_value_per_day(grouped_df: DataFrame) -> DataFrame:
+    return grouped_df.apply(
+        lambda x: Series({"value": stats.linregress(x.val, x.timestamp_val)[0]}),
+    )

@@ -27,8 +27,8 @@ def test_predictor_after_prediction_time():
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
         resolve_multiple="max",
-        expected_flattened_values=[-1],
-        fallback=-1,
+        expected_flattened_values=[np.NaN],
+        fallback=np.NaN,
     )
 
 
@@ -46,7 +46,7 @@ def test_predictor_before_prediction():
         lookbehind_days=2,
         resolve_multiple="max",
         expected_flattened_values=[1],
-        fallback=-1,
+        fallback=np.NaN,
     )
 
 
@@ -71,8 +71,8 @@ def test_multiple_citizens_predictor():
         predictor_df_str=predictor_df_str,
         lookbehind_days=2,
         resolve_multiple="max",
-        expected_flattened_values=[0, 1, 0, 2, -1.0],
-        fallback=-1,
+        expected_flattened_values=[0, 1, 0, 2, np.NaN],
+        fallback=np.NaN,
     )
 
 
@@ -107,8 +107,7 @@ def test_event_before_prediction():
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
         resolve_multiple="max",
-        expected_flattened_values=[0],
-        is_fallback_prop_warning_threshold=None,
+        expected_flattened_values=[np.NaN],
     )
 
 
@@ -160,7 +159,7 @@ def test_multiple_citizens_outcome():
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
         resolve_multiple="max",
-        expected_flattened_values=[1, 0, 1, 0],
+        expected_flattened_values=[1, np.NaN, 1, np.NaN],
     )
 
 
@@ -177,9 +176,8 @@ def test_citizen_without_outcome():
         outcome_df_str=outcome_df_str,
         lookahead_days=2,
         resolve_multiple="max",
-        fallback=0,
-        expected_flattened_values=[0],
-        is_fallback_prop_warning_threshold=None,
+        fallback=np.NaN,
+        expected_flattened_values=[np.NaN],
     )
 
 

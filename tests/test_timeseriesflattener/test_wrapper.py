@@ -122,9 +122,9 @@ def test_output_independent_of_order_of_input():
 
     predictor_str = """dw_ek_borger,timestamp,value,
                         1,2021-12-30 00:00:01, 1
-                        1,2021-12-29 00:00:02, 2
-                        2,2021-12-30 00:00:01, 1
-                        2,2021-12-29 00:00:02, 2
+                        1,2021-12-29 00:00:02, 4
+                        2,2021-12-30 00:00:01, 2
+                        2,2021-12-29 00:00:02, 3
                         """
 
     predictor_df = str_to_df(predictor_str)

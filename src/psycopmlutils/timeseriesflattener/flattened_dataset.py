@@ -1,3 +1,4 @@
+import datetime as dt
 from datetime import timedelta
 from multiprocessing import Pool
 from typing import Callable, Dict, List, Optional, Union
@@ -400,7 +401,6 @@ class FlattenedDataset:
         incident: Optional[bool] = False,
         outcome_df_values_col_name: str = "value",
         new_col_name: str = "value",
-        is_fallback_prop_warning_threshold: float = 0.9,
         keep_outcome_timestamp: bool = True,
         dichotomous: bool = False,
     ):
@@ -414,9 +414,6 @@ class FlattenedDataset:
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
             outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "value".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
-            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-                prediction_times that receive fallback is larger than threshold.
-                Indicates unlikely to be a learnable feature. Defaults to 0.9.
             keep_outcome:timestamp (bool, optional): Whether to keep the timestamp for the outcome value as a separate column. Defaults to False.
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
@@ -464,7 +461,6 @@ class FlattenedDataset:
                 resolve_multiple=resolve_multiple,
                 fallback=fallback,
                 source_values_col_name=outcome_df_values_col_name,
-                is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
                 keep_val_timestamp=keep_outcome_timestamp,
                 new_col_name=new_col_name,
             )
@@ -508,7 +504,6 @@ class FlattenedDataset:
         fallback: float,
         new_col_name: Optional[str] = None,
         source_values_col_name: str = "value",
-        is_fallback_prop_warning_threshold: float = 0.9,
         keep_val_timestamp: bool = False,
     ):
         """Add a column to the dataset (either predictor or outcome depending
@@ -522,9 +517,6 @@ class FlattenedDataset:
             fallback (List[str]): What to do if no value within the lookahead.
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
             source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
-            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-                prediction_times that receive fallback is larger than threshold.
-                Indicates unlikely to be a learnable feature. Defaults to 0.9.
             keep_val_timestamp (bool, optional): Whether to keep the timestamp for the temporal value as a separate column. Defaults to False.
         """
         timestamp_col_type = type(values_df[self.timestamp_col_name][0]).__name__
@@ -551,7 +543,6 @@ class FlattenedDataset:
             timestamp_col_name=self.timestamp_col_name,
             pred_time_uuid_col_name=self.pred_time_uuid_col_name,
             source_values_col_name=source_values_col_name,
-            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
             keep_val_timestamp=keep_val_timestamp,
             new_col_name_prefix=new_col_name_prefix,
         )
@@ -571,8 +562,6 @@ class FlattenedDataset:
         pred_time_uuid_col_name: str,
         new_col_name: str,
         source_values_col_name: str = "value",
-        is_fallback_prop_warning_threshold: float = 0.9,
-        low_variance_threshold: float = 0.01,
         keep_val_timestamp: bool = False,
         new_col_name_prefix: str = None,
     ) -> DataFrame:
@@ -604,10 +593,6 @@ class FlattenedDataset:
                 dataframe.
             source_values_col_name (str, optional): Name of column containing values in
                 values_df. Defaults to "value".
-            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError
-                if proportion of prediction_times that receive fallback is larger than
-                threshold. Indicates unlikely to be a learnable feature. Defaults to
-                0.9.
             keep_val_timestamp (bool, optional): Whether to keep the timestamp for the
                 temporal value as a separate column. Defaults to False.
 
@@ -660,6 +645,8 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         ).fillna(fallback)
 
+        df["timestamp_val"].replace({fallback: pd.NaT}, inplace=True)
+
         df = FlattenedDataset.resolve_multiple_values_within_interval_days(
             resolve_multiple=resolve_multiple,
             df=df,
@@ -667,49 +654,20 @@ class FlattenedDataset:
             pred_time_uuid_colname=pred_time_uuid_col_name,
         )
 
+        # If resolve_multiple generates empty values,
+        # e.g. when there is only one prediction_time within look_ahead window for slope calculation,
+        # replace with NaN
+        df["value"].replace({np.NaN: fallback}, inplace=True)
+
         df.rename(
             {"value": full_col_str},
             axis=1,
             inplace=True,
         )
 
-        if direction == "ahead":
-            if is_fallback_prop_warning_threshold is not None:
-                prop_of_values_that_are_fallback = (
-                    df[df[full_col_str] == fallback].shape[0] / df.shape[0]
-                )
-
-                if (
-                    prop_of_values_that_are_fallback
-                    > is_fallback_prop_warning_threshold
-                ):
-                    msg.warn(
-                        f"""{full_col_str}: Beware, {prop_of_values_that_are_fallback*100}% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None.""",
-                    )
-
-            if low_variance_threshold is not None:
-                variance_as_fraction_of_mean = (
-                    df[full_col_str].var() / df[full_col_str].mean()
-                )
-                if variance_as_fraction_of_mean < low_variance_threshold:
-                    msg.warn(
-                        f"""{full_col_str}: Beware, variance / mean < low_variance_threshold ({variance_as_fraction_of_mean} < {low_variance_threshold}), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None.""",
-                    )
-
         msg.good(f"Returning flattened dataframe with {full_col_str}")
 
         cols_to_return = [pred_time_uuid_col_name, full_col_str]
-
-        if keep_val_timestamp:
-            timestamp_val_name = f"timestamp_{full_col_str}"
-
-            df.rename(
-                {"timestamp_val": timestamp_val_name},
-                axis=1,
-                inplace=True,
-            )
-
-            cols_to_return.append(timestamp_val_name)
 
         return df[cols_to_return]
 
@@ -753,6 +711,9 @@ class FlattenedDataset:
         Returns:
             DataFrame: DataFrame with one row pr. prediction time.
         """
+        # Convert timestamp val to numeric that can be used for resolve_multiple functions
+        df["timestamp_val"] = df["timestamp_val"].map(dt.datetime.toordinal)
+
         # Sort by timestamp_pred in case resolve_multiple needs dates
         df = df.sort_values(by=timestamp_col_name).groupby(pred_time_uuid_colname)
 
