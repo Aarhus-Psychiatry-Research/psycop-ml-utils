@@ -211,7 +211,8 @@
         </div>
         <article role="main">
           <h1>Source code for psycopmlutils.timeseriesflattener.flattened_dataset</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -613,7 +614,6 @@
         <span class="n">incident</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">outcome_df_values_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
         <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
-        <span class="n">is_fallback_prop_warning_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
         <span class="n">keep_outcome_timestamp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">dichotomous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -627,9 +627,6 @@
 <span class="sd">            incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.</span>
 <span class="sd">            outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to &quot;value&quot;.</span>
 <span class="sd">            new_col_name (str): Name to use for new col. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;. Defaults to &quot;value&quot;.</span>
-<span class="sd">            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of</span>
-<span class="sd">                prediction_times that receive fallback is larger than threshold.</span>
-<span class="sd">                Indicates unlikely to be a learnable feature. Defaults to 0.9.</span>
 <span class="sd">            keep_outcome:timestamp (bool, optional): Whether to keep the timestamp for the outcome value as a separate column. Defaults to False.</span>
 <span class="sd">            dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -677,7 +674,6 @@
                 <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
                 <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
                 <span class="n">source_values_col_name</span><span class="o">=</span><span class="n">outcome_df_values_col_name</span><span class="p">,</span>
-                <span class="n">is_fallback_prop_warning_threshold</span><span class="o">=</span><span class="n">is_fallback_prop_warning_threshold</span><span class="p">,</span>
                 <span class="n">keep_val_timestamp</span><span class="o">=</span><span class="n">keep_outcome_timestamp</span><span class="p">,</span>
                 <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
             <span class="p">)</span></div>
@@ -721,7 +717,6 @@
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">source_values_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
-        <span class="n">is_fallback_prop_warning_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
         <span class="n">keep_val_timestamp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a column to the dataset (either predictor or outcome depending</span>
@@ -735,9 +730,6 @@
 <span class="sd">            fallback (List[str]): What to do if no value within the lookahead.</span>
 <span class="sd">            new_col_name (str): Name to use for new column. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;.</span>
 <span class="sd">            source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to &quot;val&quot;.</span>
-<span class="sd">            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of</span>
-<span class="sd">                prediction_times that receive fallback is larger than threshold.</span>
-<span class="sd">                Indicates unlikely to be a learnable feature. Defaults to 0.9.</span>
 <span class="sd">            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the temporal value as a separate column. Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">timestamp_col_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">values_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span>
@@ -764,7 +756,6 @@
             <span class="n">timestamp_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">,</span>
             <span class="n">pred_time_uuid_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
             <span class="n">source_values_col_name</span><span class="o">=</span><span class="n">source_values_col_name</span><span class="p">,</span>
-            <span class="n">is_fallback_prop_warning_threshold</span><span class="o">=</span><span class="n">is_fallback_prop_warning_threshold</span><span class="p">,</span>
             <span class="n">keep_val_timestamp</span><span class="o">=</span><span class="n">keep_val_timestamp</span><span class="p">,</span>
             <span class="n">new_col_name_prefix</span><span class="o">=</span><span class="n">new_col_name_prefix</span><span class="p">,</span>
         <span class="p">)</span>
@@ -784,8 +775,6 @@
         <span class="n">pred_time_uuid_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">source_values_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
-        <span class="n">is_fallback_prop_warning_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.9</span><span class="p">,</span>
-        <span class="n">low_variance_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
         <span class="n">keep_val_timestamp</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">new_col_name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
@@ -817,10 +806,6 @@
 <span class="sd">                dataframe.</span>
 <span class="sd">            source_values_col_name (str, optional): Name of column containing values in</span>
 <span class="sd">                values_df. Defaults to &quot;value&quot;.</span>
-<span class="sd">            is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError</span>
-<span class="sd">                if proportion of prediction_times that receive fallback is larger than</span>
-<span class="sd">                threshold. Indicates unlikely to be a learnable feature. Defaults to</span>
-<span class="sd">                0.9.</span>
 <span class="sd">            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the</span>
 <span class="sd">                temporal value as a separate column. Defaults to False.</span>
 
@@ -873,6 +858,8 @@
             <span class="n">pred_time_uuid_colname</span><span class="o">=</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fallback</span><span class="p">)</span>
 
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_val&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">fallback</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">NaT</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="n">df</span> <span class="o">=</span> <span class="n">FlattenedDataset</span><span class="o">.</span><span class="n">resolve_multiple_values_within_interval_days</span><span class="p">(</span>
             <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
             <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
@@ -880,49 +867,20 @@
             <span class="n">pred_time_uuid_colname</span><span class="o">=</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># If resolve_multiple generates empty values,</span>
+        <span class="c1"># e.g. when there is only one prediction_time within look_ahead window for slope calculation,</span>
+        <span class="c1"># replace with NaN</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span> <span class="n">fallback</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
         <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
             <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">full_col_str</span><span class="p">},</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;ahead&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">is_fallback_prop_warning_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">prop_of_values_that_are_fallback</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">==</span> <span class="n">fallback</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="p">)</span>
-
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">prop_of_values_that_are_fallback</span>
-                    <span class="o">&gt;</span> <span class="n">is_fallback_prop_warning_threshold</span>
-                <span class="p">):</span>
-                    <span class="n">msg</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">: Beware, </span><span class="si">{</span><span class="n">prop_of_values_that_are_fallback</span><span class="o">*</span><span class="mi">100</span><span class="si">}</span><span class="s2">% of rows contain the fallback value, indicating that it is unlikely to be a learnable feature. Consider redefining. You can generate the feature anyway by passing an is_fallback_prop_warning_threshold argument with a higher threshold or None.&quot;&quot;&quot;</span><span class="p">,</span>
-                    <span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">low_variance_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">variance_as_fraction_of_mean</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span><span class="o">.</span><span class="n">var</span><span class="p">()</span> <span class="o">/</span> <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-                <span class="p">)</span>
-                <span class="k">if</span> <span class="n">variance_as_fraction_of_mean</span> <span class="o">&lt;</span> <span class="n">low_variance_threshold</span><span class="p">:</span>
-                    <span class="n">msg</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">: Beware, variance / mean &lt; low_variance_threshold (</span><span class="si">{</span><span class="n">variance_as_fraction_of_mean</span><span class="si">}</span><span class="s2"> &lt; </span><span class="si">{</span><span class="n">low_variance_threshold</span><span class="si">}</span><span class="s2">), indicating high risk of overfitting. Consider redefining. You can generate the feature anyway by passing an low_variance_threshold argument with a lower threshold or None.&quot;&quot;&quot;</span><span class="p">,</span>
-                    <span class="p">)</span>
-
         <span class="n">msg</span><span class="o">.</span><span class="n">good</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning flattened dataframe with </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">cols_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span> <span class="n">full_col_str</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">keep_val_timestamp</span><span class="p">:</span>
-            <span class="n">timestamp_val_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;timestamp_</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span>
-
-            <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
-                <span class="p">{</span><span class="s2">&quot;timestamp_val&quot;</span><span class="p">:</span> <span class="n">timestamp_val_name</span><span class="p">},</span>
-                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
-
-            <span class="n">cols_to_return</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">timestamp_val_name</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">cols_to_return</span><span class="p">]</span></div>
 
@@ -966,6 +924,9 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame: DataFrame with one row pr. prediction time.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Convert timestamp val to numeric that can be used for resolve_multiple functions</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_val&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;timestamp_val&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">toordinal</span><span class="p">)</span>
+
         <span class="c1"># Sort by timestamp_pred in case resolve_multiple needs dates</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">timestamp_col_name</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">pred_time_uuid_colname</span><span class="p">)</span>
 

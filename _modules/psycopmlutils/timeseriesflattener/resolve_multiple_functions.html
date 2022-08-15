@@ -212,7 +212,8 @@
         <article role="main">
           <h1>Source code for psycopmlutils.timeseriesflattener.resolve_multiple_functions</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">catalogue</span>
-<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">Series</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">stats</span>
 
 <span class="n">resolve_fns</span> <span class="o">=</span> <span class="n">catalogue</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;timeseriesflattener&quot;</span><span class="p">,</span> <span class="s2">&quot;resolve_strategies&quot;</span><span class="p">)</span>
 
@@ -266,6 +267,13 @@
 <div class="viewcode-block" id="get_count_in_group"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_count_in_group">[docs]</a><span class="nd">@resolve_fns</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">get_count_in_group</span><span class="p">(</span><span class="n">grouped_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">grouped_df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="get_change_in_value_per_day"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.resolve_multiple_functions.get_change_in_value_per_day">[docs]</a><span class="nd">@resolve_fns</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;change_per_day&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_change_in_value_per_day</span><span class="p">(</span><span class="n">grouped_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">grouped_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">Series</span><span class="p">({</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">timestamp_val</span><span class="p">)[</span><span class="mi">0</span><span class="p">]}),</span>
+    <span class="p">)</span></div>
 </pre></div>
         </article>
       </div>
