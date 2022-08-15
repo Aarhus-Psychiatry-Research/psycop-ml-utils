@@ -3,6 +3,7 @@ from typing import Callable, List, Union
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 from psycopmlutils.utils import data_loaders
 
@@ -20,7 +21,8 @@ def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:
 
 
 def convert_cols_with_matching_colnames_to_datetime(
-    df: DataFrame, colname_substr: str
+    df: DataFrame,
+    colname_substr: str,
 ) -> DataFrame:
     """Convert columns that contain colname_substr in their name to datetimes
     Args:
@@ -28,7 +30,8 @@ def convert_cols_with_matching_colnames_to_datetime(
         colname_substr (str): Substring to match on.
     """
     df.loc[:, df.columns.str.contains(colname_substr)] = df.loc[
-        :, df.columns.str.contains(colname_substr)
+        :,
+        df.columns.str.contains(colname_substr),
     ].apply(pd.to_datetime)
 
     return df
@@ -42,8 +45,6 @@ def assert_flattened_outcome_as_expected(
     resolve_multiple: Union[Callable, str],
     values_colname: str = "value",
     fallback: List = np.NaN,
-    is_fallback_prop_warning_threshold: float = 0.9,
-    low_variance_threshold: float = None,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -52,13 +53,8 @@ def assert_flattened_outcome_as_expected(
         lookahead_days (float): _description_
         expected_flattened_vals (List): A list of the expected values in the value column of the flattened df
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
-        values_colname (str, optional): Column name for the new values. Defaults to "value".
+        values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
-        is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-            prediction_times that receive fallback is larger than threshold.
-            Indicates unlikely to be a learnable feature. Defaults to 0.9.
-        low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
-            Low value indicates high risk of overfitting. Defaults to 0.01.
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
@@ -73,7 +69,7 @@ def assert_flattened_outcome_as_expected(
         >>>     lookahead_days=2,
         >>>     resolve_multiple=max,
         >>>     fallback = 0,
-        >>>     expected_flattened_vals=[0],
+        >>>     expected_flattened_vals=[np.NaN],
         >>> )
     """
 
@@ -86,8 +82,6 @@ def assert_flattened_outcome_as_expected(
         expected_flattened_values=expected_flattened_values,
         values_colname=values_colname,
         fallback=fallback,
-        is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
-        low_variance_threshold=low_variance_threshold,
     )
 
 
@@ -99,8 +93,6 @@ def assert_flattened_predictor_as_expected(
     expected_flattened_values: List,
     values_colname: str = "value",
     fallback: List = np.NaN,
-    is_fallback_prop_warning_threshold: float = 0.9,
-    low_variance_threshold: float = None,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -111,11 +103,6 @@ def assert_flattened_predictor_as_expected(
         expected_flattened_values (List): A list of the expected values in the value column of the flattened df
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
-        is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-            prediction_times that receive fallback is larger than threshold.
-            Indicates unlikely to be a learnable feature. Defaults to 0.9.
-        low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
-            Low valyue indicates high risk of overfitting. Defaults to 0.01.
     Example:
         >>> prediction_times_df_str =  '''dw_ek_borger,timestamp,
         >>>                            1,2021-12-31 00:00:00
@@ -143,8 +130,6 @@ def assert_flattened_predictor_as_expected(
         expected_flattened_values=expected_flattened_values,
         values_colname=values_colname,
         fallback=fallback,
-        is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
-        low_variance_threshold=low_variance_threshold,
     )
 
 
@@ -157,10 +142,9 @@ def assert_flattened_values_as_expected(
     expected_flattened_values: List,
     values_colname: str = "value",
     fallback: List = np.NaN,
-    is_fallback_prop_warning_threshold: float = 0.9,
-    low_variance_threshold: float = None,
 ):
     """Run tests from string representations of dataframes.
+
     Args:
         Args:
         prediction_times_df_str (str): A string-representation of prediction-times df
@@ -171,11 +155,6 @@ def assert_flattened_values_as_expected(
         expected_flattened_vals (List): A list of the expected values in the value column of the flattened df
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
-        is_fallback_prop_warning_threshold (float, optional): Triggers a ValueError if proportion of
-            prediction_times that receive fallback is larger than threshold.
-            Indicates unlikely to be a learnable feature. Defaults to 0.9.
-        low_variance_threshold (float, optional):  Triggers a ValueError ifvariance / mean < low_variance_threshold
-            Low value indicates high risk of overfitting. Defaults to 0.01.
     Raises:
         ValueError: _description_
     """
@@ -190,36 +169,36 @@ def assert_flattened_values_as_expected(
     )
 
     if direction == "behind":
+        new_col_name_prefix = "pred"
         dataset.add_temporal_predictor(
             predictor_df=df_event_times,
-            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
-            low_variance_threshold=low_variance_threshold,
             lookbehind_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            new_col_name=values_colname,
         )
     elif direction == "ahead":
+        new_col_name_prefix = "outc"
         dataset.add_temporal_outcome(
             outcome_df=df_event_times,
-            is_fallback_prop_warning_threshold=is_fallback_prop_warning_threshold,
-            low_variance_threshold=low_variance_threshold,
             lookahead_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            new_col_name=values_colname,
         )
     else:
         raise ValueError("direction only takes look ahead or behind")
 
-    flattened_values_colname = f"{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+    flattened_values_colname = f"{new_col_name_prefix}_{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
     expected_flattened_values = pd.DataFrame(
-        {flattened_values_colname: expected_flattened_values}
+        {flattened_values_colname: expected_flattened_values},
     )
 
     pd.testing.assert_series_equal(
         left=dataset.df[flattened_values_colname].reset_index(drop=True),
         right=expected_flattened_values[flattened_values_colname].reset_index(
-            drop=True
+            drop=True,
         ),
         check_dtype=False,
     )
