@@ -38,7 +38,6 @@ PSYCOP projects which use `psycop-ml-utils`.
 | 🙋 **[FAQ]**                | Frequently asked question                                                          |
 
 [api references]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/
-[Demo]: https://share.streamlit.io/Aarhus-Psychiatry-Research/psycop-ml-utils/dev/streamlit.py
 [FAQ]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/faq.html
 
 ## 💬 Where to ask questions
