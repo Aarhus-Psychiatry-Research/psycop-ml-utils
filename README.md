@@ -34,16 +34,10 @@ PSYCOP projects which use `psycop-ml-utils`.
 
 | Documentation              |                                                                                    |
 | -------------------------- | ---------------------------------------------------------------------------------- |
-| 📚 **[Usage Guides]**       | Guides and instructions on how the package and its features.                       |
-| 📰 **[News and changelog]** | New additions, changes and version history.                                        |
 | 🎛 **[API References]**     | The detailed reference for psycop-ml-utils's API. Including function documentation |
 | 🙋 **[FAQ]**                | Frequently asked question                                                          |
 
-[usage guides]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/introduction.html
 [api references]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/
-[Augmenters]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/augmenters.html
-[Demo]: https://share.streamlit.io/Aarhus-Psychiatry-Research/psycop-ml-utils/dev/streamlit.py
-[News and changelog]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/news.html
 [FAQ]: https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/faq.html
 
 ## 💬 Where to ask questions
