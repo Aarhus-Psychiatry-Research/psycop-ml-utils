@@ -1,6 +1,8 @@
 <a href="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils"><img src="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/blob/main/docs/_static/icon_with_title.png?raw=true" width="220" align="right" /></a>
 # PSYCOP Machine Learning Utilities
 
+Current priorities are on the [Board 🎬](https://github.com/orgs/Aarhus-Psychiatry-Research/projects/4/views/1).
+
 ![python versions](https://img.shields.io/badge/Python-%3E=3.8-blue)
 [![Code style: black](https://img.shields.io/badge/Code%20Style-Black-black)](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html)
 [![github actions pytest](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/pytest.yml/badge.svg)](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions)
