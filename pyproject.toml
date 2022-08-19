@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psycopmlutils"
-version = "0.1.2"
+version = "0.1.3"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
 classifiers = [
@@ -29,7 +29,6 @@ scikit-learn = "1.1.*"
 # Manually specify catalogue dependencies
 pydantic = "1.9.*"
 srsly = "2.4.*"
-ceODBC = "^3.0"
 
 [tool.poetry.dev-dependencies]
 black = "22.3.*"

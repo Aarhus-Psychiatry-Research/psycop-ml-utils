@@ -9,9 +9,15 @@ from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
 )
-from psycopmlutils.writers.sql_writer import write_df_to_sql
+from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
+    # set path to save features to
+    SAVE_PATH = FEATURE_SETS_PATH / "t2d"
+
+    if not SAVE_PATH.exists():
+        SAVE_PATH.mkdir()
+
     RESOLVE_MULTIPLE = ["mean", "max", "min"]
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
@@ -104,18 +110,15 @@ if __name__ == "__main__":
 
     msg.good("Done!")
 
-    # Split and upload to SQL_server
+    # Split and save to disk
     splits = ["test", "val", "train"]
 
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
     # Version table with current date and time
-    table_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
-    msg.info(f"Table prefix is: {table_prefix}")
+    file_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     for dataset_name in splits:
-        ROWS_PER_CHUNK = 8_000
-
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
         # Find IDs which are in split_ids, but not in flattened_df
@@ -132,16 +135,12 @@ if __name__ == "__main__":
 
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
-        msg.info(f"{dataset_name}: Writing to SQL")
-
         # Version table with current date and time
-        table_name = f"{table_prefix}_{dataset_name}"
+        filename = f"{file_prefix}_{dataset_name}.csv"
+        msg.info(f"Saving {filename} to disk")
 
-        write_df_to_sql(
-            df=split_df,
-            table_name=table_name,
-            if_exists="replace",
-            rows_per_chunk=ROWS_PER_CHUNK,
-        )
+        file_path = SAVE_PATH / filename
 
-        msg.good(f"{dataset_name}: Succesfully wrote {table_name} to SQL server")
+        split_df.to_csv(file_path, index=False)
+
+        msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
