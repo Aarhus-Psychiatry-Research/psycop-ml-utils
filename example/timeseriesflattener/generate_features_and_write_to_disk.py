@@ -14,6 +14,7 @@ from psycopmlutils.utils import FEATURE_SETS_PATH
 if __name__ == "__main__":
     # set path to save features to
     SAVE_PATH = FEATURE_SETS_PATH / "t2d"
+
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
@@ -115,11 +116,9 @@ if __name__ == "__main__":
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
     # Version table with current date and time
-    table_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}.csv"
-    msg.info(f"Table prefix is: {table_prefix}")
+    file_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     for dataset_name in splits:
-
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
         # Find IDs which are in split_ids, but not in flattened_df
@@ -136,10 +135,11 @@ if __name__ == "__main__":
 
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
-        msg.info(f"{dataset_name}: Writing to disk")
-
         # Version table with current date and time
-        file_path = SAVE_PATH / f"{table_prefix}_{dataset_name}"
+        filename = f"{file_prefix}_{dataset_name}.csv"
+        msg.info(f"Saving {filename} to disk")
+
+        file_path = SAVE_PATH / filename
 
         split_df.to_csv(file_path, index=False)
 
