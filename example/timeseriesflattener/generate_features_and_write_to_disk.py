@@ -124,11 +124,11 @@ if __name__ == "__main__":
 
     # Log poetry lock file and file prefix to WandB for reproducibility
     feature_settings = {
-        "filename" : file_prefix,
-        "save_path" : SAVE_PATH,
-        "resolve_multiple" : RESOLVE_MULTIPLE,
-        "lookbehind_days" : LOOKBEHIND_DAYS,
-        "predictor_list" :PREDICTOR_LIST
+        "filename": file_prefix,
+        "save_path": SAVE_PATH,
+        "resolve_multiple": RESOLVE_MULTIPLE,
+        "lookbehind_days": LOOKBEHIND_DAYS,
+        "predictor_list": PREDICTOR_LIST,
     }
 
     run = wandb.init(project="psycop-feature-files", config=feature_settings)
@@ -160,3 +160,4 @@ if __name__ == "__main__":
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
+    wandb.finish()
