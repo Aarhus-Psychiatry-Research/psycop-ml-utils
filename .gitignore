@@ -158,3 +158,4 @@ pytest-coverage.txt
 
 #other
 *test_load_data.py
+wandb
