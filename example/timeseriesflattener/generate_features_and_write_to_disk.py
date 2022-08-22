@@ -1,10 +1,12 @@
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
+import wandb
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
@@ -116,7 +118,19 @@ if __name__ == "__main__":
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
     # Version table with current date and time
-    file_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+    # prefix with user name to avoid potential clashes
+    current_user = Path().home().name + "_"
+    file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+
+    # Log poetry lock file and file prefix to WandB for reproducibility
+    feature_settings = {
+        "filename": file_prefix,
+        "save_path": SAVE_PATH,
+        "predictor_list": PREDICTOR_LIST,
+    }
+
+    run = wandb.init(project="psycop-feature-files", config=feature_settings)
+    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
 
     for dataset_name in splits:
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
@@ -144,3 +158,4 @@ if __name__ == "__main__":
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
+    wandb.finish()
