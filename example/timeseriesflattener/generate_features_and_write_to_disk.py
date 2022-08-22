@@ -3,10 +3,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import wandb
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
+import wandb
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
