@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import wandb
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
@@ -120,6 +121,11 @@ if __name__ == "__main__":
     # prefix with user name to avoid potential clashes
     current_user = Path().home().name + "_"
     file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+
+    # Log poetry lock file and file prefix to WandB for reproducibility
+    run = wandb.init()
+    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+    wandb.log({"file-prefix": file_prefix})
 
     for dataset_name in splits:
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
