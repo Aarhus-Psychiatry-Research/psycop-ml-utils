@@ -123,9 +123,16 @@ if __name__ == "__main__":
     file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Log poetry lock file and file prefix to WandB for reproducibility
-    run = wandb.init()
+    feature_settings = {
+        "filename" : file_prefix,
+        "save_path" : SAVE_PATH,
+        "resolve_multiple" : RESOLVE_MULTIPLE,
+        "lookbehind_days" : LOOKBEHIND_DAYS,
+        "predictor_list" :PREDICTOR_LIST
+    }
+
+    run = wandb.init(project="psycop-feature-files", config=feature_settings)
     wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
-    wandb.log({"file-prefix": file_prefix})
 
     for dataset_name in splits:
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
