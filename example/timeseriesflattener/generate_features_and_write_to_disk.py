@@ -126,8 +126,6 @@ if __name__ == "__main__":
     feature_settings = {
         "filename": file_prefix,
         "save_path": SAVE_PATH,
-        "resolve_multiple": RESOLVE_MULTIPLE,
-        "lookbehind_days": LOOKBEHIND_DAYS,
         "predictor_list": PREDICTOR_LIST,
     }
 
