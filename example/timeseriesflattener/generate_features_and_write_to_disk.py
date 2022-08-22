@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -116,7 +117,9 @@ if __name__ == "__main__":
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
     # Version table with current date and time
-    file_prefix = f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+    # prefix with user name to avoid potential clashes
+    current_user = Path().home().name
+    file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     for dataset_name in splits:
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
