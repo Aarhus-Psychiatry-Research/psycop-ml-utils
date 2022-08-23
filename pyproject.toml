@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psycopmlutils"
-version = "0.1.4"
+version = "0.1.5"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
 classifiers = [
