@@ -38,16 +38,16 @@ class LoadVisits:
 
         dfs = []
 
-        for k, v in d.items():
-            cols = f"{v['datetime_col']}, dw_ek_borger"
+        for table, meta in d.items():
+            cols = f"{meta['datetime_col']}, dw_ek_borger"
 
-            sql = f"SELECT {cols} FROM [fct].{v['view']}"
+            sql = f"SELECT {cols} FROM [fct].{meta['view']}"
 
-            if "where" in v:
-                sql += f" WHERE {v['location_col']} {v['where']}"
+            if "where" in meta:
+                sql += f" WHERE {meta['location_col']} {meta['where']}"
 
             df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
-            df.rename(columns={v["datetime_col"]: "timestamp"}, inplace=True)
+            df.rename(columns={meta["datetime_col"]: "timestamp"}, inplace=True)
 
             dfs.append(df)
 
