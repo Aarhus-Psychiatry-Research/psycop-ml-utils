@@ -7,12 +7,40 @@ class LoadVisits:
     def physical_visits_to_psychiatry():
         # msg.info("Loading physical visits to psychiatry")
 
-        view = "[FOR_besoeg_fysiske_fremmoeder_inkl_2021_feb2022]"
-        sql = f"SELECT dw_ek_borger, datotid_start FROM [fct].{view} WHERE besoeg=1"
+        # LPR3
+        d = {
+            "LPR3": {
+                "view": "[FOR_LPR3kontakter_psyk_somatik_inkl_2021_feb2022]",
+                "columns": "dw_ek_borger, datotid_start",
+                "where": "(SHAK=6600 and pt_type in ('indlæggelse', 'akut ambulant', 'ambulant')",
+            },
+            "LPR2_outpatient": {
+                "view": "[FOR_besoeg_psyk_somatik_LPR2_inkl_2021_feb2022]",
+                "columns": "dw_ek_borger, datotid_start",
+                "where": "(SHAK=6600 and pt_type = 'psykambbesoeg')",
+            },
+            "LPR2_acute_outpatient": {
+                "view": "[FOR_besoeg_psyk_somatik_LPR2_inkl_2021_feb2022]",
+                "columns": "dw_ek_borger, datotid_start",
+                "where": "SHAK=6600",
+            },
+            "LPR2_admissions": {
+                "view": "[FOR_indlaeggelser_psyk_somatik_LPR2_inkl_2021_feb2022]",
+                "columns": "dw_ek_borger, datotid_start",
+                "where": "SHAK=6600",
+            },
+        }
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
+        dfs = []
 
-        df.rename(columns={"datotid_start": "timestamp"}, inplace=True)
+        for k, v in d.items:
+            sql = f"SELECT {v.columns} FROM [fct].{v.view} WHERE {v.where}"
+            df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
+            df.rename(columns={"datotid_start": "timestamp"}, inplace=True)
 
+            dfs.append(df)
+
+        output_df = dfs.concat(axis=0)
         msg.good("Loaded physical visits")
-        return df.reset_index(drop=True)
+
+        return output_df.reset_index(drop=True)
