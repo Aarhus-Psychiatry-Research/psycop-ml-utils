@@ -4,13 +4,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
+from features_blood_samples import generate_blood_sample_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
-from psycopmlutils.timeseriesflattener import (
-    FlattenedDataset,
-    create_feature_combinations,
-)
+from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
@@ -23,33 +21,9 @@ if __name__ == "__main__":
     RESOLVE_MULTIPLE = ["mean", "max", "min"]
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
-    PREDICTOR_LIST = create_feature_combinations(
-        [
-            {
-                "predictor_df": "hba1c",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": ["mean", "max", "min", "count"],
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "alat",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "hdl",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "ldl",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-        ],
+    PREDICTOR_LIST = generate_blood_sample_feature_combinations(
+        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
     )
 
     event_times = psycopmlutils.loaders.LoadOutcome.t2d()
