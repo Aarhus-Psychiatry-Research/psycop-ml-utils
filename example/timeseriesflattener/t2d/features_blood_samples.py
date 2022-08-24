@@ -40,7 +40,7 @@ def create_lab_feature_combinations(
                 "fallback": np.nan,
             },
             {
-                "predictor_df": "unshceduled_p_glc",
+                "predictor_df": "unscheduled_p_glc",
                 "lookbehind_days": LOOKBEHIND_DAYS,
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
