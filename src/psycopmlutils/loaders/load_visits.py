@@ -14,25 +14,25 @@ class LoadVisits:
                 "view": "[FOR_LPR3kontakter_psyk_somatik_inkl_2021_feb2022]",
                 "datetime_col": "datotid_lpr3kontaktstart",
                 "location_col": "shakkode_lpr3kontaktansvarlig",
-                "where": "LIKE '6600%' AND pt_type in ('Ambulant', 'Akut ambulant', 'Indlæggelse')",
+                "where": "AND pt_type in ('Ambulant', 'Akut ambulant', 'Indlæggelse')",
             },
             "LPR2_outpatient": {
                 "view": "[FOR_besoeg_psyk_somatik_LPR2_inkl_2021_feb2022]",
                 "datetime_col": "datotid_start",
                 "location_col": "shakafskode",
-                "where": "LIKE '6600%' AND psykambbesoeg = 1",
+                "where": "AND psykambbesoeg = 1",
             },
             "LPR2_acute_outpatient": {
                 "view": "[FOR_akutambulantekontakter_psyk_somatik_LPR2_inkl_2021_feb2022]",
                 "datetime_col": "datotid_start",
                 "location_col": "afsnit_stam",
-                "where": " LIKE '6600%'",
+                "where": "",
             },
             "LPR2_admissions": {
                 "view": "[FOR_indlaeggelser_psyk_somatik_LPR2_inkl_2021_feb2022]",
                 "datetime_col": "datotid_indlaeggelse",
                 "location_col": "shakKode_kontaktansvarlig",
-                "where": "LIKE '6600%'",
+                "where": "",
             },
         }
 
@@ -44,7 +44,9 @@ class LoadVisits:
             sql = f"SELECT {cols} FROM [fct].{meta['view']}"
 
             if "where" in meta:
-                sql += f" WHERE {meta['location_col']} {meta['where']}"
+                sql += (
+                    f" WHERE left({meta['location_col']}, 4) = '6600' {meta['where']}"
+                )
 
             df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
             df.rename(columns={meta["datetime_col"]: "timestamp"}, inplace=True)
