@@ -2,6 +2,7 @@ import pandas as pd
 from wasabi import msg
 
 from psycopmlutils.loaders.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
@@ -31,7 +32,7 @@ class LoadMedications:
 
     def load(
         atc_code: str,
-        output_col_name: str = None,
+        output_col_name: str = "value",
         load_prescribed: bool = True,
         load_administered: bool = True,
         wildcard_at_end: bool = True,
@@ -150,4 +151,13 @@ class LoadMedications:
             columns={
                 source_timestamp_col_name: "timestamp",
             },
+        )
+
+    @data_loaders.register("antipsychotics")
+    def antipsychotics() -> pd.DataFrame:
+        return LoadMedications.load(
+            atc_code="N05A",
+            load_prescribed=True,
+            load_administered=True,
+            wildcard_atc_at_end=True,
         )

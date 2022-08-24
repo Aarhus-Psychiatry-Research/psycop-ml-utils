@@ -3,7 +3,7 @@ import numpy as np
 from psycopmlutils.timeseriesflattener import create_feature_combinations
 
 
-def generate_blood_sample_feature_combinations(
+def create_lab_feature_combinations(
     LOOKBEHIND_DAYS=[365, 730, 1825, 9999],
     RESOLVE_MULTIPLE=["mean", "max", "min"],
 ):

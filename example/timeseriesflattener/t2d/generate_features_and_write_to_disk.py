@@ -4,7 +4,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from features_blood_samples import generate_blood_sample_feature_combinations
+from features_blood_samples import create_lab_feature_combinations
+from features_diagnoses import create_diag_feature_combinations
+from features_medications import create_medication_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
@@ -21,10 +23,22 @@ if __name__ == "__main__":
     RESOLVE_MULTIPLE = ["mean", "max", "min"]
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
-    PREDICTOR_LIST = generate_blood_sample_feature_combinations(
+    LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
     )
+
+    DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
+        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+    )
+
+    MEDICATION_PREDICTORS = create_medication_feature_combinations(
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        RESOLVE_MULTIPLE=["count"],
+    )
+
+    PREDICTOR_LIST = LAB_PREDICTORS + DIAGNOSIS_PREDICTORS
 
     event_times = psycopmlutils.loaders.LoadOutcome.t2d()
 
