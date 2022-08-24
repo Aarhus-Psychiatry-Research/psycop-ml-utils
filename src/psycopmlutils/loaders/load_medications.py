@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 from wasabi import msg
 
@@ -7,14 +9,14 @@ from psycopmlutils.loaders.sql_load import sql_load
 class LoadMedications:
     def aggregate_medications(
         output_col_name: str,
-        atc_code_prefixes: list,
+        atc_code_prefixes: list[str],
     ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
         column.
 
         Args:
-            output_col_name (str): Name for new column.
-            atc_codes (list): List of atc_codes.
+            output_col_name (str): Name for new column.  # noqa: DAR102
+            atc_code_prefixes (list[str]): List of atc_codes.
 
         Returns:
             pd.DataFrame
@@ -31,10 +33,10 @@ class LoadMedications:
 
     def load(
         atc_code: str,
-        output_col_name: str = None,
-        load_prescribed: bool = True,
-        load_administered: bool = True,
-        wildcard_at_end: bool = True,
+        output_col_name: Optional[str] = None,
+        load_prescribed: Optional[bool] = True,
+        load_administered: Optional[bool] = True,
+        wildcard_at_end: Optional[bool] = True,
     ) -> pd.DataFrame:
         """Load medications. Aggregates prescribed/administered if both true.
         If wildcard_atc_at_end, match from atc_code*. Aggregates all that
@@ -42,7 +44,7 @@ class LoadMedications:
         medications.
 
         Args:
-            atc_code (str): ATC-code prefix to load. Matches atc_code_prefix*.
+            atc_code (str): ATC-code prefix to load. Matches atc_code_prefix*. # noqa: DAR102
                 Aggregates all.
             output_col_name (str, optional): Name of output_col_name. Contains 1 if
                 atc_code matches atc_code_prefix, 0 if not.Defaults to
@@ -51,7 +53,7 @@ class LoadMedications:
                 True. Beware incomplete until sep 2016.
             load_administered (bool, optional): Whether to load administrations.
                 Defaults to True.
-            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or
+            wildcard_at_end (bool, optional): Whether to match on atc_code* or
                 atc_code.
 
         Returns:
@@ -102,8 +104,8 @@ class LoadMedications:
         atc_code: str,
         source_timestamp_col_name: str,
         view: str,
-        output_col_name: str = None,
-        wildcard_atc_at_end: bool = False,
+        output_col_name: Optional[str] = None,
+        wildcard_atc_at_end: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load the prescribed medications that match atc. If
         wildcard_atc_at_end, match from atc_code*. Aggregates all that match.
@@ -111,7 +113,7 @@ class LoadMedications:
         medications.
 
         Args:
-            atc_code (str): ATC string to match on.
+            atc_code (str): ATC string to match on. # noqa: DAR102
             source_timestamp_col_name (str): Name of the timestamp column in the SQL
                 table.
             view (str): Which view to use, e.g.
