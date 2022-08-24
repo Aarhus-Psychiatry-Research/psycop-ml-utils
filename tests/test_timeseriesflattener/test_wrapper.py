@@ -3,10 +3,10 @@ import pytest
 from pandas.testing import assert_frame_equal
 from utils_for_testing import str_to_df
 
-from psycopmlutils.timeseriesflattener.create_feature_combinations import \
-    create_feature_combinations
-from psycopmlutils.timeseriesflattener.flattened_dataset import \
-    FlattenedDataset
+from psycopmlutils.timeseriesflattener.create_feature_combinations import (
+    create_feature_combinations,
+)
+from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 
 
 def test_generate_two_features_from_dict():

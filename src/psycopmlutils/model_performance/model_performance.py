@@ -5,14 +5,23 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
-                             precision_score, recall_score, roc_auc_score)
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 
-from psycopmlutils.model_performance.utils import (add_metadata_cols,
-                                                   aggregate_predictions,
-                                                   get_metadata_cols,
-                                                   idx_to_class, labels_to_int,
-                                                   scores_to_probs)
+from psycopmlutils.model_performance.utils import (
+    add_metadata_cols,
+    aggregate_predictions,
+    get_metadata_cols,
+    idx_to_class,
+    labels_to_int,
+    scores_to_probs,
+)
 
 
 class ModelPerformance:

@@ -4,10 +4,12 @@ from typing import Tuple
 
 import pandas as pd
 from deepchecks.tabular import Dataset, Suite
-from deepchecks.tabular.checks import (FeatureLabelCorrelation,
-                                       FeatureLabelCorrelationChange,
-                                       IdentifierLabelCorrelation,
-                                       TrainTestLabelDrift)
+from deepchecks.tabular.checks import (
+    FeatureLabelCorrelation,
+    FeatureLabelCorrelationChange,
+    IdentifierLabelCorrelation,
+    TrainTestLabelDrift,
+)
 from deepchecks.tabular.suites import data_integrity, train_test_validation
 from wasabi import Printer
 
@@ -63,7 +65,7 @@ def check_feature_sets_dir(path: Path) -> None:
         )
         suite_results = label_checks.run(ds)
         suite_results.save_as_html(
-            str(outcome_checks_dir / f"{outcome_column}_check.html")
+            str(outcome_checks_dir / f"{outcome_column}_check.html"),
         )
 
     msg.good("Finshed data integrity checks!")
@@ -138,7 +140,7 @@ def check_feature_sets_dir(path: Path) -> None:
             )
             suite_results = label_split_check.run(train_ds, split_ds)
             suite_results.save_as_html(
-                str(outcome_checks_dir / f"train_{split}_{outcome_column}_check.html")
+                str(outcome_checks_dir / f"train_{split}_{outcome_column}_check.html"),
             )
 
     msg.good(f"All data checks done! Saved to {out_dir}")
