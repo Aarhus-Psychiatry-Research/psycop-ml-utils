@@ -30,6 +30,7 @@ scikit-learn = "1.1.*"
 pydantic = "1.9.*"
 srsly = "2.4.*"
 wandb = ">=0.12.21,<0.13.0"
+deepchecks = "^0.8.3"
 
 [tool.poetry.dev-dependencies]
 black = "22.3.*"
