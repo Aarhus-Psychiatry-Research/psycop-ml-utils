@@ -145,7 +145,7 @@ class LoadDiagnoses:
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
-            + " FROM [fct].{fct} WHERE ({match_col_sql_str})"
+            + f" FROM [fct].{fct} WHERE ({match_col_sql_str})"
         )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
