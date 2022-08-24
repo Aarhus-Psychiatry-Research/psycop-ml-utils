@@ -12,7 +12,7 @@ def create_lab_feature_combinations(
             {
                 "predictor_df": "hba1c",
                 "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": ["mean", "max", "min", "count"],
+                "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
             },
             {
@@ -47,18 +47,6 @@ def create_lab_feature_combinations(
             },
             {
                 "predictor_df": "triglycerides",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "hdl",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "ldl",
                 "lookbehind_days": LOOKBEHIND_DAYS,
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
