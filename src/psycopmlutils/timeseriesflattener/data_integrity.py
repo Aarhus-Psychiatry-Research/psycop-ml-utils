@@ -1,5 +1,4 @@
-"""Code to generate data integrity and train/val/test drift reports"""
-from msilib import PID_LASTPRINTED
+"""Code to generate data integrity and train/val/test drift reports."""
 from pathlib import Path
 from typing import Tuple
 
@@ -17,8 +16,8 @@ from wasabi import Printer
 
 def check_feature_sets_dir(path: Path) -> None:
     """Runs Deepcheck data integrity and train/val/test drift checks for a
-    given directory containing train/val/test files. Expects the directory
-    to contain 3 csv files, where the files have ["train", "val", "test"]
+    given directory containing train/val/test files. Expects the directory to
+    contain 3 csv files, where the files have ["train", "val", "test"]
     somewhere in their name.
 
     The resulting reports are saved to a sub directory as .html files.
@@ -42,7 +41,9 @@ def check_feature_sets_dir(path: Path) -> None:
     # Only running data integrity checks on the training set to reduce the
     # chance of any form of peaking at the test set
     train_predictors, train_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="train", include_id=False
+        path=path,
+        split="train",
+        include_id=False,
     )
     ds = Dataset(df=train_predictors, datetime_name="timestamp")
 
@@ -75,23 +76,35 @@ def check_feature_sets_dir(path: Path) -> None:
     validation_suite = train_test_validation()
 
     train_predictors, train_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="train", include_id=True
+        path=path,
+        split="train",
+        include_id=True,
     )
     val_predictors, val_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="val", include_id=True
+        path=path,
+        split="val",
+        include_id=True,
     )
     test_predictors, test_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="test", include_id=True
+        path=path,
+        split="test",
+        include_id=True,
     )
 
     train_ds = Dataset(
-        train_predictors, index_name="dw_ek_borger", datetime_name="timestamp"
+        train_predictors,
+        index_name="dw_ek_borger",
+        datetime_name="timestamp",
     )
     val_ds = Dataset(
-        val_predictors, index_name="dw_ek_borger", datetime_name="timestamp"
+        val_predictors,
+        index_name="dw_ek_borger",
+        datetime_name="timestamp",
     )
     test_ds = Dataset(
-        test_predictors, index_name="dw_ek_borger", datetime_name="timestamp"
+        test_predictors,
+        index_name="dw_ek_borger",
+        datetime_name="timestamp",
     )
     suite_results = validation_suite.run(train_ds, val_ds)
     suite_results.save_as_html(out_dir / "train_val_integrity.html")
@@ -123,14 +136,14 @@ def check_feature_sets_dir(path: Path) -> None:
             )
             suite_results = label_split_check.run(train_ds, split_ds)
             suite_results.save_as_html(
-                outcome_checks_dir / f"train_{split}_{outcome_column}_check.html"
+                outcome_checks_dir / f"train_{split}_{outcome_column}_check.html",
             )
 
     msg.good(f"All data checks done! Saved to {out_dir}")
 
 
 def label_integrity_checks() -> Suite:
-    """Deepchecks data integrity suite for checks that require a label
+    """Deepchecks data integrity suite for checks that require a label.
 
     Returns:
         Suite: A deepchecks Suite
@@ -148,7 +161,7 @@ def label_integrity_checks() -> Suite:
 
 
 def label_split_checks() -> Suite:
-    """Deepchecks train/test validation suite for checks that require a label
+    """Deepchecks train/test validation suite for checks that require a label.
 
     Returns:
         Suite: a deepchecks Suite
@@ -163,7 +176,9 @@ def label_split_checks() -> Suite:
 
 
 def load_split_predictors_and_outcomes(
-    path: Path, split: str, include_id: bool
+    path: Path,
+    split: str,
+    include_id: bool,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Loads a given data split from a directory and returns predictors and
     outcomes separately.
@@ -183,12 +198,12 @@ def load_split_predictors_and_outcomes(
 
 
 def separate_predictors_and_outcome(
-    df: pd.DataFrame, include_id: bool
+    df: pd.DataFrame,
+    include_id: bool,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Split predictors and outcomes into two dataframes. Assumes predictors
-    to be prefixed with 'pred', and outcomes to be prefixed with 'outc'.
-    Timestamp is also returned for predictors, and optionally also
-    dw_ek_borger
+    """Split predictors and outcomes into two dataframes. Assumes predictors to
+    be prefixed with 'pred', and outcomes to be prefixed with 'outc'. Timestamp
+    is also returned for predictors, and optionally also dw_ek_borger.
 
     Args:
         df (pd.DataFrame): Dataframe containing generates features
@@ -207,7 +222,7 @@ def separate_predictors_and_outcome(
 
 
 def load_split(path: Path, split: str) -> pd.DataFrame:
-    """Loads a given data split as a dataframe
+    """Loads a given data split as a dataframe.
 
     Args:
         path (Path): Path to directory containing data files
