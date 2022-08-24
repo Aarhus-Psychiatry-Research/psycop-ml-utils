@@ -4,6 +4,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
+from deepchecks.tabular import Dataset
+from deepchecks.tabular.suites import data_integrity
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
@@ -11,6 +13,7 @@ from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
 )
+from psycopmlutils.timeseriesflattener.data_integrity import check_feature_sets_dir
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
@@ -122,16 +125,21 @@ if __name__ == "__main__":
     current_user = Path().home().name + "_"
     file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
 
+    # Create directory to store all files related to this run
+    sub_dir = SAVE_PATH / file_prefix
+    sub_dir.mkdir()
+
     # Log poetry lock file and file prefix to WandB for reproducibility
     feature_settings = {
         "filename": file_prefix,
-        "save_path": SAVE_PATH,
+        "save_path": sub_dir,
         "predictor_list": PREDICTOR_LIST,
     }
 
     run = wandb.init(project="psycop-feature-files", config=feature_settings)
     wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
 
+    # Create splits
     for dataset_name in splits:
         df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
 
@@ -153,9 +161,12 @@ if __name__ == "__main__":
         filename = f"{file_prefix}_{dataset_name}.csv"
         msg.info(f"Saving {filename} to disk")
 
-        file_path = SAVE_PATH / filename
+        file_path = sub_dir / filename
 
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
     wandb.finish()
+
+    ## Create data integrity report
+    check_feature_sets_dir(sub_dir)
