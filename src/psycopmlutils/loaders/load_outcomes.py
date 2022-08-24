@@ -43,7 +43,7 @@ class LoadOutcome:
     def forced_admnissions_indlagt():
 
         df = sql_load(
-            "SELECT dw_ek_borger, timestamp FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Indlagt_2y_0f_2015-2021]",
+            "SELECT * FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Indlagt_2y_0f_2015-2021]",
             database="USR_PS_FORSK",
             chunksize=None,
         )
@@ -61,7 +61,7 @@ class LoadOutcome:
     def forced_admnissions_ammbulant():
 
         df = sql_load(
-            "SELECT dw_ek_borger, timestamp FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Ambulant_2y_0f_2015-2021]",
+            "SELECT * FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Ambulant_2y_0f_2015-2021]",
             database="USR_PS_FORSK",
             chunksize=None,
         )
@@ -74,4 +74,3 @@ class LoadOutcome:
         msg.good("Finished loading forced admissions ambulant predicction times with outcome")
 
         return df.reset_index(drop=True)
-        
