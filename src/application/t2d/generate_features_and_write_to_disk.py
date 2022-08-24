@@ -3,13 +3,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import wandb
 from features_blood_samples import create_lab_feature_combinations
 from features_diagnoses import create_diag_feature_combinations
 from features_medications import create_medication_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
-import wandb
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
