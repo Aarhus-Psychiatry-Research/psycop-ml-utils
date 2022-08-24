@@ -7,7 +7,7 @@ def create_diag_feature_combinations(
     LOOKBEHIND_DAYS=[365, 730, 1825, 9999],
     RESOLVE_MULTIPLE=["mean", "max", "min"],
 ):
-    create_feature_combinations(
+    return create_feature_combinations(
         [
             {
                 "predictor_df": "essential_hypertension",
