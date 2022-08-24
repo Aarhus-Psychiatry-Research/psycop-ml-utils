@@ -1,8 +1,6 @@
 from psycopmlutils.timeseriesflattener.create_feature_combinations import (
-    create_feature_combinations,
-    dict_has_list_in_any_value,
-    list_has_dict_with_list_as_value,
-)
+    create_feature_combinations, dict_has_list_in_any_value,
+    list_has_dict_with_list_as_value)
 
 
 def test_skip_all_if_no_need_to_process():

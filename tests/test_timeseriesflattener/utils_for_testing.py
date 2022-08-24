@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
+from psycopmlutils.timeseriesflattener.flattened_dataset import \
+    FlattenedDataset
 from psycopmlutils.utils import data_loaders
 
 

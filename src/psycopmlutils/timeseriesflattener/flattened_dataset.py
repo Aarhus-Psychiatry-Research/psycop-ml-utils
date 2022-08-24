@@ -9,7 +9,8 @@ from catalogue import Registry  # noqa
 from pandas import DataFrame
 from wasabi import msg
 
-from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
+from psycopmlutils.timeseriesflattener.resolve_multiple_functions import \
+    resolve_fns
 from psycopmlutils.utils import data_loaders
 
 

@@ -4,12 +4,10 @@ from typing import Tuple
 
 import pandas as pd
 from deepchecks.tabular import Dataset, Suite
-from deepchecks.tabular.checks import (
-    FeatureLabelCorrelation,
-    FeatureLabelCorrelationChange,
-    IdentifierLabelCorrelation,
-    TrainTestLabelDrift,
-)
+from deepchecks.tabular.checks import (FeatureLabelCorrelation,
+                                       FeatureLabelCorrelationChange,
+                                       IdentifierLabelCorrelation,
+                                       TrainTestLabelDrift)
 from deepchecks.tabular.suites import data_integrity, train_test_validation
 from wasabi import Printer
 
