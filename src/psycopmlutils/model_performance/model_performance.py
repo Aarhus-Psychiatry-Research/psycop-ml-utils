@@ -25,14 +25,16 @@ from psycopmlutils.model_performance.utils import (
 
 
 class ModelPerformance:
+    """Class to generate model performances."""
+
     def performance_metrics_from_df(
         df: pd.DataFrame,
         prediction_col_name: str,
         label_col_name: str,
-        id_col_name: Optional[str] = None,
+        id_col_name: str = None,
         metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
-        to_wide: Optional[bool] = False,
+        to_wide: bool = False,
     ) -> pd.DataFrame:
         """Calculate performance metrics from a dataframe.
 
@@ -40,7 +42,7 @@ class ModelPerformance:
         If the class was instantiated with an id_col_name, id-level performance is added and identfied via the ´level´ column as 'id'.
 
         Args:
-            df (pd.DataFrame): Dataframe with 1 row per prediction. # noqa: DAR102
+            df (pd.DataFrame): Dataframe with 1 row per prediction.
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
@@ -98,15 +100,15 @@ class ModelPerformance:
         path: Union[str, Path],
         prediction_col_name: str,
         label_col_name: str,
-        id_col_name: Optional[str] = None,
+        id_col_name: str = None,
         metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
-        to_wide: Optional[bool] = False,
+        to_wide=False,
     ) -> pd.DataFrame:
         """Load a .jsonl file and returns performance metrics.
 
         Args:
-            path (Union[str, Path]): Path to .jsonl file # noqa: DAR102
+            path (Union[str, Path]): Path to .jsonl file
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
@@ -143,7 +145,7 @@ class ModelPerformance:
         pattern: str,
         prediction_col_name: str,
         label_col_name: str,
-        id_col_name: Optional[str] = None,
+        id_col_name: str = None,
         metadata_col_names: Optional[List[str]] = None,
         id2label: Optional[Dict[int, str]] = None,
         to_wide=False,
@@ -154,15 +156,13 @@ class ModelPerformance:
         Only supports jsonl for now.
 
         Args:
-            folder (Union[str, Path]): Path to folder. # noqa: DAR102
-            pattern (str): Pattern to match on filename.
+            folder (Union[str, Path]): Path to folder.
+            pattern (str, optional): Pattern to match on filename.
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
-            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
-            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
             to_wide (bool): Whether to return performance as wide format.
-
+            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
 
         Returns:
             pd.Dataframe: Dataframe with performance metrics for each file
@@ -195,11 +195,11 @@ class ModelPerformance:
         aggregated performance by id.
 
         Args:
-            df (pd.DataFrame): Dataframe with one prediction per row # noqa: DAR102
+            df (pd.DataFrame): Dataframe with one prediction per row
             aggregate_by_id (bool): Whether to only calculate predictions on row level or also aggregate by id
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
-            id_col_name (str): Column name for the id, used for grouping.
+            id_col_name (str, optional): Column name for the id, used for grouping.
             to_wide (bool): Whether to return performance as wide format.
             id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
 
@@ -272,7 +272,6 @@ class ModelPerformance:
         Args:
             labels (Union[pd.Series, List]): True labels as 0 or 1
             predicted (Union[pd.Series, List]): Predictions as values between 0 and 1
-            to_wide (bool): Whether to return roc_auc as wide format.
             add_level_prefix (Optional[str]): Whether to add a prefix to the metric names.
                 Can be used to indicate aggregation level.
 

@@ -44,4 +44,5 @@ def test_col_does_not_exist():
             lookbehind_days=2,
             resolve_multiple="max",
             fallback=2,
+            source_values_col_name="val",
         )
