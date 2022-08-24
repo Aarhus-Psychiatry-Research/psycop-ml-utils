@@ -135,7 +135,7 @@ class LoadMedications:
         view = f"[{view}]"
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-            + " WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+            + f" WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
         )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
