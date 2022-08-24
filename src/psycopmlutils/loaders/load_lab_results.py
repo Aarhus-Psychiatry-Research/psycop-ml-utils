@@ -9,7 +9,7 @@ class LoadLabResults:
         """Load a blood sample.
 
         Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code.
+            blood_sample_id (str): The blood_sample_id, typically an NPU code. # noqa: DAR102
 
         Returns:
             pd.DataFrame
@@ -33,7 +33,7 @@ class LoadLabResults:
         column.
 
         Args:
-            blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes.
+            blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes. # noqa: DAR102
 
         Returns:
             pd.DataFrame

@@ -8,7 +8,7 @@ class LoadIDs:
         """Loads ids for a given split.
 
         Args:
-            split (str): Which split to load IDs from. Takes either "train", "test" or "val".
+            split (str): Which split to load IDs from. Takes either "train", "test" or "val". # noqa: DAR102
 
         Returns:
             pd.DataFrame: Only dw_ek_borger column with ids
