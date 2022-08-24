@@ -74,3 +74,4 @@ class LoadOutcome:
         msg.good("Finished loading forced admissions ambulant predicction times with outcome")
 
         return df.reset_index(drop=True)
+        
