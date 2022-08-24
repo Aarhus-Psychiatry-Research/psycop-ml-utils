@@ -126,16 +126,18 @@ class LoadMedications:
                 output_col_name = 1
         """
 
-        if wildcard_atc_at_end:
-            end_of_sql = "%"
-        else:
-            end_of_sql = ""  # noqa
-
         view = f"[{view}]"
-        sql = (
-            f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-            + " WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
-        )
+
+        if wildcard_atc_at_end:
+            sql = (
+                f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
+                + f" WHERE left(lower(atc), {len(atc_code)}) = {atc_code.lower()}'"
+            )
+        else:
+            sql = (
+                f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
+                + f" WHERE lower(atc) = {atc_code.lower()}"
+            )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
