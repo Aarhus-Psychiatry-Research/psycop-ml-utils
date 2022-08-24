@@ -34,7 +34,7 @@ def create_lab_feature_combinations(
                 "fallback": np.nan,
             },
             {
-                "predictor_df": "shceduled_glc",
+                "predictor_df": "scheduled_glc",
                 "lookbehind_days": LOOKBEHIND_DAYS,
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
@@ -88,7 +88,7 @@ def create_lab_feature_combinations(
                 "fallback": np.nan,
             },
             {
-                "predictor_df": "albumine_creatinnine_ratio",
+                "predictor_df": "albumine_creatinine_ratio",
                 "lookbehind_days": LOOKBEHIND_DAYS,
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
