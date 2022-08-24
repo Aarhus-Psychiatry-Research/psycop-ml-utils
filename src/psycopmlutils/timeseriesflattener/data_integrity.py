@@ -155,7 +155,7 @@ def label_integrity_checks() -> Suite:
     """
     return Suite(
         "Data integrity checks requiring labels",
-        IdentifierLabelCorrelation.add_condition_pps_less_or_equal(),
+        IdentifierLabelCorrelation().add_condition_pps_less_or_equal(),
         FeatureLabelCorrelation().add_condition_feature_pps_less_than(),
     )
 
