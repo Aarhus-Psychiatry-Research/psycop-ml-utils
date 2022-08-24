@@ -4,8 +4,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from deepchecks.tabular import Dataset
-from deepchecks.tabular.suites import data_integrity
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
