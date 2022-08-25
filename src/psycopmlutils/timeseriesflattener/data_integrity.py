@@ -27,9 +27,7 @@ def check_feature_sets_dir(
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a given
     directory containing train/val/test files. Splits indicates which data
-    splits to check. If nrows is provided, only.
-
-    the first nrows are loaded - should only be used for debugging.
+    splits to check. If nrows is provided, only the first nrows are loaded - should only be used for debugging.
 
     The resulting reports are saved to a sub directory as .html files.
 
@@ -40,7 +38,7 @@ def check_feature_sets_dir(
         Should only be used for debugging.
     """
     msg = Printer(timestamp=True)
-    failed_checks = {}
+    failed_checks = {} # Collect failed checks for error messages at the end of the function
 
     ## check if file splits exist before running checks
     for split in splits:
@@ -171,7 +169,8 @@ def check_feature_sets_dir(
             ] = get_name_of_failed_checks(suite_results)
 
         msg.good(f"All data checks done! Saved to {out_dir}")
-        msg.warn(f"Failed checks: {failed_checks}")
+        if len(failed_checks.keys()) > 0:
+            msg.warn(f"Failed checks: {failed_checks}")
 
 
 def label_integrity_checks() -> Suite:
