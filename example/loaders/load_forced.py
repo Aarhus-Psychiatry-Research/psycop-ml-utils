@@ -1,0 +1,65 @@
+import pandas as pd
+from wasabi import msg
+
+from psycopmlutils.loaders.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
+
+
+class LoadForce:
+    @data_loaders.register("forced_admissions_indlagt")
+    def forced_admissions_indlagt():
+
+        df = sql_load(
+            "SELECT * FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Indlagt_2y_0f_2015-2021]",
+            database="USR_PS_FORSK",
+            chunksize=None,
+        )
+
+        df = df[["dw_ek_borger", "datotid_slut", "six_month"]]
+
+        df.rename(
+            columns={
+                "datotid_slut": "timestamp",
+                "six_month": "forced_admission_withn_6_months",
+            },
+            inplace=True,
+        )
+        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_localize(None)
+
+        msg.good(
+            "Finished loading forced admissions indlagt predicction times with outcome"
+        )
+
+        return df.reset_index(drop=True)
+
+    @data_loaders.register("forced_admissions_ambulant")
+    def forced_admnissions_ambulant():
+
+        df = sql_load(
+            "SELECT * FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Ambulant_2y_0f_2015-2021]",
+            database="USR_PS_FORSK",
+            chunksize=None,
+        )
+
+        df = df[["dw_ek_borger", "datotid_predict", "six_month"]]
+
+        df.rename(
+            columns={
+                "datotid_predict": "timestamp",
+                "six_month": "forced_admission_withn_6_months",
+            },
+            inplace=True,
+        )
+        df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.tz_localize(None)
+
+        msg.good(
+            "Finished loading forced admissions ambulant predicction times with outcome"
+        )
+
+        return df.reset_index(drop=True)
+
+
+if __name__ == "__main__":
+    df = LoadForce.forced_admissions_indlagt()
+
+    pass
