@@ -1,6 +1,6 @@
 """Code to generate data integrity and train/val/test drift reports."""
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pandas as pd
 from deepchecks.tabular import Dataset, Suite
@@ -14,7 +14,7 @@ from deepchecks.tabular.suites import data_integrity, train_test_validation
 from wasabi import Printer
 
 
-def check_feature_sets_dir(path: Path) -> None:
+def check_feature_sets_dir(path: Path, nrows: Optional[int] = None) -> None:
     """Runs Deepcheck data integrity and train/val/test drift checks for a
     given directory containing train/val/test files. Expects the directory to
     contain 3 csv files, where the files have ["train", "val", "test"]
@@ -24,6 +24,8 @@ def check_feature_sets_dir(path: Path) -> None:
 
     Args:
         path (Path): Path to a directory containing train/val/test files
+        nrows (Optional[int]): Whether to only load a subset of the data.
+        Should only be used for debugging.
     """
     msg = Printer(timestamp=True)
     msg.info("Running data integrity checks...")
@@ -43,9 +45,7 @@ def check_feature_sets_dir(path: Path) -> None:
     # Only running data integrity checks on the training set to reduce the
     # chance of any form of peaking at the test set
     train_predictors, train_outcomes = load_split_predictors_and_outcomes(
-        path=path,
-        split="train",
-        include_id=False,
+        path=path, split="train", include_id=False, nrows=nrows
     )
     ds = Dataset(df=train_predictors, datetime_name="timestamp")
 
@@ -80,19 +80,13 @@ def check_feature_sets_dir(path: Path) -> None:
     validation_suite = train_test_validation()
 
     train_predictors, train_outcomes = load_split_predictors_and_outcomes(
-        path=path,
-        split="train",
-        include_id=True,
+        path=path, split="train", include_id=True, nrows=nrows
     )
     val_predictors, val_outcomes = load_split_predictors_and_outcomes(
-        path=path,
-        split="val",
-        include_id=True,
+        path=path, split="val", include_id=True, nrows=nrows
     )
     test_predictors, test_outcomes = load_split_predictors_and_outcomes(
-        path=path,
-        split="test",
-        include_id=True,
+        path=path, split="test", include_id=True, nrows=nrows
     )
 
     train_ds = Dataset(
@@ -164,6 +158,32 @@ def label_integrity_checks() -> Suite:
     )
 
 
+def custom_train_test_validation() -> Suite:
+    """Deepchecks train/test validation suite for train/test checks which 
+    slow checks disabled. 
+
+    Returns:
+        Suite: A deepchecks Suite
+    """
+    return Suite(
+        'Train Test Validation Suite',
+        DatasetsSizeComparison(**kwargs).add_condition_test_train_size_ratio_greater_than(),
+        NewLabelTrainTest(**kwargs).add_condition_new_labels_number_less_or_equal(),
+        CategoryMismatchTrainTest(**kwargs).add_condition_new_category_ratio_less_or_equal(),
+        StringMismatchComparison(**kwargs).add_condition_no_new_variants(),
+        DateTrainTestLeakageDuplicates(**kwargs).add_condition_leakage_ratio_less_or_equal(),
+        DateTrainTestLeakageOverlap(**kwargs).add_condition_leakage_ratio_less_or_equal(),
+        IndexTrainTestLeakage(**kwargs).add_condition_ratio_less_or_equal(),
+        TrainTestSamplesMix(**kwargs).add_condition_duplicates_ratio_less_or_equal(),
+        FeatureLabelCorrelationChange(**kwargs).add_condition_feature_pps_difference_less_than()
+        .add_condition_feature_pps_in_train_less_than(),
+        TrainTestFeatureDrift(**kwargs).add_condition_drift_score_less_than(),
+        TrainTestLabelDrift(**kwargs).add_condition_drift_score_less_than(),
+        WholeDatasetDrift(**kwargs).add_condition_overall_drift_value_less_than(),
+    )
+
+
+
 def label_split_checks() -> Suite:
     """Deepchecks train/test validation suite for checks that require a label.
 
@@ -183,6 +203,7 @@ def load_split_predictors_and_outcomes(
     path: Path,
     split: str,
     include_id: bool,
+    nrows: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Loads a given data split from a directory and returns predictors and
     outcomes separately.
@@ -191,12 +212,13 @@ def load_split_predictors_and_outcomes(
         path (Path): Path to directory containing data files
         split (str): Which split to load
         include_id (bool): Whether to include 'dw_ek_borger' in predictor df
+        nrows (Optional[int]): Number of rows to load from each file.
 
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: Tuple where first element is the
         predictors and second element the outcomes
     """
-    split = load_split(path, split)
+    split = load_split(path, split, nrows=nrows)
     predictors, outcomes = separate_predictors_and_outcome(split, include_id=include_id)
     return predictors, outcomes
 
@@ -225,14 +247,15 @@ def separate_predictors_and_outcome(
     return predictors, outcomes
 
 
-def load_split(path: Path, split: str) -> pd.DataFrame:
+def load_split(path: Path, split: str, nrows: Optional[int] = None) -> pd.DataFrame:
     """Loads a given data split as a dataframe.
 
     Args:
         path (Path): Path to directory containing data files
         split (str): Which string to look for (e.g. 'train', 'val', 'test')
+        nrows (Optional[int]): Whether to only load a subset of the data
 
     Returns:
         pd.DataFrame: The loaded dataframe
     """
-    return pd.read_csv(list(path.glob(f"*{split}*"))[0])
+    return pd.read_csv(list(path.glob(f"*{split}*"))[0], nrows=nrows)
