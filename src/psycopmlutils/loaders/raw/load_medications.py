@@ -105,8 +105,8 @@ class LoadMedications:
         atc_code: str,
         source_timestamp_col_name: str,
         view: str,
-        output_col_name: str = None,
-        wildcard_at_end: bool = False,
+        output_col_name: Optional[str] = None,
+        wildcard_at_end: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load the prescribed medications that match atc. If wildcard_at_end,
         match from atc_code*. Aggregates all that match. Beware that data is
