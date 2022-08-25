@@ -74,7 +74,7 @@ def check_feature_sets_dir(
         )
 
         # Running checks that do not require a label
-        integ_suite = data_integrity()
+        integ_suite = data_integrity(timeout=0)  # timeout=0 removes timeout
         suite_results = integ_suite.run(ds)
         suite_results.save_as_html(str(out_dir / "data_integrity.html"))
         failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
