@@ -25,9 +25,10 @@ def check_feature_sets_dir(
     splits: Optional[List[str]] = ["train", "val", "test"],
     nrows: Optional[int] = None,
 ) -> None:
-    """Runs Deepcheck data integrity and train/val/test checks for a
-    given directory containing train/val/test files. Splits indicates which
-    data splits to check. If nrows is provided, only
+    """Runs Deepcheck data integrity and train/val/test checks for a given
+    directory containing train/val/test files. Splits indicates which data
+    splits to check. If nrows is provided, only.
+
     the first nrows are loaded - should only be used for debugging.
 
     The resulting reports are saved to a sub directory as .html files.
@@ -70,7 +71,9 @@ def check_feature_sets_dir(
             nrows=nrows,
         )
         ds = Dataset(
-            df=train_predictors, index_name="dw_ek_borger", datetime_name="timestamp"
+            df=train_predictors,
+            index_name="dw_ek_borger",
+            datetime_name="timestamp",
         )
 
         # Running checks that do not require a label
@@ -95,7 +98,7 @@ def check_feature_sets_dir(
                 str(outcome_checks_dir / f"{outcome_column}_check.html"),
             )
             failed_checks[f"{outcome_column}_check"] = get_name_of_failed_checks(
-                suite_results
+                suite_results,
             )
 
         msg.good("Finshed data integrity checks!")
@@ -111,7 +114,10 @@ def check_feature_sets_dir(
     split_dict = {}
     for split in splits:
         predictors = load_split_predictors(
-            path=path, split=split, include_id=True, nrows=nrows
+            path=path,
+            split=split,
+            include_id=True,
+            nrows=nrows,
         )
         outcomes = load_split_outcomes(path=path, split=split, nrows=nrows)
         ds = Dataset(
@@ -122,13 +128,15 @@ def check_feature_sets_dir(
         split_dict[split] = {"predictors": predictors, "outcomes": outcomes, "ds": ds}
 
     suite_results = validation_suite.run(
-        split_dict["train"]["ds"], split_dict["val"]["ds"]
+        split_dict["train"]["ds"],
+        split_dict["val"]["ds"],
     )
     suite_results.save_as_html(str(out_dir / "train_val_integrity.html"))
     failed_checks["train_val_integrity"] = get_name_of_failed_checks(suite_results)
 
     suite_results = validation_suite.run(
-        split_dict["train"]["ds"], split_dict["test"]["ds"]
+        split_dict["train"]["ds"],
+        split_dict["test"]["ds"],
     )
     suite_results.save_as_html(str(out_dir / "train_test_integrity.html"))
     failed_checks["train_test_integrity"] = get_name_of_failed_checks(suite_results)

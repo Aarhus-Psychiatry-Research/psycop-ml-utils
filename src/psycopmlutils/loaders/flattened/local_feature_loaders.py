@@ -5,9 +5,13 @@ import pandas as pd
 
 
 def load_split_predictors(
-    path: Path, split: str, include_id: bool, nrows: Optional[int] = None
+    path: Path,
+    split: str,
+    include_id: bool,
+    nrows: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Loads predictors from a given data split as a dataframe from a directory.
+    """Loads predictors from a given data split as a dataframe from a
+    directory.
 
     Args:
         path (Path): Path to directory containing data files
@@ -22,7 +26,9 @@ def load_split_predictors(
 
 
 def load_split_outcomes(
-    path: Path, split: str, nrows: Optional[int] = None
+    path: Path,
+    split: str,
+    nrows: Optional[int] = None,
 ) -> pd.DataFrame:
     """Loads outcomes from a given data split as a dataframe from a directory.
 
@@ -38,8 +44,10 @@ def load_split_outcomes(
 
 
 def get_predictors(df: pd.DataFrame, include_id: bool) -> pd.DataFrame:
-    """Returns the predictors from a dataframe. Assumes predictors to be prefixed
-    with 'pred'. Timestamp is also returned for predictors, and optionally dw_ek_borger.
+    """Returns the predictors from a dataframe.
+
+    Assumes predictors to be prefixed with 'pred'. Timestamp is also
+    returned for predictors, and optionally dw_ek_borger.
     """
     pred_regex = (
         "^pred|^timestamp" if not include_id else "^pred|^timestamp|dw_ek_borger"
@@ -48,8 +56,9 @@ def get_predictors(df: pd.DataFrame, include_id: bool) -> pd.DataFrame:
 
 
 def get_outcomes(df: pd.DataFrame) -> pd.DataFrame:
-    """Returns the outcomes from a dataframe. Assumes outcomes to be prefixed
-    with 'outc'.
+    """Returns the outcomes from a dataframe.
+
+    Assumes outcomes to be prefixed with 'outc'.
     """
     return df.filter(regex="^outc")
 
