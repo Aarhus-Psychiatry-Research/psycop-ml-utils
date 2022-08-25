@@ -141,7 +141,7 @@ def check_feature_sets_dir(
             "test": {"predictors": test_predictors, "outcomes": test_outcomes},
         }
 
-        for split in split_dict:
+        for split, data in split_dict.items():
             for outcome_column in train_outcomes:
                 msg.info(
                     f"Running split validation for train/{split} and {outcome_column}"
@@ -153,10 +153,10 @@ def check_feature_sets_dir(
                     label=train_outcomes[outcome_column],
                 )
                 split_ds = Dataset(
-                    df=split["predictors"],
+                    df=data["predictors"],
                     index_name="dw_ek_borger",
                     datetime_name="timestamp",
-                    label=split["outcomes"][outcome_column],
+                    label=data["outcomes"][outcome_column],
                 )
                 suite_results = label_split_check.run(train_ds, split_ds)
                 suite_results.save_as_html(
