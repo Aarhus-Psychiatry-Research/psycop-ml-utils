@@ -11,7 +11,9 @@ from wasabi import msg
 
 import psycopmlutils.loaders.raw  # noqa
 from psycopmlutils.timeseriesflattener import FlattenedDataset
-from psycopmlutils.timeseriesflattener.data_integrity import check_feature_sets_dir
+from psycopmlutils.timeseriesflattener.data_integrity import (
+    check_feature_set_integrity_from_dir,
+)
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
@@ -110,17 +112,17 @@ if __name__ == "__main__":
 
     # Version table with current date and time
     # prefix with user name to avoid potential clashes
-    current_user = Path().home().name + "_"
-    file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+    current_user = Path().home().name
+    file_prefix = current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create directory to store all files related to this run
-    sub_dir = SAVE_PATH / file_prefix
+    sub_dir = SAVE_PATH / current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
     sub_dir.mkdir()
 
     # Log poetry lock file and file prefix to WandB for reproducibility
     feature_settings = {
         "file_prefix": file_prefix,
-        "save_path": sub_dir + file_prefix,
+        "save_path": sub_dir / file_prefix,
         "predictor_list": PREDICTOR_LIST,
     }
 
@@ -146,7 +148,7 @@ if __name__ == "__main__":
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
         # Version table with current date and time
-        filename = f"{file_prefix}_{dataset_name}.csv"
+        filename = f"psycop_t2d_{file_prefix}_{dataset_name}.csv"
         msg.info(f"Saving {filename} to disk")
 
         file_path = sub_dir / filename
@@ -157,4 +159,4 @@ if __name__ == "__main__":
     wandb.finish()
 
     ## Create data integrity report
-    check_feature_sets_dir(sub_dir, splits=["train", "val", "test"])
+    check_feature_set_integrity_from_dir(sub_dir, splits=["train", "val", "test"])

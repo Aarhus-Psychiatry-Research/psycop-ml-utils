@@ -20,13 +20,14 @@ from wasabi import Printer
 from psycopmlutils.loaders.flattened import load_split_outcomes, load_split_predictors
 
 
-def check_feature_sets_dir(
+def check_feature_set_integrity_from_dir(
     path: Path,
     splits: Optional[List[str]] = ["train", "val", "test"],
     nrows: Optional[int] = None,
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a given
-    directory containing train/val/test files. Splits indicates which data
+    directory containing train/val/test files. Splits indicates which data.
+
     splits to check. If nrows is provided, only the first nrows are loaded - should only be used for debugging.
 
     The resulting reports are saved to a sub directory as .html files.
@@ -38,7 +39,9 @@ def check_feature_sets_dir(
         Should only be used for debugging.
     """
     msg = Printer(timestamp=True)
-    failed_checks = {} # Collect failed checks for error messages at the end of the function
+    failed_checks = (
+        {}
+    )  # Collect failed checks for error messages at the end of the function
 
     ## check if file splits exist before running checks
     for split in splits:
