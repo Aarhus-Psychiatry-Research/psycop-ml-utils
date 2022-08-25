@@ -1,55 +1,57 @@
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import pandas as pd
 
 
-def load_split_predictors_and_outcomes(
-    path: Path,
-    split: str,
-    include_id: bool,
-    nrows: Optional[int] = None,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Loads a given data split from a directory and returns predictors and
-    outcomes separately.
+def load_split_predictors(
+    path: Path, split: str, include_id: bool, nrows: Optional[int] = None
+) -> pd.DataFrame:
+    """Loads predictors from a given data split as a dataframe from a directory.
 
     Args:
         path (Path): Path to directory containing data files
-        split (str): Which split to load
-        include_id (bool): Whether to include 'dw_ek_borger' in predictor df
-        nrows (Optional[int]): Number of rows to load from each file.
+        split (str): Which string to look for (e.g. 'train', 'val', 'test')
+        include_id (bool): Whether to include 'dw_ek_borger' in the returned df
+        nrows (Optional[int]): Whether to only load a subset of the data
 
     Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]: Tuple where first element is the
-        predictors and second element the outcomes
+        pd.DataFrame: The loaded dataframe
     """
-    split = load_split(path, split, nrows=nrows)
-    predictors, outcomes = separate_predictors_and_outcome(split, include_id=include_id)
-    return predictors, outcomes
+    return get_predictors(load_split(path, split, nrows=nrows), include_id)
 
 
-def separate_predictors_and_outcome(
-    df: pd.DataFrame,
-    include_id: bool,
-) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    """Split predictors and outcomes into two dataframes. Assumes predictors to
-    be prefixed with 'pred', and outcomes to be prefixed with 'outc'. Timestamp
-    is also returned for predictors, and optionally also dw_ek_borger.
+def load_split_outcomes(
+    path: Path, split: str, nrows: Optional[int] = None
+) -> pd.DataFrame:
+    """Loads outcomes from a given data split as a dataframe from a directory.
 
     Args:
-        df (pd.DataFrame): Dataframe containing generates features
-        include_id (bool): Whether to include 'dw_ek_borger' in predictor df
+        path (Path): Path to directory containing data files
+        split (str): Which string to look for (e.g. 'train', 'val', 'test')
+        nrows (Optional[int]): Whether to only load a subset of the data
 
     Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]: Tuple where first element is the
-        predictors and second element the outcomes
+        pd.DataFrame: The loaded dataframe
+    """
+    return get_outcomes(load_split(path, split, nrows=nrows))
+
+
+def get_predictors(df: pd.DataFrame, include_id: bool) -> pd.DataFrame:
+    """Returns the predictors from a dataframe. Assumes predictors to be prefixed
+    with 'pred'. Timestamp is also returned for predictors, and optionally dw_ek_borger.
     """
     pred_regex = (
         "^pred|^timestamp" if not include_id else "^pred|^timestamp|dw_ek_borger"
     )
-    predictors = df.filter(regex=pred_regex)
-    outcomes = df.filter(regex="^outc")
-    return predictors, outcomes
+    return df.filter(regex=pred_regex)
+
+
+def get_outcomes(df: pd.DataFrame) -> pd.DataFrame:
+    """Returns the outcomes from a dataframe. Assumes outcomes to be prefixed
+    with 'outc'.
+    """
+    return df.filter(regex="^outc")
 
 
 def load_split(path: Path, split: str, nrows: Optional[int] = None) -> pd.DataFrame:

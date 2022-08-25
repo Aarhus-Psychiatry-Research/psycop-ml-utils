@@ -123,7 +123,7 @@ if __name__ == "__main__":
     # Version table with current date and time
     # prefix with user name to avoid potential clashes
     current_user = Path().home().name + "_"
-    file_prefix = current_user + f"psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
+    file_prefix = current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create directory to store all files related to this run
     sub_dir = SAVE_PATH / file_prefix
