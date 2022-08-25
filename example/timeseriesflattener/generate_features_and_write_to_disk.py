@@ -169,4 +169,4 @@ if __name__ == "__main__":
     wandb.finish()
 
     ## Create data integrity report
-    check_feature_sets_dir(sub_dir)
+    check_feature_sets_dir(sub_dir, splits=["train", "val", "test"])
