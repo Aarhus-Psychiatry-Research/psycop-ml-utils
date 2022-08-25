@@ -4,6 +4,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
+from features_blood_samples import create_lab_feature_combinations
+from features_diagnoses import create_diag_feature_combinations
+from features_medications import create_medication_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders.raw  # noqa
@@ -21,39 +24,27 @@ if __name__ == "__main__":
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
-    RESOLVE_MULTIPLE = ["mean", "max", "min"]
+    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
-    PREDICTOR_LIST = create_feature_combinations(
-        [
-            {
-                "predictor_df": "hba1c",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": ["mean", "max", "min", "count"],
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "alat",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "hdl",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-            {
-                "predictor_df": "ldl",
-                "lookbehind_days": LOOKBEHIND_DAYS,
-                "resolve_multiple": RESOLVE_MULTIPLE,
-                "fallback": np.nan,
-            },
-        ],
+    LAB_PREDICTORS = create_lab_feature_combinations(
+        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
     )
 
-    event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
+    DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
+        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+    )
+
+    MEDICATION_PREDICTORS = create_medication_feature_combinations(
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        RESOLVE_MULTIPLE=["count"],
+    )
+
+    PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
+
+    event_times = psycopmlutils.loaders.LoadOutcome.t2d()
 
     msg.info(f"Generating {len(PREDICTOR_LIST)} features")
 
@@ -69,7 +60,7 @@ if __name__ == "__main__":
     # Outcome
     msg.info("Adding outcome")
     for i in [0.5, 1, 2, 3, 4, 5]:
-        lookahead_days = i * 365.25
+        lookahead_days = int(i * 365)
         msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
         flattened_df.add_temporal_outcome(
             outcome_df=event_times,
@@ -91,8 +82,6 @@ if __name__ == "__main__":
     )
     msg.good("Finished adding outcome")
 
-    end_time = time.time()
-
     # Predictors
     msg.info("Adding static predictors")
     flattened_df.add_static_info(psycopmlutils.loaders.raw.LoadDemographic.sex_female())
@@ -104,13 +93,15 @@ if __name__ == "__main__":
         predictors=PREDICTOR_LIST,
     )
 
+    end_time = time.time()
+
     # Finish
     msg.good(
         f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
     )
 
     msg.info(
-        f"Dataframe size is {flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 1024} MiB",
+        f"Dataframe size is {int(flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 102)} MiB",
     )
 
     msg.good("Done!")
