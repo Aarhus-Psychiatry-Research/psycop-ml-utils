@@ -128,23 +128,20 @@ class LoadDiagnoses:
         fct = f"[{fct}]"
 
         # Add a % at the end of the SQL match as a wildcard, so e.g. F20 matches F200.
-        sql_ending = "%" if wildcard_icd_10_end else ""
 
         if isinstance(icd_code, list):
-            match_col_sql_strings = [
-                f"lower(diagnosegruppestreng) LIKE lower('%{diag_str}{sql_ending}')"
-                for diag_str in icd_code
-            ]
+            match_col_sql_strings = []
+
+            for code_str in icd_code:
+                match_col_sql_strings += f"left(lower(diagnosegruppestreng), {len(code_str)}) = '{code_str.lower()}'"
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
-            match_col_sql_str = (  # noqa
-                f"lower(diagnosegruppestreng) LIKE lower('%{icd_code}{sql_ending}')"
-            )
+            match_col_sql_str = f"left(lower(diagnosegruppestreng), {len(code_str)}) = '{code_str.lower()}'"
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
-            + " FROM [fct].{fct} WHERE ({match_col_sql_str})"
+            + f" FROM [fct].{fct} WHERE ({match_col_sql_str})"
         )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)

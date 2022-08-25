@@ -4,6 +4,7 @@ import pandas as pd
 from wasabi import msg
 
 from psycopmlutils.loaders.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
@@ -62,8 +63,8 @@ class LoadMedications:
 
         if load_prescribed:
             msg.warn(
-                "Beware, there are missing prescriptions until september 2019. "
-                "Hereafter, data is complete.",
+                "Beware, there are missing prescriptions until september 2016. "
+                "Hereafter, data is complete. See the wiki (OBS: Medication) for more details.",
             )
 
         df = pd.DataFrame()
@@ -74,7 +75,7 @@ class LoadMedications:
                 source_timestamp_col_name="datotid_ordinationstart",
                 view="FOR_Medicin_ordineret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
-                wildcard_atc_at_end=wildcard_at_end,
+                wildcard_at_end=wildcard_at_end,
             )
             df = pd.concat([df, df_medication_prescribed])
 
@@ -84,7 +85,7 @@ class LoadMedications:
                 source_timestamp_col_name="datotid_administration_start",
                 view="FOR_Medicin_administreret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
-                wildcard_atc_at_end=wildcard_at_end,
+                wildcard_at_end=wildcard_at_end,
             )
             df = pd.concat([df, df_medication_administered])
 
@@ -104,13 +105,12 @@ class LoadMedications:
         atc_code: str,
         source_timestamp_col_name: str,
         view: str,
-        output_col_name: Optional[str] = None,
-        wildcard_atc_at_end: Optional[bool] = False,
+        output_col_name: str = None,
+        wildcard_at_end: bool = False,
     ) -> pd.DataFrame:
-        """Load the prescribed medications that match atc. If
-        wildcard_atc_at_end, match from atc_code*. Aggregates all that match.
-        Beware that data is incomplete prior to sep. 2016 for prescribed
-        medications.
+        """Load the prescribed medications that match atc. If wildcard_at_end,
+        match from atc_code*. Aggregates all that match. Beware that data is
+        incomplete prior to sep. 2016 for prescribed medications.
 
         Args:
             atc_code (str): ATC string to match on. # noqa: DAR102
@@ -120,7 +120,7 @@ class LoadMedications:
                 "FOR_Medicin_ordineret_inkl_2021_feb2022"
             output_col_name (str, optional): Name of new column string. Defaults to
                 None.
-            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or
+            wildcard_at_end (bool, optional): Whether to match on atc_code* or
                 atc_code.
 
         Returns:
@@ -128,7 +128,7 @@ class LoadMedications:
                 output_col_name = 1
         """
 
-        if wildcard_atc_at_end:
+        if wildcard_at_end:
             end_of_sql = "%"
         else:
             end_of_sql = ""  # noqa
@@ -152,4 +152,13 @@ class LoadMedications:
             columns={
                 source_timestamp_col_name: "timestamp",
             },
+        )
+
+    @data_loaders.register("antipsychotics")
+    def antipsychotics() -> pd.DataFrame:
+        return LoadMedications.load(
+            atc_code="N05A",
+            load_prescribed=True,
+            load_administered=True,
+            wildcard_at_end=True,
         )
