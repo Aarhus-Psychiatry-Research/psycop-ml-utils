@@ -1,8 +1,9 @@
 """Code to generate data integrity and train/val/test drift reports."""
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
+from deepchecks.core.suite import SuiteResult
 from deepchecks.tabular import Dataset, Suite
 from deepchecks.tabular.checks import (
     CategoryMismatchTrainTest,
@@ -39,6 +40,7 @@ def check_feature_sets_dir(
         check_split_integrity (Optional[bool]): Whether to run train/val/test drift checks
     """
     msg = Printer(timestamp=True)
+    failed_checks = {}
 
     out_dir = path / "deepchecks"
     if not out_dir.exists():
@@ -68,6 +70,7 @@ def check_feature_sets_dir(
         integ_suite = data_integrity()
         suite_results = integ_suite.run(ds)
         suite_results.save_as_html(str(out_dir / "data_integrity.html"))
+        failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
 
         # Running checks that require a label for each outcome
         label_checks = label_integrity_checks()
@@ -82,6 +85,7 @@ def check_feature_sets_dir(
             suite_results.save_as_html(
                 str(outcome_checks_dir / f"{outcome_column}_check.html"),
             )
+            failed_checks[f"{outcome_column}_check"] = get_name_of_failed_checks(suite_results)
 
         msg.good("Finshed data integrity checks!")
 
@@ -130,8 +134,10 @@ def check_feature_sets_dir(
         )
         suite_results = validation_suite.run(train_ds, val_ds)
         suite_results.save_as_html(str(out_dir / "train_val_integrity.html"))
+        failed_checks["train_val_integrity"] = get_name_of_failed_checks(suite_results)
         suite_results = validation_suite.run(train_ds, test_ds)
         suite_results.save_as_html(str(out_dir / "train_test_integrity.html"))
+        failed_checks["train_test_integrity"] = get_name_of_failed_checks(suite_results)
 
         # Running checks that require a label for each outcome
         label_split_check = label_split_checks()
@@ -165,8 +171,10 @@ def check_feature_sets_dir(
                         / f"train_{split}_{outcome_column}_check.html"
                     ),
                 )
+                failed_checks[f"train_{split}_{outcome_column}_check"] = get_name_of_failed_checks(suite_results)
 
         msg.good(f"All data checks done! Saved to {out_dir}")
+        msg.warn(f"Failed checks: {failed_checks}")
 
 
 def label_integrity_checks() -> Suite:
@@ -282,3 +290,15 @@ def load_split(path: Path, split: str, nrows: Optional[int] = None) -> pd.DataFr
         pd.DataFrame: The loaded dataframe
     """
     return pd.read_csv(list(path.glob(f"*{split}*"))[0], nrows=nrows)
+
+
+def get_name_of_failed_checks(result: SuiteResult) -> List[str]:
+    """Returns a list of names of failed checks.
+
+    Args:
+        result (SuiteResult): A deepchecks SuiteResult
+
+    Returns:
+        List[str]: List of names of failed checks
+    """
+    return [check_result.check.name for check_result in result.get_not_passed_checks()]
