@@ -6,7 +6,7 @@ import pandas as pd
 import wandb
 from wasabi import msg
 
-import psycopmlutils.loaders  # noqa
+import psycopmlutils.loaders.raw  # noqa
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
@@ -53,16 +53,18 @@ if __name__ == "__main__":
         ],
     )
 
-    event_times = psycopmlutils.loaders.LoadOutcome.t2d()
+    event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
     msg.info(f"Generating {len(PREDICTOR_LIST)} features")
 
     msg.info("Loading prediction times")
-    prediction_times = psycopmlutils.loaders.LoadVisits.physical_visits_to_psychiatry()
+    prediction_times = (
+        psycopmlutils.loaders.raw.LoadVisits.physical_visits_to_psychiatry()
+    )
 
     msg.info("Initialising flattened dataset")
     flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
-    flattened_df.add_age(psycopmlutils.loaders.LoadDemographic.birthdays())
+    flattened_df.add_age(psycopmlutils.loaders.raw.LoadDemographic.birthdays())
 
     # Outcome
     msg.info("Adding outcome")
@@ -93,7 +95,7 @@ if __name__ == "__main__":
 
     # Predictors
     msg.info("Adding static predictors")
-    flattened_df.add_static_info(psycopmlutils.loaders.LoadDemographic.sex_female())
+    flattened_df.add_static_info(psycopmlutils.loaders.raw.LoadDemographic.sex_female())
 
     start_time = time.time()
 
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     # Log poetry lock file and file prefix to WandB for reproducibility
     feature_settings = {
         "filename": file_prefix,
-        "save_path": sub_dir,
+        "save_path": sub_dir + file_prefix,
         "predictor_list": PREDICTOR_LIST,
     }
 
@@ -139,7 +141,7 @@ if __name__ == "__main__":
 
     # Create splits
     for dataset_name in splits:
-        df_split_ids = psycopmlutils.loaders.LoadIDs.load(split=dataset_name)
+        df_split_ids = psycopmlutils.loaders.raw.LoadIDs.load(split=dataset_name)
 
         # Find IDs which are in split_ids, but not in flattened_df
         split_ids = df_split_ids["dw_ek_borger"].unique()
