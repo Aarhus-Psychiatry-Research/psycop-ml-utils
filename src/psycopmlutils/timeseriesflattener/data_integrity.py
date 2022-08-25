@@ -5,9 +5,13 @@ from typing import Optional, Tuple
 import pandas as pd
 from deepchecks.tabular import Dataset, Suite
 from deepchecks.tabular.checks import (
+    CategoryMismatchTrainTest,
+    DatasetsSizeComparison,
     FeatureLabelCorrelation,
     FeatureLabelCorrelationChange,
     IdentifierLabelCorrelation,
+    IndexTrainTestLeakage,
+    NewLabelTrainTest,
     TrainTestLabelDrift,
 )
 from deepchecks.tabular.suites import data_integrity, train_test_validation
@@ -45,7 +49,10 @@ def check_feature_sets_dir(path: Path, nrows: Optional[int] = None) -> None:
     # Only running data integrity checks on the training set to reduce the
     # chance of any form of peaking at the test set
     train_predictors, train_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="train", include_id=False, nrows=nrows
+        path=path,
+        split="train",
+        include_id=False,
+        nrows=nrows,
     )
     ds = Dataset(df=train_predictors, datetime_name="timestamp")
 
@@ -77,16 +84,25 @@ def check_feature_sets_dir(path: Path, nrows: Optional[int] = None) -> None:
     msg.info("Running split validation...")
     # Running data validation checks on train/val and train/test splits that do not
     # require a label
-    validation_suite = train_test_validation()
+    validation_suite = custom_train_test_validation()
 
     train_predictors, train_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="train", include_id=True, nrows=nrows
+        path=path,
+        split="train",
+        include_id=True,
+        nrows=nrows,
     )
     val_predictors, val_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="val", include_id=True, nrows=nrows
+        path=path,
+        split="val",
+        include_id=True,
+        nrows=nrows,
     )
     test_predictors, test_outcomes = load_split_predictors_and_outcomes(
-        path=path, split="test", include_id=True, nrows=nrows
+        path=path,
+        split="test",
+        include_id=True,
+        nrows=nrows,
     )
 
     train_ds = Dataset(
@@ -158,30 +174,24 @@ def label_integrity_checks() -> Suite:
     )
 
 
-def custom_train_test_validation() -> Suite:
-    """Deepchecks train/test validation suite for train/test checks which 
-    slow checks disabled. 
+def custom_train_test_validation(**kwargs) -> Suite:
+    """Deepchecks train/test validation suite for train/test checks which slow
+    checks disabled.
 
     Returns:
         Suite: A deepchecks Suite
     """
     return Suite(
-        'Train Test Validation Suite',
-        DatasetsSizeComparison(**kwargs).add_condition_test_train_size_ratio_greater_than(),
+        "Train Test Validation Suite",
+        DatasetsSizeComparison(
+            **kwargs
+        ).add_condition_test_train_size_ratio_greater_than(),
         NewLabelTrainTest(**kwargs).add_condition_new_labels_number_less_or_equal(),
-        CategoryMismatchTrainTest(**kwargs).add_condition_new_category_ratio_less_or_equal(),
-        StringMismatchComparison(**kwargs).add_condition_no_new_variants(),
-        DateTrainTestLeakageDuplicates(**kwargs).add_condition_leakage_ratio_less_or_equal(),
-        DateTrainTestLeakageOverlap(**kwargs).add_condition_leakage_ratio_less_or_equal(),
+        CategoryMismatchTrainTest(
+            **kwargs
+        ).add_condition_new_category_ratio_less_or_equal(),
         IndexTrainTestLeakage(**kwargs).add_condition_ratio_less_or_equal(),
-        TrainTestSamplesMix(**kwargs).add_condition_duplicates_ratio_less_or_equal(),
-        FeatureLabelCorrelationChange(**kwargs).add_condition_feature_pps_difference_less_than()
-        .add_condition_feature_pps_in_train_less_than(),
-        TrainTestFeatureDrift(**kwargs).add_condition_drift_score_less_than(),
-        TrainTestLabelDrift(**kwargs).add_condition_drift_score_less_than(),
-        WholeDatasetDrift(**kwargs).add_condition_overall_drift_value_less_than(),
     )
-
 
 
 def label_split_checks() -> Suite:
