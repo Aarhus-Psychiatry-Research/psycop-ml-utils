@@ -19,12 +19,12 @@ class FlattenedDataset:
     def __init__(
         self,
         prediction_times_df: DataFrame,
-        id_col_name: str = "dw_ek_borger",
-        timestamp_col_name: str = "timestamp",
+        id_col_name: Optional[str] = "dw_ek_borger",
+        timestamp_col_name: Optional[str] = "timestamp",
         min_date: Optional[pd.Timestamp] = None,
-        n_workers: int = 60,
-        predictor_col_name_prefix: str = "pred",
-        outcome_col_name_prefix: str = "outc",
+        n_workers: Optional[int] = 60,
+        predictor_col_name_prefix: Optional[str] = "pred",
+        outcome_col_name_prefix: Optional[str] = "outc",
     ):
         """Class containing a time-series, flattened. A 'flattened' version is
         a tabular representation for each prediction time.
@@ -185,9 +185,6 @@ class FlattenedDataset:
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = arg_dict["values_df"]
 
-            if "source_values_col_name" not in arg_dict.keys():
-                arg_dict["source_values_col_name"] = "value"
-
             # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registry
             if predictor_dfs is None:
                 predictor_dfs = self.loaders_catalogue.get_all()
@@ -211,7 +208,6 @@ class FlattenedDataset:
                 "resolve_multiple",
                 "fallback",
                 "new_col_name",
-                "source_values_col_name",
                 "new_col_name_prefix",
             ]
 
@@ -293,7 +289,7 @@ class FlattenedDataset:
     def add_age(
         self,
         id2date_of_birth: DataFrame,
-        date_of_birth_col_name: str = "date_of_birth",
+        date_of_birth_col_name: Optional[str] = "date_of_birth",
     ):
         """Add age at prediction time to each prediction time.
 
@@ -340,16 +336,16 @@ class FlattenedDataset:
     def add_static_info(
         self,
         info_df: DataFrame,
-        prefix: str = "self.predictor_col_name_prefix",
-        input_col_name: str = None,
-        output_col_name: str = None,
+        prefix: Optional[str] = "self.predictor_col_name_prefix",
+        input_col_name: Optional[str] = None,
+        output_col_name: Optional[str] = None,
     ):
         """Add static info to each prediction time, e.g. age, sex etc.
 
         Args:
-            predictor_df (DataFrame): Contains an id_column and a value column.
-            prefix (str): Prefix for column. Defaults to self.predictor_col_name_prefix.
-            value_col_name (str, optional): Column names for the values you want to add. Defaults to "value".
+            info_df (DataFrame): Contains an id_column and a value column.
+            prefix (str, optional): Prefix for column. Defaults to self.predictor_col_name_prefix.
+            input_col_name (str, optional): Column names for the values you want to add. Defaults to "value".
             output_col_name (str, optional): Name of the output column. Defaults to None.
         """
 
@@ -399,10 +395,8 @@ class FlattenedDataset:
         resolve_multiple: Union[Callable, str],
         fallback: float,
         incident: Optional[bool] = False,
-        outcome_df_values_col_name: str = "value",
-        new_col_name: str = "value",
-        keep_outcome_timestamp: bool = True,
-        dichotomous: bool = False,
+        new_col_name: Optional[str] = "value",
+        dichotomous: Optional[bool] = False,
     ):
         """Add an outcome-column to the dataset.
 
@@ -412,9 +406,7 @@ class FlattenedDataset:
             resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
-            outcome_df_values_col_name (str): Column name for the outcome values in outcome_df, e.g. whether a patient has t2d or not at the timestamp. Defaults to "value".
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
-            keep_outcome:timestamp (bool, optional): Whether to keep the timestamp for the outcome value as a separate column. Defaults to False.
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
         prediction_timestamp_col_name = f"{self.timestamp_col_name}_prediction"
@@ -460,8 +452,6 @@ class FlattenedDataset:
                 interval_days=lookahead_days,
                 resolve_multiple=resolve_multiple,
                 fallback=fallback,
-                source_values_col_name=outcome_df_values_col_name,
-                keep_val_timestamp=keep_outcome_timestamp,
                 new_col_name=new_col_name,
             )
 
@@ -471,7 +461,6 @@ class FlattenedDataset:
         lookbehind_days: float,
         resolve_multiple: Union[Callable, str],
         fallback: float,
-        source_values_col_name: str = "value",
         new_col_name: str = None,
     ):
         """Add a column with predictor values to the flattened dataset (e.g.
@@ -481,8 +470,7 @@ class FlattenedDataset:
             predictor_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
             lookbehind_days (float): How far behind to look for a predictor value in days. If none found, use fallback.
             resolve_multiple (Callable, str): How to handle multiple values within the lookbehind window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-            fallback (List[str]): What to do if no value within the lookahead.
-            source_values_col_name (str): Column name for the predictor values in predictor_df, e.g. the patient's most recent blood-sample value. Defaults to "value".
+            fallback (float): What to do if no value within the lookahead.
             new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
         self.add_temporal_col_to_flattened_dataset(
@@ -491,7 +479,6 @@ class FlattenedDataset:
             interval_days=lookbehind_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            source_values_col_name=source_values_col_name,
             new_col_name=new_col_name,
         )
 
@@ -503,8 +490,6 @@ class FlattenedDataset:
         resolve_multiple: Union[Callable, str],
         fallback: float,
         new_col_name: Optional[str] = None,
-        source_values_col_name: str = "value",
-        keep_val_timestamp: bool = False,
     ):
         """Add a column to the dataset (either predictor or outcome depending
         on the value of "direction").
@@ -514,10 +499,8 @@ class FlattenedDataset:
             direction (str): Whether to look "ahead" or "behind".
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-            fallback (List[str]): What to do if no value within the lookahead.
+            fallback (float): What to do if no value within the lookahead.
             new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
-            source_values_col_name (str, optional): Column name of the values column in values_df. Defaults to "val".
-            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the temporal value as a separate column. Defaults to False.
         """
         timestamp_col_type = type(values_df[self.timestamp_col_name][0]).__name__
 
@@ -542,8 +525,6 @@ class FlattenedDataset:
             id_col_name=self.id_col_name,
             timestamp_col_name=self.timestamp_col_name,
             pred_time_uuid_col_name=self.pred_time_uuid_col_name,
-            source_values_col_name=source_values_col_name,
-            keep_val_timestamp=keep_val_timestamp,
             new_col_name_prefix=new_col_name_prefix,
         )
 
@@ -561,9 +542,7 @@ class FlattenedDataset:
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
         new_col_name: str,
-        source_values_col_name: str = "value",
-        keep_val_timestamp: bool = False,
-        new_col_name_prefix: str = None,
+        new_col_name_prefix: Optional[str] = None,
     ) -> DataFrame:
 
         """Create a dataframe with flattened values (either predictor or
@@ -591,10 +570,7 @@ class FlattenedDataset:
                 prediction_times_with_uuid_df. Required because this is a static method.
             new_col_name (str): Name of new column in returned
                 dataframe.
-            source_values_col_name (str, optional): Name of column containing values in
-                values_df. Defaults to "value".
-            keep_val_timestamp (bool, optional): Whether to keep the timestamp for the
-                temporal value as a separate column. Defaults to False.
+            new_col_name_prefix (str, optional): Prefix to use for new column name.
 
 
         Returns:
@@ -681,10 +657,12 @@ class FlattenedDataset:
         dataframe.
 
         Args:
-            df (DataFrame):
+            df (DataFrame): Dataframe with prediction times but without uuid.
+            pred_times_with_uuid (DataFrame): Dataframe with prediction times and uuid.
+            pred_time_uuid_colname (str): Name of uuid column in both df and pred_times_with_uuid.
 
         Returns:
-            DataFrame:
+            DataFrame: A merged dataframe with all prediction times.
         """
         return pd.merge(
             pred_times_with_uuid,
@@ -707,6 +685,8 @@ class FlattenedDataset:
         Args:
             resolve_multiple (Callable): Takes a grouped df and collapses each group to one record (e.g. sum, count etc.).
             df (DataFrame): Source dataframe with all prediction time x val combinations.
+            timestamp_col_name (str): Name of timestamp column in df.
+            pred_time_uuid_colname (str): Name of uuid column in df.
 
         Returns:
             DataFrame: DataFrame with one row pr. prediction time.
@@ -742,8 +722,8 @@ class FlattenedDataset:
             direction (str): Whether to look ahead or behind.
             interval_days (float): How far to look
             df (DataFrame): Source dataframe
-            timestamp_pred_colname (str):
-            timestamp_value_colname (str):
+            timestamp_pred_colname (str): Name of timestamp column for predictions in df.
+            timestamp_value_colname (str): Name of timestamp column for values in df.
 
         Raises:
             ValueError: If direction is niether ahead nor behind.
@@ -780,8 +760,8 @@ def select_and_assert_keys(dictionary: Dict, key_list: List[str]) -> Dict:
     them as in the lsit.
 
     Args:
-        dict (Dict): Dictionary to process
-        keys_to_keep (List[str]): List of keys to keep
+        dictionary (Dict): Dictionary to process
+        key_list (List[str]): List of keys to keep
 
     Returns:
         Dict: Dict with only the selected keys

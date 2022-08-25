@@ -1,4 +1,4 @@
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -26,8 +26,11 @@ def convert_cols_with_matching_colnames_to_datetime(
 ) -> DataFrame:
     """Convert columns that contain colname_substr in their name to datetimes
     Args:
-        df (DataFrame)
+        df (DataFrame): The df to convert
         colname_substr (str): Substring to match on.
+
+    Returns:
+        DataFrame: The converted df
     """
     df.loc[:, df.columns.str.contains(colname_substr)] = df.loc[
         :,
@@ -43,15 +46,15 @@ def assert_flattened_outcome_as_expected(
     lookahead_days: float,
     expected_flattened_values: List,
     resolve_multiple: Union[Callable, str],
-    values_colname: str = "value",
-    fallback: List = np.NaN,
+    values_colname: Optional[str] = "value",
+    fallback: Optional[List] = np.NaN,
 ):
     """Run tests from string representations of dataframes.
     Args:
         prediction_times_df_str (str): A string-representation of prediction-times
         outcome_df_str (str): A string-representation of an outcome df
         lookahead_days (float): _description_
-        expected_flattened_vals (List): A list of the expected values in the value column of the flattened df
+        expected_flattened_values (List): A list of the expected values in the value column of the flattened df
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
@@ -91,8 +94,8 @@ def assert_flattened_predictor_as_expected(
     lookbehind_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: str = "value",
-    fallback: List = np.NaN,
+    values_colname: Optional[str] = "value",
+    fallback: Optional[List] = np.NaN,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -140,8 +143,8 @@ def assert_flattened_values_as_expected(
     interval_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: str = "value",
-    fallback: List = np.NaN,
+    values_colname: Optional[str] = "value",
+    fallback: Optional[List] = np.NaN,
 ):
     """Run tests from string representations of dataframes.
 
@@ -155,8 +158,6 @@ def assert_flattened_values_as_expected(
         expected_flattened_vals (List): A list of the expected values in the value column of the flattened df
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
-    Raises:
-        ValueError: _description_
     """
 
     df_prediction_times = str_to_df(prediction_times_str)

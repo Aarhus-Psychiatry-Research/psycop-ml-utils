@@ -198,6 +198,9 @@ def custom_train_test_validation(**kwargs) -> Suite:
     """Deepchecks train/test validation suite for train/test checks which slow
     checks disabled.
 
+    Args:
+        **kwargs: Keyword arguments to pass to the Suite constructor.
+
     Returns:
         Suite: A deepchecks Suite
     """

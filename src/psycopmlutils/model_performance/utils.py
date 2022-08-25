@@ -54,7 +54,7 @@ def aggregate_predictions(
     id_col: str,
     predictions_col: str,
     label_col: str,
-):
+) -> pd.DataFrame:
     """Calculates the mean prediction by a grouping col (id_col).
 
     Args:
@@ -62,6 +62,9 @@ def aggregate_predictions(
         id_col (str): Column to group by
         predictions_col (str): column containing predictions
         label_col (str): column containing labels
+
+    Returns:
+        pd.DataFrame: Dataframe with aggregated predictions
     """
 
     def mean_scores(x: pd.Series):

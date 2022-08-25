@@ -48,6 +48,13 @@ def get_predictors(df: pd.DataFrame, include_id: bool) -> pd.DataFrame:
 
     Assumes predictors to be prefixed with 'pred'. Timestamp is also
     returned for predictors, and optionally dw_ek_borger.
+
+    Args:
+        df: The dataframe to get the predictors from
+        include_id (bool): Whether to include 'dw_ek_borger' in the returned df
+
+    Returns:
+        pd.DataFrame: Dataframe with only predictor columns
     """
     pred_regex = (
         "^pred|^timestamp" if not include_id else "^pred|^timestamp|dw_ek_borger"
@@ -59,6 +66,12 @@ def get_outcomes(df: pd.DataFrame) -> pd.DataFrame:
     """Returns the outcomes from a dataframe.
 
     Assumes outcomes to be prefixed with 'outc'.
+
+    Args:
+        df: The dataframe to get the outcomes from
+
+    Returns:
+        pd.DataFrame: Dataframe with only outcome columns
     """
     return df.filter(regex="^outc")
 

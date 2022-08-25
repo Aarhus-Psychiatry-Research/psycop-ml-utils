@@ -1,5 +1,6 @@
 import urllib
 import urllib.parse
+from typing import Optional
 
 import pandas as pd
 from sqlalchemy import create_engine
@@ -46,9 +47,9 @@ def write_df_to_sql(
     df: pd.DataFrame,
     table_name: str,
     rows_per_chunk: int = 5000,
-    server: str = "BI-DPA-PROD",
-    database: str = "USR_PS_Forsk",
-    if_exists: str = "fail",
+    server: Optional[str] = "BI-DPA-PROD",
+    database: Optional[str] = "USR_PS_Forsk",
+    if_exists: Optional[str] = "fail",
 ):
     """Writes a pandas dataframe to the SQL server.
 
