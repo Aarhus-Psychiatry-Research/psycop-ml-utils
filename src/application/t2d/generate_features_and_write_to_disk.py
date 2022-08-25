@@ -4,12 +4,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from features_blood_samples import create_lab_feature_combinations
-from features_diagnoses import create_diag_feature_combinations
-from features_medications import create_medication_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders  # noqa
+from application.t2d.features_blood_samples import create_lab_feature_combinations
+from application.t2d.features_diagnoses import create_diag_feature_combinations
+from application.t2d.features_medications import create_medication_feature_combinations
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
@@ -29,13 +29,15 @@ if __name__ == "__main__":
     )
 
     DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
-        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        resolve_multiple=RESOLVE_MULTIPLE,
+        lookbehind_days=LOOKBEHIND_DAYS,
+        fallback=0,
     )
 
     MEDICATION_PREDICTORS = create_medication_feature_combinations(
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
         RESOLVE_MULTIPLE=["count"],
+        fallback=0,
     )
 
     PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS

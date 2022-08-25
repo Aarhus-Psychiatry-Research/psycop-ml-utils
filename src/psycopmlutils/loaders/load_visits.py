@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 from wasabi import msg
 
@@ -5,7 +7,19 @@ from psycopmlutils.loaders.sql_load import sql_load
 
 
 class LoadVisits:
-    def physical_visits_to_psychiatry():
+    def physical_visits_to_psychiatry(
+        where_clause: Optional[str] = None,
+        where_separator: Optional[str] = "AND",
+    ) -> pd.DataFrame:
+        """Load physical visits.
+
+        Args:
+            where_clause (Optional[str], optional): Extra where-clauses to add to the SQL call. E.g. dw_ek_borger = 1. Defaults to None.
+            where_separator (Optional[str], optional): Separator between where-clauses. Defaults to "AND".
+
+        Returns:
+            pd.DataFrame: Dataframe with all physical visits to psychiatry. Has columns dw_ek_borger and timestamp.
+        """
         # msg.info("Loading physical visits to psychiatry")
 
         # SHAK = 6600 ≈ in psychiatry
@@ -47,6 +61,9 @@ class LoadVisits:
                 sql += (
                     f" WHERE left({meta['location_col']}, 4) = '6600' {meta['where']}"
                 )
+
+            if where_clause is not None:
+                sql += f" {where_separator} {where_clause}"
 
             df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
             df.rename(columns={meta["datetime_col"]: "timestamp"}, inplace=True)
