@@ -228,4 +228,6 @@ def get_name_of_failed_checks(result: SuiteResult) -> List[str]:
     Returns:
         List[str]: List of names of failed checks
     """
-    return [check_result.check.name for check_result in result.get_not_passed_checks()]
+    return [
+        check_result.check.name() for check_result in result.get_not_passed_checks()
+    ]
