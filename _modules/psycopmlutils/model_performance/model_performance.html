@@ -238,16 +238,14 @@
 
 
 <div class="viewcode-block" id="ModelPerformance"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.model_performance.ModelPerformance">[docs]</a><span class="k">class</span> <span class="nc">ModelPerformance</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Class to generate model performances.&quot;&quot;&quot;</span>
-
 <div class="viewcode-block" id="ModelPerformance.performance_metrics_from_df"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.model_performance.ModelPerformance.performance_metrics_from_df">[docs]</a>    <span class="k">def</span> <span class="nf">performance_metrics_from_df</span><span class="p">(</span>
         <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">id2label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">to_wide</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">to_wide</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Calculate performance metrics from a dataframe.</span>
 
@@ -255,7 +253,7 @@
 <span class="sd">        If the class was instantiated with an id_col_name, id-level performance is added and identfied via the ´level´ column as &#39;id&#39;.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            df (pd.DataFrame): Dataframe with 1 row per prediction.</span>
+<span class="sd">            df (pd.DataFrame): Dataframe with 1 row per prediction. # noqa: DAR102</span>
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
@@ -313,15 +311,15 @@
         <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">id2label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">to_wide</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">to_wide</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Load a .jsonl file and returns performance metrics.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            path (Union[str, Path]): Path to .jsonl file</span>
+<span class="sd">            path (Union[str, Path]): Path to .jsonl file # noqa: DAR102</span>
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
@@ -358,7 +356,7 @@
         <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">id2label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">to_wide</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -369,13 +367,15 @@
 <span class="sd">        Only supports jsonl for now.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            folder (Union[str, Path]): Path to folder.</span>
-<span class="sd">            pattern (str, optional): Pattern to match on filename.</span>
+<span class="sd">            folder (Union[str, Path]): Path to folder. # noqa: DAR102</span>
+<span class="sd">            pattern (str): Pattern to match on filename.</span>
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
-<span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
+<span class="sd">            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
 <span class="sd">            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
+<span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
+
 
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.Dataframe: Dataframe with performance metrics for each file</span>
@@ -408,11 +408,11 @@
 <span class="sd">        aggregated performance by id.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            df (pd.DataFrame): Dataframe with one prediction per row</span>
+<span class="sd">            df (pd.DataFrame): Dataframe with one prediction per row # noqa: DAR102</span>
 <span class="sd">            aggregate_by_id (bool): Whether to only calculate predictions on row level or also aggregate by id</span>
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
-<span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
+<span class="sd">            id_col_name (str): Column name for the id, used for grouping.</span>
 <span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
 <span class="sd">            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
 
@@ -485,6 +485,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            labels (Union[pd.Series, List]): True labels as 0 or 1</span>
 <span class="sd">            predicted (Union[pd.Series, List]): Predictions as values between 0 and 1</span>
+<span class="sd">            to_wide (bool): Whether to return roc_auc as wide format.</span>
 <span class="sd">            add_level_prefix (Optional[str]): Whether to add a prefix to the metric names.</span>
 <span class="sd">                Can be used to indicate aggregation level.</span>
 
