@@ -2,6 +2,7 @@ import pandas as pd
 from wasabi import msg
 
 from psycopmlutils.loaders.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
@@ -131,12 +132,12 @@ class LoadMedications:
         if wildcard_atc_at_end:
             sql = (
                 f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-                + f" WHERE left(lower(atc), {len(atc_code)}) = {atc_code.lower()}'"
+                + f" WHERE left(lower(atc), {len(atc_code)}) = '{atc_code.lower()}'"
             )
         else:
             sql = (
                 f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-                + f" WHERE lower(atc) = {atc_code.lower()}"
+                + f" WHERE lower(atc) = '{atc_code.lower()}'"
             )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
@@ -152,4 +153,13 @@ class LoadMedications:
             columns={
                 source_timestamp_col_name: "timestamp",
             },
+        )
+
+    @data_loaders.register("antipsychotics")
+    def antipsychotics() -> pd.DataFrame:
+        return LoadMedications.load(
+            atc_code="N05A",
+            load_prescribed=True,
+            load_administered=True,
+            wildcard_at_end=True,
         )
