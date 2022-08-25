@@ -32,7 +32,7 @@ class LoadMedications:
 
     def load(
         atc_code: str,
-        output_col_name: str = None,
+        output_col_name: str = "value",
         load_prescribed: bool = True,
         load_administered: bool = True,
         wildcard_at_end: bool = True,
@@ -61,8 +61,8 @@ class LoadMedications:
 
         if load_prescribed:
             msg.warn(
-                "Beware, there are missing prescriptions until september 2019. "
-                "Hereafter, data is complete.",
+                "Beware, there are missing prescriptions until september 2016. "
+                "Hereafter, data is complete. See the wiki (OBS: Medication) for more details.",
             )
 
         df = pd.DataFrame()
@@ -73,7 +73,7 @@ class LoadMedications:
                 source_timestamp_col_name="datotid_ordinationstart",
                 view="FOR_Medicin_ordineret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
-                wildcard_atc_at_end=wildcard_at_end,
+                wildcard_at_end=wildcard_at_end,
             )
             df = pd.concat([df, df_medication_prescribed])
 
@@ -83,7 +83,7 @@ class LoadMedications:
                 source_timestamp_col_name="datotid_administration_start",
                 view="FOR_Medicin_administreret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
-                wildcard_atc_at_end=wildcard_at_end,
+                wildcard_at_end=wildcard_at_end,
             )
             df = pd.concat([df, df_medication_administered])
 
@@ -104,7 +104,7 @@ class LoadMedications:
         source_timestamp_col_name: str,
         view: str,
         output_col_name: str = None,
-        wildcard_atc_at_end: bool = False,
+        wildcard_at_end: bool = False,
     ) -> pd.DataFrame:
         """Load the prescribed medications that match atc. If
         wildcard_atc_at_end, match from atc_code*. Aggregates all that match.
@@ -119,7 +119,7 @@ class LoadMedications:
                 "FOR_Medicin_ordineret_inkl_2021_feb2022"
             output_col_name (str, optional): Name of new column string. Defaults to
                 None.
-            wildcard_atc_at_end (bool, optional): Whether to match on atc_code* or
+            wildcard_at_end (bool, optional): Whether to match on atc_code* or
                 atc_code.
 
         Returns:
@@ -127,18 +127,16 @@ class LoadMedications:
                 output_col_name = 1
         """
 
-        view = f"[{view}]"
-
-        if wildcard_atc_at_end:
-            sql = (
-                f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-                + f" WHERE left(lower(atc), {len(atc_code)}) = '{atc_code.lower()}'"
-            )
+        if wildcard_at_end:
+            end_of_sql = "%"
         else:
-            sql = (
-                f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-                + f" WHERE lower(atc) = '{atc_code.lower()}'"
-            )
+            end_of_sql = ""  # noqa
+
+        view = f"[{view}]"
+        sql = (
+            f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
+            + " WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+        )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
