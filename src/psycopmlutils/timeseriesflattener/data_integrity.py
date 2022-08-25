@@ -27,7 +27,7 @@ def check_feature_sets_dir(
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a
     given directory containing train/val/test files. Splits indicates which
-    data splits to check. If nrows is provided, only 
+    data splits to check. If nrows is provided, only
     the first nrows are loaded - should only be used for debugging.
 
     The resulting reports are saved to a sub directory as .html files.
@@ -41,7 +41,11 @@ def check_feature_sets_dir(
     msg = Printer(timestamp=True)
     failed_checks = {}
 
-    ## check if file splits exist
+    ## check if file splits exist before running checks
+    for split in splits:
+        file = list(path.glob(f"*{split}*.csv"))
+        if not file or len(file) > 1:
+            raise ValueError(f"{split} split not found in {path}")
 
     out_dir = path / "deepchecks"
     if not out_dir.exists():
@@ -115,13 +119,17 @@ def check_feature_sets_dir(
             index_name="dw_ek_borger",
             datetime_name="timestamp",
         )
-        split_dict[split] = {"predictors": predictors, "outcomes": outcomes, "ds" : ds}
+        split_dict[split] = {"predictors": predictors, "outcomes": outcomes, "ds": ds}
 
-    suite_results = validation_suite.run(split_dict["train"]["ds"], split_dict["val"]["ds"])
+    suite_results = validation_suite.run(
+        split_dict["train"]["ds"], split_dict["val"]["ds"]
+    )
     suite_results.save_as_html(str(out_dir / "train_val_integrity.html"))
     failed_checks["train_val_integrity"] = get_name_of_failed_checks(suite_results)
-    
-    suite_results = validation_suite.run(split_dict["train"]["ds"], split_dict["test"]["ds"])
+
+    suite_results = validation_suite.run(
+        split_dict["train"]["ds"], split_dict["test"]["ds"]
+    )
     suite_results.save_as_html(str(out_dir / "train_test_integrity.html"))
     failed_checks["train_test_integrity"] = get_name_of_failed_checks(suite_results)
 
@@ -133,9 +141,7 @@ def check_feature_sets_dir(
         if split == "train":
             continue
         for outcome_column in train_outcomes:
-            msg.info(
-                f"Running split validation for train/{split} and {outcome_column}"
-            )
+            msg.info(f"Running split validation for train/{split} and {outcome_column}")
             train_ds = Dataset(
                 df=split_dict["train"]["predictors"],
                 index_name="dw_ek_borger",
@@ -150,10 +156,7 @@ def check_feature_sets_dir(
             )
             suite_results = label_split_check.run(train_ds, split_ds)
             suite_results.save_as_html(
-                str(
-                    outcome_checks_dir
-                    / f"train_{split}_{outcome_column}_check.html"
-                ),
+                str(outcome_checks_dir / f"train_{split}_{outcome_column}_check.html"),
             )
             failed_checks[
                 f"train_{split}_{outcome_column}_check"
