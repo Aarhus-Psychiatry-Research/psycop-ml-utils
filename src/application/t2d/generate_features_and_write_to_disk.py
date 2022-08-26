@@ -1,3 +1,4 @@
+import random
 import time
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from application.t2d.features_blood_samples import create_lab_feature_combinatio
 from application.t2d.features_diagnoses import create_diag_feature_combinations
 from application.t2d.features_medications import create_medication_feature_combinations
 from psycopmlutils.loaders.raw.test_feature_combinations import (
-    test_that_feature_combinations_return_values,
+    test_that_feature_combinations_return_correct_formatting,
 )
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.timeseriesflattener.data_integrity import (
@@ -26,8 +27,8 @@ if __name__ == "__main__":
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
-    RESOLVE_MULTIPLE = ["latest"]  # , "max", "min", "mean"]
-    LOOKBEHIND_DAYS = [365]  # , 730, 1825, 9999]
+    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
+    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
@@ -48,7 +49,14 @@ if __name__ == "__main__":
 
     PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
 
-    test_that_feature_combinations_return_values(predicator_dict=PREDICTOR_LIST, n=100)
+    # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
+    # at the end of the list.
+    random.shuffle(PREDICTOR_LIST)
+
+    test_that_feature_combinations_return_correct_formatting(
+        predictor_dict_list=PREDICTOR_LIST,
+        n=100,
+    )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
@@ -122,22 +130,12 @@ if __name__ == "__main__":
 
     # Create directory to store all files related to this run
     sub_dir = (
-        SAVE_PATH / current_user
-        + f"{current_user}_{len(PREDICTOR_LIST)}_{time.strftime('%Y_%m_%d_%H_%M')}"
+        SAVE_PATH
+        / f"{current_user}_{len(PREDICTOR_LIST)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
     )
     sub_dir.mkdir()
 
-    file_prefix = f"{current_user}_{len(PREDICTOR_LIST)}_psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
-
-    # Log poetry lock file and file prefix to WandB for reproducibility
-    feature_settings = {
-        "file_prefix": file_prefix,
-        "save_path": sub_dir / file_prefix,
-        "predictor_list": PREDICTOR_LIST,
-    }
-
-    run = wandb.init(project="psycop-feature-files", config=feature_settings)
-    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_LIST)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create splits
     for dataset_name in splits:
@@ -158,7 +156,7 @@ if __name__ == "__main__":
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
         # Version table with current date and time
-        filename = f"psycop_t2d_{file_prefix}_{dataset_name}.csv"
+        filename = f"{file_prefix}_{dataset_name}.csv"
         msg.info(f"Saving {filename} to disk")
 
         file_path = sub_dir / filename
@@ -166,6 +164,17 @@ if __name__ == "__main__":
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
+
+    # Log poetry lock file and file prefix to WandB for reproducibility
+    feature_settings = {
+        "file_prefix": file_prefix,
+        "save_path": sub_dir / file_prefix,
+        "predictor_list": PREDICTOR_LIST,
+    }
+
+    run = wandb.init(project="psycop-feature-files", config=feature_settings)
+    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+
     wandb.finish()
 
     ## Create data integrity report

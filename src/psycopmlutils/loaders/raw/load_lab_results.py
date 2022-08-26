@@ -31,7 +31,10 @@ class LoadLabResults:
         # msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
-    def _aggregate_blood_samples(blood_sample_ids: list) -> pd.DataFrame:
+    def _aggregate_blood_samples(
+        blood_sample_ids: list,
+        n: Optional[int] = None,
+    ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
         column.
 
@@ -42,7 +45,7 @@ class LoadLabResults:
             pd.DataFrame
         """
         dfs = [
-            LoadLabResults.blood_sample(blood_sample_id=f"{id}")
+            LoadLabResults.blood_sample(blood_sample_id=f"{id}", n=n)
             for id in blood_sample_ids
         ]
 
