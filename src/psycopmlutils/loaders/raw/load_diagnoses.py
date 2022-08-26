@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 
 import pandas as pd
 
-from psycopmlutils.loaders.raw.sql_load import sql_load
+from psycopmlutils.loaders.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
@@ -45,7 +45,7 @@ class LoadDiagnoses:
             LoadDiagnoses._load(
                 icd_code=icd_codes,
                 output_col_name=output_col_name,
-                wildcard_icd_10_end=wildcard_icd_10_end,
+                wildcard_icd_10=wildcard_icd_10_end,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
@@ -56,6 +56,7 @@ class LoadDiagnoses:
 
     def from_physical_visits(
         icd_code: str,
+        n: Optional[int] = None,
         output_col_name: Optional[str] = "value",
         wildcard_icd_10_end: Optional[bool] = False,
     ) -> pd.DataFrame:
@@ -66,6 +67,7 @@ class LoadDiagnoses:
         Args:
             icd_code (str): Substring to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc. # noqa: DAR102
             output_col_name (str, optional): Name of new column string. Defaults to "value".
+            n: Number of rows to return. Defaults to None.
             wildcard_icd_10_end (bool, optional): Whether to match on icd_code*. Defaults to False.
 
         Returns:
@@ -90,7 +92,8 @@ class LoadDiagnoses:
             LoadDiagnoses._load(
                 icd_code=icd_code,
                 output_col_name=output_col_name,
-                wildcard_icd_10_end=wildcard_icd_10_end,
+                wildcard_icd_10=wildcard_icd_10_end,
+                n=n,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
@@ -105,21 +108,26 @@ class LoadDiagnoses:
         source_timestamp_col_name: str,
         fct: str,
         output_col_name: Optional[str] = None,
-        wildcard_icd_10_end: Optional[bool] = True,
+        wildcard_icd_10: Optional[bool] = True,
+        n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load the visits that have diagnoses that match icd_code from the
         beginning of their adiagnosekode string. Aggregates all that match.
 
         Args:
             icd_code (Union[List[str], str]): Substring(s) to match diagnoses for. # noqa: DAR102
-                Matches any diagnoses, whether a-diagnosis, b-diagnosis etc.
+                Matches any diagnoses, whether a-diagnosis, b-diagnosis etc. If a list is passed, will
+                count a diagnosis as a match if any of the icd_codes in the list match.
             source_timestamp_col_name (str): Name of the timestamp column in the SQL
                 view.
             fct (str): Name of the SQL view to load from.
             output_col_name (str, optional): Name of new column string. Defaults to
                 None.
-            wildcard_icd_10_end (bool, optional): Whether to match on icd_code*.
-                Defaults to true.
+            wildcard_icd_10 (bool, optional): Whether to match on *icd_code*.
+                Defaults to true. Note that diagnosegruppestreng is formatted like A:DF123#B:DF789,
+                where the A-diagnosis is F123, B-diagnosis is F789 and supplementary diagnosis is F456.
+                A visit must have an A-diagnosis, but supplementary diagnoses are optional.
+            n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
@@ -127,33 +135,42 @@ class LoadDiagnoses:
         """
         fct = f"[{fct}]"
 
+        # Must be able to split a string like this:
+        #   A:DF431#+:ALFC3#B:DF329
+        # Which means that if wildcard_icd_10_end is False, we must match on icd_code# or icd_code followed by nothing.
+        # If it's true, we can match on icd_code*.
+
         # Handle if there are multiple ICD codes to count together.
         if isinstance(icd_code, list):
             match_col_sql_strings = []
 
             for code_str in icd_code:
-                if wildcard_icd_10_end:
-                    code_must_equal = (
-                        f"left(lower(diagnosegruppestreng), {len(code_str)})"
+                if wildcard_icd_10:
+                    match_col_sql_strings.append(
+                        f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}%'",
                     )
                 else:
-                    code_must_equal = "lower(diagnosegruppestreng)"
-
-                match_col_sql_strings.append(
-                    f"{code_must_equal} = '{code_str.lower()}'",
-                )
+                    match_col_sql_strings.append(
+                        f"lower(diagnosegruppestreng) REGEXP '%{code_str.lower()}(#)*'",
+                    )
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
-            if wildcard_icd_10_end:
-                code_must_equal = f"left(lower(diagnosegruppestreng), {len(code_str)})"
-            else:
-                code_must_equal = "lower(diagnosegruppestreng)"
+            if wildcard_icd_10:
+                match_col_sql_str = (
+                    f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}%'"
+                )
 
-            match_col_sql_str = f"{code_must_equal} = '{code_str.lower()}'"
+            else:
+                match_col_sql_str = (
+                    f"lower(diagnosegruppestreng) REGEXP '%{code_str.lower()}(#)*'"
+                )
+
+        if n is not None:
+            top_sql_str = f"TOP {n}"
 
         sql = (
-            f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
+            f"SELECT {top_sql_str} dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
             + f" FROM [fct].{fct} WHERE ({match_col_sql_str})"
         )
 
@@ -204,10 +221,11 @@ class LoadDiagnoses:
         )
 
     @data_loaders.register("sleep_apnea")
-    def sleep_apnea():
+    def sleep_apnea(n: int):
         return LoadDiagnoses.from_physical_visits(
             icd_code=["G473", "G4732"],
             wildcard_icd_10_end=False,
+            n=n,
         )
 
     @data_loaders.register("sleep_problems_unspecified")
