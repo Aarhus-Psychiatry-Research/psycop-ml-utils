@@ -43,9 +43,9 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
+    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
 
-    event_times = psycopmlutils.loaders.LoadOutcome.t2d()
+    event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
     msg.info(f"Generating {len(PREDICTOR_LIST)} features")
 
@@ -68,7 +68,6 @@ if __name__ == "__main__":
             lookahead_days=lookahead_days,
             resolve_multiple="max",
             fallback=0,
-            outcome_df_values_col_name="value",
             new_col_name="t2d",
             incident=True,
             dichotomous=True,
@@ -115,11 +114,15 @@ if __name__ == "__main__":
     # Version table with current date and time
     # prefix with user name to avoid potential clashes
     current_user = Path().home().name
-    file_prefix = current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create directory to store all files related to this run
-    sub_dir = SAVE_PATH / current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
+    sub_dir = (
+        SAVE_PATH / current_user
+        + f"{current_user}_{len(PREDICTOR_LIST)}_{time.strftime('%Y_%m_%d_%H_%M')}"
+    )
     sub_dir.mkdir()
+
+    file_prefix = f"{current_user}_{len(PREDICTOR_LIST)}_psycop_t2d_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Log poetry lock file and file prefix to WandB for reproducibility
     feature_settings = {
@@ -144,7 +147,7 @@ if __name__ == "__main__":
         ]
 
         msg.warn(
-            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge",
+            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
@@ -161,4 +164,4 @@ if __name__ == "__main__":
     wandb.finish()
 
     ## Create data integrity report
-    check_feature_set_integrity_from_dir(sub_dir, splits=["train", "val", "test"])
+    check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
