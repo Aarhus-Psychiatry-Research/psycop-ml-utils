@@ -11,6 +11,7 @@ class LoadDiagnoses:
         icd_codes: List[str],
         output_col_name: str,
         wildcard_icd_10_end: Optional[bool] = False,
+        n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load all diagnoses matching any icd_code in icd_codes. Create
         output_col_name and set to 1.
@@ -19,6 +20,7 @@ class LoadDiagnoses:
             icd_codes (List[str]): List of icd_codes. # noqa: DAR102
             output_col_name (str): Output column name
             wildcard_icd_10_end (bool, optional): Whether to match on icd_codes* or icd_codes. Defaults to False.
+            n: Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame
@@ -46,6 +48,7 @@ class LoadDiagnoses:
                 icd_code=icd_codes,
                 output_col_name=output_col_name,
                 wildcard_icd_10=wildcard_icd_10_end,
+                n=n,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
@@ -170,15 +173,12 @@ class LoadDiagnoses:
 
                 match_col_sql_str = " OR ".join(match_col_sql_strings)
 
-        if n is not None:
-            top_sql_str = f"TOP {n}"
-
         sql = (
-            f"SELECT {top_sql_str} dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
+            f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
             + f" FROM [fct].{fct} WHERE ({match_col_sql_str})"
         )
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         if output_col_name is None:
             output_col_name = icd_code
@@ -194,38 +194,42 @@ class LoadDiagnoses:
         )
 
     @data_loaders.register("essential_hypertension")
-    def essential_hypertension():
+    def essential_hypertension(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="I109",
             wildcard_icd_10=False,
+            n=n,
         )
 
     @data_loaders.register("hyperlipidemia")
-    def hyperlipidemia():
+    def hyperlipidemia(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=[
                 "E780",
                 "E785",
             ],  # Only these two, as the others are exceedingly rare
             wildcard_icd_10=False,
+            n=n,
         )
 
     @data_loaders.register("liverdisease_unspecified")
-    def liverdisease_unspecified():
+    def liverdisease_unspecified(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="K769",
             wildcard_icd_10=False,
+            n=n,
         )
 
     @data_loaders.register("polycystic_ovarian_syndrome")
-    def polycystic_ovarian_syndrome():
+    def polycystic_ovarian_syndrome(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="E282",
             wildcard_icd_10=False,
+            n=n,
         )
 
     @data_loaders.register("sleep_apnea")
-    def sleep_apnea(n: int):
+    def sleep_apnea(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["G473", "G4732"],
             wildcard_icd_10=False,
@@ -233,8 +237,9 @@ class LoadDiagnoses:
         )
 
     @data_loaders.register("sleep_problems_unspecified")
-    def sleep_problems_unspecified():
+    def sleep_problems_unspecified(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="G479",
             wildcard_icd_10=False,
+            n=n,
         )
