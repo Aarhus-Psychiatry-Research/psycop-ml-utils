@@ -20,8 +20,8 @@ if __name__ == "__main__":
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
-    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
-    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
+    RESOLVE_MULTIPLE = ["latest"]  # , "max", "min", "mean"]
+    LOOKBEHIND_DAYS = [365]  # , 730, 1825, 9999]
 
     LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,

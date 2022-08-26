@@ -138,7 +138,7 @@ class LoadDiagnoses:
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
-            match_col_sql_str = f"left(lower(diagnosegruppestreng), {len(code_str)}) = '{code_str.lower()}'"
+            match_col_sql_str = f"left(lower(diagnosegruppestreng), {len(icd_code)}) = '{icd_code.lower()}'"
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
