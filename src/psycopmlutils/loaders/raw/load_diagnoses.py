@@ -58,7 +58,7 @@ class LoadDiagnoses:
         icd_code: str,
         n: Optional[int] = None,
         output_col_name: Optional[str] = "value",
-        wildcard_icd_10_end: Optional[bool] = False,
+        wildcard_icd_10: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load diagnoses from all physical visits. If icd_code is a list, will
         aggregate as one column (e.g. ["E780", "E785"] into a
@@ -92,7 +92,7 @@ class LoadDiagnoses:
             LoadDiagnoses._load(
                 icd_code=icd_code,
                 output_col_name=output_col_name,
-                wildcard_icd_10=wildcard_icd_10_end,
+                wildcard_icd_10=wildcard_icd_10,
                 n=n,
                 **kwargs,
             )
@@ -150,21 +150,25 @@ class LoadDiagnoses:
                         f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}%'",
                     )
                 else:
-                    match_col_sql_strings.append(
-                        f"lower(diagnosegruppestreng) REGEXP '%{code_str.lower()}(#)*'",
-                    )
+                    for suffix in ["#%", ""]:
+                        match_col_sql_strings.append(
+                            f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}{suffix}'",
+                        )
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
             if wildcard_icd_10:
                 match_col_sql_str = (
-                    f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}%'"
+                    f"lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}%'"
                 )
 
             else:
-                match_col_sql_str = (
-                    f"lower(diagnosegruppestreng) REGEXP '%{code_str.lower()}(#)*'"
-                )
+                match_col_sql_strings = [
+                    f"lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}{suffix}'"
+                    for suffix in ["#%", ""]
+                ]
+
+                match_col_sql_str = " OR ".join(match_col_sql_strings)
 
         if n is not None:
             top_sql_str = f"TOP {n}"
@@ -193,7 +197,7 @@ class LoadDiagnoses:
     def essential_hypertension():
         return LoadDiagnoses.from_physical_visits(
             icd_code="I109",
-            wildcard_icd_10_end=False,
+            wildcard_icd_10=False,
         )
 
     @data_loaders.register("hyperlipidemia")
@@ -203,28 +207,28 @@ class LoadDiagnoses:
                 "E780",
                 "E785",
             ],  # Only these two, as the others are exceedingly rare
-            wildcard_icd_10_end=False,
+            wildcard_icd_10=False,
         )
 
     @data_loaders.register("liverdisease_unspecified")
     def liverdisease_unspecified():
         return LoadDiagnoses.from_physical_visits(
             icd_code="K769",
-            wildcard_icd_10_end=False,
+            wildcard_icd_10=False,
         )
 
     @data_loaders.register("polycystic_ovarian_syndrome")
     def polycystic_ovarian_syndrome():
         return LoadDiagnoses.from_physical_visits(
             icd_code="E282",
-            wildcard_icd_10_end=False,
+            wildcard_icd_10=False,
         )
 
     @data_loaders.register("sleep_apnea")
     def sleep_apnea(n: int):
         return LoadDiagnoses.from_physical_visits(
             icd_code=["G473", "G4732"],
-            wildcard_icd_10_end=False,
+            wildcard_icd_10=False,
             n=n,
         )
 
@@ -232,5 +236,5 @@ class LoadDiagnoses:
     def sleep_problems_unspecified():
         return LoadDiagnoses.from_physical_visits(
             icd_code="G479",
-            wildcard_icd_10_end=False,
+            wildcard_icd_10=False,
         )
