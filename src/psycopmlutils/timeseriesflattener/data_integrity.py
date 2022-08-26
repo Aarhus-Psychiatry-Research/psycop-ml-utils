@@ -21,7 +21,6 @@ from deepchecks.tabular.checks import (
     StringLengthOutOfBounds,
     TrainTestLabelDrift,
 )
-from deepchecks.tabular.suites import data_integrity
 from wasabi import Printer
 
 from psycopmlutils.loaders.flattened import load_split_outcomes, load_split_predictors
@@ -86,7 +85,7 @@ def check_feature_set_integrity_from_dir(
 
         # Running checks that do not require a label
         integ_suite = pruned_data_integrity_checks(
-            timeout=0
+            timeout=0,
         )  # timeout=0 removes timeout
         suite_results = integ_suite.run(ds)
         suite_results.save_as_html(str(out_dir / "data_integrity.html"))
@@ -186,7 +185,7 @@ def check_feature_set_integrity_from_dir(
 
 
 def pruned_data_integrity_checks(**kwargs) -> Suite:
-    """Deepchecks data integrity suite with only wanted checks
+    """Deepchecks data integrity suite with only wanted checks.
 
     Returns:
         Suite: a deepchecks Suite
