@@ -47,7 +47,7 @@ class LoadDiagnoses:
             LoadDiagnoses._load(
                 icd_code=icd_codes,
                 output_col_name=output_col_name,
-                wildcard_icd_10=wildcard_icd_10_end,
+                wildcard_icd_code=wildcard_icd_10_end,
                 n=n,
                 **kwargs,
             )
@@ -61,7 +61,7 @@ class LoadDiagnoses:
         icd_code: str,
         n: Optional[int] = None,
         output_col_name: Optional[str] = "value",
-        wildcard_icd_10: Optional[bool] = False,
+        wildcard_icd_code: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load diagnoses from all physical visits. If icd_code is a list, will
         aggregate as one column (e.g. ["E780", "E785"] into a
@@ -71,11 +71,12 @@ class LoadDiagnoses:
             icd_code (str): Substring to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc. # noqa: DAR102
             output_col_name (str, optional): Name of new column string. Defaults to "value".
             n: Number of rows to return. Defaults to None.
-            wildcard_icd_10_end (bool, optional): Whether to match on icd_code*. Defaults to False.
+            wildcard_icd_code (bool, optional): Whether to match on icd_code*. Defaults to False.
 
         Returns:
             pd.DataFrame
         """
+
         diagnoses_source_table_info = {
             "lpr3": {
                 "fct": "FOR_LPR3kontakter_psyk_somatik_inkl_2021",
@@ -95,8 +96,7 @@ class LoadDiagnoses:
             LoadDiagnoses._load(
                 icd_code=icd_code,
                 output_col_name=output_col_name,
-                wildcard_icd_10=wildcard_icd_10,
-                n=n,
+                wildcard_icd_code=wildcard_icd_code,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
@@ -111,7 +111,7 @@ class LoadDiagnoses:
         source_timestamp_col_name: str,
         fct: str,
         output_col_name: Optional[str] = None,
-        wildcard_icd_10: Optional[bool] = True,
+        wildcard_icd_code: Optional[bool] = True,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load the visits that have diagnoses that match icd_code from the
@@ -126,11 +126,9 @@ class LoadDiagnoses:
             fct (str): Name of the SQL view to load from.
             output_col_name (str, optional): Name of new column string. Defaults to
                 None.
-            wildcard_icd_10 (bool, optional): Whether to match on *icd_code*.
-                Defaults to true. Note that diagnosegruppestreng is formatted like A:DF123#B:DF789,
-                where the A-diagnosis is F123, B-diagnosis is F789 and supplementary diagnosis is F456.
-                A visit must have an A-diagnosis, but supplementary diagnoses are optional.
-            n (int, optional): Number of rows to return. Defaults to None.
+            wildcard_icd_code (bool, optional): Whether to match on icd_code*.
+                Defaults to true.
+            n: Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
@@ -148,30 +146,25 @@ class LoadDiagnoses:
             match_col_sql_strings = []
 
             for code_str in icd_code:
-                if wildcard_icd_10:
+                if wildcard_icd_code:
                     match_col_sql_strings.append(
                         f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}%'",
                     )
                 else:
-                    for suffix in ["#%", ""]:
-                        match_col_sql_strings.append(
-                            f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}{suffix}'",
-                        )
+                    code_must_equal = "lower(diagnosegruppestreng)"
+
+                match_col_sql_strings.append(
+                    f"{code_must_equal} = '{code_str.lower()}'",
+                )
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
-            if wildcard_icd_10:
-                match_col_sql_str = (
-                    f"lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}%'"
-                )
-
+            if wildcard_icd_code:
+                code_must_equal = f"left(lower(diagnosegruppestreng), {len(code_str)})"
             else:
-                match_col_sql_strings = [
-                    f"lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}{suffix}'"
-                    for suffix in ["#%", ""]
-                ]
+                code_must_equal = "lower(diagnosegruppestreng)"
 
-                match_col_sql_str = " OR ".join(match_col_sql_strings)
+            match_col_sql_str = f"{code_must_equal} = '{code_str.lower()}'"
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
@@ -197,7 +190,7 @@ class LoadDiagnoses:
     def essential_hypertension(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="I109",
-            wildcard_icd_10=False,
+            wildcard_icd_code=False,
             n=n,
         )
 
@@ -208,7 +201,7 @@ class LoadDiagnoses:
                 "E780",
                 "E785",
             ],  # Only these two, as the others are exceedingly rare
-            wildcard_icd_10=False,
+            wildcard_icd_code=False,
             n=n,
         )
 
@@ -216,7 +209,7 @@ class LoadDiagnoses:
     def liverdisease_unspecified(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="K769",
-            wildcard_icd_10=False,
+            wildcard_icd_code=False,
             n=n,
         )
 
@@ -224,7 +217,7 @@ class LoadDiagnoses:
     def polycystic_ovarian_syndrome(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="E282",
-            wildcard_icd_10=False,
+            wildcard_icd_code=False,
             n=n,
         )
 
@@ -232,7 +225,7 @@ class LoadDiagnoses:
     def sleep_apnea(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["G473", "G4732"],
-            wildcard_icd_10=False,
+            wildcard_icd_code=False,
             n=n,
         )
 
@@ -240,6 +233,6 @@ class LoadDiagnoses:
     def sleep_problems_unspecified(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="G479",
-            wildcard_icd_10=False,
+            wildcard_icd_code=False,
             n=n,
         )

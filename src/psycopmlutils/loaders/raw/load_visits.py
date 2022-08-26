@@ -8,7 +8,7 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 
 class LoadVisits:
     def physical_visits_to_psychiatry(
-        where_clause: Optional[str] = None,
+        where_clause: Optional[str] = None,  # noqa: DAR102
         where_separator: Optional[str] = "AND",
         n: Optional[int] = None,
     ) -> pd.DataFrame:

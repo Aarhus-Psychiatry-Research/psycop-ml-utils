@@ -40,6 +40,7 @@ class LoadLabResults:
 
         Args:
             blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes. # noqa: DAR102
+            n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame

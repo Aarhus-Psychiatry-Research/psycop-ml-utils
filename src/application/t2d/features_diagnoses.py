@@ -1,10 +1,12 @@
+from typing import Optional
+
 from psycopmlutils.timeseriesflattener import create_feature_combinations
 
 
 def create_diag_feature_combinations(
     lookbehind_days=[365, 730, 1825, 9999],
     resolve_multiple=["mean", "max", "min"],
-    fallback: any = 0,
+    fallback: Optional[any] = 0,
 ):
     """Create diagnosis feature combinations.
 

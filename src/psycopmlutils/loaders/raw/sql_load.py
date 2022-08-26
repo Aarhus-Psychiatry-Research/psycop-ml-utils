@@ -25,6 +25,7 @@ def sql_load(
         chunksize (int, optional): Defaults to 1000.
         format_timestamp_cols_to_datetime (bool, optional): Whether to format all
             columns with "datotid" in their name as pandas datetime. Defaults to true.
+        n (int, optional): Defaults to None. If specified, only returns the first n rows.
 
     Returns:
         Union[pd.DataFrame, Generator[pd.DataFrame]]: DataFrame or generator of DataFrames
