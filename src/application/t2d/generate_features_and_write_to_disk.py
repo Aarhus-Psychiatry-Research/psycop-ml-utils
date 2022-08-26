@@ -11,8 +11,8 @@ import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
 from application.t2d.features_diagnoses import create_diag_feature_combinations
 from application.t2d.features_medications import create_medication_feature_combinations
-from psycopmlutils.loaders.raw.test_feature_combinations import (
-    test_that_feature_combinations_return_correct_formatting,
+from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
+    check_feature_combinations_return_correct_formatting,
 )
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.timeseriesflattener.data_integrity import (
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # at the end of the list.
     random.shuffle(PREDICTOR_LIST)
 
-    test_that_feature_combinations_return_correct_formatting(
+    check_feature_combinations_return_correct_formatting(
         predictor_dict_list=PREDICTOR_LIST,
         n=100,
     )
