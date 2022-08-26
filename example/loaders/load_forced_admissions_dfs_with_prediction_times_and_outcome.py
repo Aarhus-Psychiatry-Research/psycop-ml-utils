@@ -6,8 +6,8 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadForced:
-    @data_loaders.register("forced_admissions_admissions")
-    def forced_admissions_admissions():
+    @data_loaders.register("forced_admissions_inpatient")
+    def forced_admissions_inpatient():
 
         df = sql_load(
             "SELECT * FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Indlagt_2y_0f_2015-2021]",
@@ -20,20 +20,20 @@ class LoadForced:
         df.rename(
             columns={
                 "datotid_slut": "timestamp",
-                "six_month": "forced_admission_withn_6_months",
+                "six_month": "forced_admission_within_6_months",
             },
             inplace=True,
         )
         df["timestamp"] = pd.to_datetime(df["timestamp"])
 
         msg.good(
-            "Finished loading data frame for forced admissions with prediction times and outcome for all outpatient visits",
+            "Finished loading data frame for forced admissions with prediction times and outcome for all inpatient admissions",
         )
 
         return df.reset_index(drop=True)
 
-    @data_loaders.register("forced_admissions_outpatient_visits")
-    def forced_admnissions_outpatient_visits():
+    @data_loaders.register("forced_admissions_outpatient")
+    def forced_admnissions_outpatient():
 
         df = sql_load(
             "SELECT * FROM [fct].[psycop_fa_outcomes_all_disorders_tvangsindlaeg_Ambulant_2y_0f_2015-2021]",
@@ -46,20 +46,20 @@ class LoadForced:
         df.rename(
             columns={
                 "datotid_predict": "timestamp",
-                "six_month": "forced_admission_withn_6_months",
+                "six_month": "forced_admission_within_6_months",
             },
             inplace=True,
         )
         df["timestamp"] = pd.to_datetime(df["timestamp"])
 
         msg.good(
-            "Finished loading data frame for forced admissions with prediction times and outcome for all admissions",
+            "Finished loading data frame for forced admissions with prediction times and outcome for all outpatient visits",
         )
 
         return df.reset_index(drop=True)
 
 
 if __name__ == "__main__":
-    df = LoadForced.forced_admissions_admissions()
+    df = LoadForced.forced_admissions_inpatient()
 
     pass
