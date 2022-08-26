@@ -1,7 +1,7 @@
 import pandas as pd
 from wasabi import msg
 
-from psycopmlutils.loaders.sql_load import sql_load
+from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 

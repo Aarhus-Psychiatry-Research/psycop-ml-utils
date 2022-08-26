@@ -30,6 +30,3 @@ jobs:
 
       - name: Run darglint on src
         run: darglint src
-
-      - name: Run darglint on tests
-        run: darglint tests
