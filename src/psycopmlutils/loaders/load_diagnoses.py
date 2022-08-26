@@ -128,8 +128,6 @@ class LoadDiagnoses:
         """
         fct = f"[{fct}]"
 
-        # Add a % at the end of the SQL match as a wildcard, so e.g. F20 matches F200.
-
         if isinstance(icd_code, list):
             match_col_sql_strings = []
 
