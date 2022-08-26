@@ -15,7 +15,7 @@ class LoadVisits:
         """Load physical visits.
 
         Args:
-            where_clause (Optional[str], optional): Extra where-clauses to add to the SQL call. E.g. dw_ek_borger = 1. Defaults to None.
+            where_clause (Optional[str], optional): Extra where-clauses to add to the SQL call. E.g. dw_ek_borger = 1. Defaults to None. # noqa: DAR102
             where_separator (Optional[str], optional): Separator between where-clauses. Defaults to "AND".
             n (Optional[int], optional): Number of rows to return. Defaults to None.
 
