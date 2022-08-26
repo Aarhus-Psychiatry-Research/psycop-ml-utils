@@ -6,12 +6,19 @@ from deepchecks.core.suite import SuiteResult
 from deepchecks.tabular import Dataset, Suite
 from deepchecks.tabular.checks import (
     CategoryMismatchTrainTest,
+    DataDuplicates,
     DatasetsSizeComparison,
+    FeatureFeatureCorrelation,
     FeatureLabelCorrelation,
     FeatureLabelCorrelationChange,
     IdentifierLabelCorrelation,
     IndexTrainTestLeakage,
+    IsSingleValue,
+    MixedDataTypes,
+    MixedNulls,
     NewLabelTrainTest,
+    OutlierSampleDetection,
+    StringLengthOutOfBounds,
     TrainTestLabelDrift,
 )
 from deepchecks.tabular.suites import data_integrity
@@ -78,7 +85,9 @@ def check_feature_set_integrity_from_dir(
         )
 
         # Running checks that do not require a label
-        integ_suite = data_integrity(timeout=0)  # timeout=0 removes timeout
+        integ_suite = pruned_data_integrity_checks(
+            timeout=0
+        )  # timeout=0 removes timeout
         suite_results = integ_suite.run(ds)
         suite_results.save_as_html(str(out_dir / "data_integrity.html"))
         failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
@@ -174,6 +183,30 @@ def check_feature_set_integrity_from_dir(
         msg.good(f"All data checks done! Saved to {out_dir}")
         if len(failed_checks.keys()) > 0:
             msg.warn(f"Failed checks: {failed_checks}")
+
+
+def pruned_data_integrity_checks(**kwargs) -> Suite:
+    """Deepchecks data integrity suite with only wanted checks
+
+    Returns:
+        Suite: a deepchecks Suite
+    """
+    return Suite(
+        "Data Integrity Suite",
+        IsSingleValue(**kwargs).add_condition_not_single_value(),
+        MixedNulls(**kwargs).add_condition_different_nulls_less_equal_to(),
+        MixedDataTypes(**kwargs).add_condition_rare_type_ratio_not_in_range(),
+        DataDuplicates(**kwargs).add_condition_ratio_less_or_equal(),
+        StringLengthOutOfBounds(
+            **kwargs
+        ).add_condition_ratio_of_outliers_less_or_equal(),
+        OutlierSampleDetection(**kwargs),
+        FeatureLabelCorrelation(**kwargs).add_condition_feature_pps_less_than(),
+        FeatureFeatureCorrelation(
+            **kwargs
+        ).add_condition_max_number_of_pairs_above_threshold(),
+        IdentifierLabelCorrelation(**kwargs).add_condition_pps_less_or_equal(),
+    )
 
 
 def label_integrity_checks() -> Suite:
