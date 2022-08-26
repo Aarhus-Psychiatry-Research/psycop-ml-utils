@@ -127,15 +127,30 @@ class LoadDiagnoses:
         """
         fct = f"[{fct}]"
 
+        # Handle if there are multiple ICD codes to count together.
         if isinstance(icd_code, list):
             match_col_sql_strings = []
 
             for code_str in icd_code:
-                match_col_sql_strings += f"left(lower(diagnosegruppestreng), {len(code_str)}) = '{code_str.lower()}'"
+                if wildcard_icd_10_end:
+                    code_must_equal = (
+                        f"left(lower(diagnosegruppestreng), {len(code_str)})"
+                    )
+                else:
+                    code_must_equal = "lower(diagnosegruppestreng)"
+
+                match_col_sql_strings.append(
+                    f"{code_must_equal} = '{code_str.lower()}'",
+                )
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
-            match_col_sql_str = f"left(lower(diagnosegruppestreng), {len(icd_code)}) = '{icd_code.lower()}'"
+            if wildcard_icd_10_end:
+                code_must_equal = f"left(lower(diagnosegruppestreng), {len(code_str)})"
+            else:
+                code_must_equal = "lower(diagnosegruppestreng)"
+
+            match_col_sql_str = f"{code_must_equal} = '{code_str.lower()}'"
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
