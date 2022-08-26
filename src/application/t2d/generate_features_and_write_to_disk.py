@@ -10,6 +10,9 @@ import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
 from application.t2d.features_diagnoses import create_diag_feature_combinations
 from application.t2d.features_medications import create_medication_feature_combinations
+from psycopmlutils.loaders.raw.test_feature_combinations import (
+    test_that_feature_combinations_return_values,
+)
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.timeseriesflattener.data_integrity import (
     check_feature_set_integrity_from_dir,
@@ -44,6 +47,8 @@ if __name__ == "__main__":
     )
 
     PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
+
+    test_that_feature_combinations_return_values(predicator_dict=PREDICTOR_LIST, n=100)
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
