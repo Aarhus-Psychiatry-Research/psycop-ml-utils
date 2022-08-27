@@ -187,6 +187,9 @@ def check_feature_set_integrity_from_dir(
 def pruned_data_integrity_checks(**kwargs) -> Suite:
     """Deepchecks data integrity suite with only wanted checks.
 
+    Args:
+        **kwargs: keyword arguments to be passed to all checks.
+
     Returns:
         Suite: a deepchecks Suite
     """
