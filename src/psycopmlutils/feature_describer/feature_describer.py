@@ -5,6 +5,11 @@ import numpy as np
 import pandas as pd
 
 from psycopmlutils.utils import generate_feature_colname
+from src.application.t2d.features_blood_samples import create_lab_feature_combinations
+from src.application.t2d.features_diagnoses import create_diag_feature_combinations
+from src.application.t2d.features_medications import (
+    create_medication_feature_combinations,
+)
 
 UNICODE_HIST = {
     0: " ",
@@ -74,9 +79,7 @@ def generate_feature_description_row(
     d["Lookbehind days"] = predictor_dict["lookbehind_days"]
     d["Resolve multiple strategy"] = predictor_dict["resolve_multiple"]
 
-    d["Fallback strategy"] = (
-        "np.nan" if np.isnan(predictor_dict["fallback"]) else predictor_dict["fallback"]
-    )
+    d["Fallback strategy"] = predictor_dict["fallback"]
 
     d["Proportion using fallback"] = get_value_proportion(series=series, value=np.nan)
 
@@ -153,6 +156,42 @@ def _find_nearest(array, value):
 
 
 if __name__ == "__main__":
-    path = Path(
-        "C:/shared_resources/feature_sets/t2d/adminmanber_260_features_2022_08_26_14_10/adminmanber_psycop_t2d_260_features_2022_08_26_14_10_train.csv",
+    feature_set_dir = Path(
+        "C:/shared_resources/feature_sets/t2d/adminmanber_260_features_2022_08_26_14_10/",
     )
+
+    feature_set_path = (
+        feature_set_dir
+        / "adminmanber_psycop_t2d_260_features_2022_08_26_14_10_train.csv"
+    )
+    out_dir = feature_set_dir / "feature_description"
+
+    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
+    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
+
+    LAB_PREDICTORS = create_lab_feature_combinations(
+        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+    )
+
+    DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
+        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+    )
+
+    MEDICATION_PREDICTORS = create_medication_feature_combinations(
+        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        RESOLVE_MULTIPLE=["count"],
+    )
+
+    PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
+
+    features = pd.read_csv(feature_set_path)
+
+    feature_description_df = generate_feature_description_df(
+        df=features,
+        predictor_list=PREDICTOR_LIST,
+    )
+
+    # Output dataframe as word document
+    feature_description_df.to_csv(out_dir / "train_description.csv")
