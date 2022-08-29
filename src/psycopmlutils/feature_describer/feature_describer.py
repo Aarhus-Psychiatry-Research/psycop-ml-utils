@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -149,3 +150,9 @@ def _find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
+
+
+if __name__ == "__main__":
+    path = Path(
+        "C:/shared_resources/feature_sets/t2d/adminmanber_260_features_2022_08_26_14_10/adminmanber_psycop_t2d_260_features_2022_08_26_14_10_train.csv",
+    )
