@@ -10,7 +10,7 @@ from pandas import DataFrame
 from wasabi import msg
 
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
-from psycopmlutils.utils import data_loaders
+from psycopmlutils.utils import data_loaders, generate_feature_colname
 
 
 class FlattenedDataset:
@@ -580,7 +580,13 @@ class FlattenedDataset:
         if new_col_name is None:
             raise ValueError("No name for new colum")
 
-        full_col_str = f"{new_col_name_prefix}_{new_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+        full_col_str = generate_feature_colname(
+            prefix=new_col_name_prefix,
+            out_col_name=new_col_name,
+            interval_days=interval_days,
+            resolve_multiple=resolve_multiple,
+            fallback=fallback,
+        )
 
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
