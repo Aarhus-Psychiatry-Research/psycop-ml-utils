@@ -26,8 +26,8 @@ def convert_cols_with_matching_colnames_to_datetime(
 ) -> DataFrame:
     """Convert columns that contain colname_substr in their name to datetimes
     Args:
-        df (DataFrame): The df to convert
-        colname_substr (str): Substring to match on.
+        df (DataFrame): The df to convert. # noqa: DAR101
+        colname_substr (str): Substring to match on. # noqa: DAR101
 
     Returns:
         DataFrame: The converted df
@@ -51,13 +51,16 @@ def assert_flattened_outcome_as_expected(
 ):
     """Run tests from string representations of dataframes.
     Args:
-        prediction_times_df_str (str): A string-representation of prediction-times
-        outcome_df_str (str): A string-representation of an outcome df
-        lookahead_days (float): _description_
-        expected_flattened_values (List): A list of the expected values in the value column of the flattened df
-        resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
+        prediction_times_df_str (str): A string-representation of prediction-times.
+        outcome_df_str (str): A string-representation of an outcome df.
+        lookahead_days (float): How far ahead from the prediction time to look for
+            outcomes.
+        expected_flattened_values (List): A list of the expected values in the value # noqa: DAR101
+            column of the flattened df.
+        resolve_multiple (Callable): How to handle multiple values within the lookahead window.
+            Takes a a function that takes a list as an argument and returns a float.
         values_colname (str, optional): Column name for the new values. Defaults to "val".
-        fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+        fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0. # noqa: DAR101
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
@@ -101,11 +104,13 @@ def assert_flattened_predictor_as_expected(
     Args:
         prediction_times_df_str (str): A string-representation of prediction-times df
         predictor_df_str (str): A string-representation of the predictor df
-        lookbehind_days (float): How far to look behind
+        lookbehind_days (float): How far to look behind.
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
-        expected_flattened_values (List): A list of the expected values in the value column of the flattened df
+        expected_flattened_values (List): A list of the expected values in the value column of the flattened df.
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+
+        # noqa: DAR101
     Example:
         >>> prediction_times_df_str =  '''dw_ek_borger,timestamp,
         >>>                            1,2021-12-31 00:00:00
@@ -149,15 +154,17 @@ def assert_flattened_values_as_expected(
     """Run tests from string representations of dataframes.
 
     Args:
-        Args:
-        prediction_times_df_str (str): A string-representation of prediction-times df
-        predictor_df_str (str): A string-representation of the predictor df
+        prediction_times_str (str): A string-representation of prediction-times df.
+        event_times_str (str): A string-representation of an event-times df.
         direction (str): Whether to look ahead or behind
         interval_days (float): How far to look in direction
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
-        expected_flattened_vals (List): A list of the expected values in the value column of the flattened df
+        expected_flattened_values (List): A list of the expected values in the value column of the flattened df
         values_colname (str, optional): Column name for the new values. Defaults to "val".
         fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+
+    Raises:
+        ValueError: If direction is neither ahead nor behind.
     """
 
     df_prediction_times = str_to_df(prediction_times_str)
