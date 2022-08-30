@@ -13,11 +13,11 @@ class LoadCoercion:
         reason_for_coercion: Optional[str] = None,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
-        """Load coarcion data.
+        """Load coercion data. Defaults to entire coercion data view.
 
         Args:
-            coercion_type (str): Type of coercion, e.g. 'tvangsindlæggelse', 'bæltefiksering'. # noqa: DAR102
-            reason_for_coercion (str): Reason for coercion, e.g. 'farlighed'. # noqa: DAR102
+            coercion_type (str): Type of coercion, e.g. 'tvangsindlæggelse', 'bæltefiksering'. Defaults to None. # noqa: DAR102
+            reason_for_coercion (str): Reason for coercion, e.g. 'farlighed'. Defaults to None.
             n: Number of rows to return. Defaults to None.
 
         Returns:
@@ -46,19 +46,18 @@ class LoadCoercion:
             inplace=True,
         )
 
-        # msg.good(f"Loaded {print_str}")
         return df.reset_index(drop=True)
 
     def _aggregate_coercion(
-        coercion_types_lists: list,
+        coercion_types_list: list,
         subset_by: Optional[int] = "both",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple types of coercion with multiple reasons into one
-        data frame column.
+        column.
 
         Args:
-            coercion_types_lists (list): List of lists each containing a string with coercion_type and a string with reason_for_coercion # noqa: DAR102
+            coercion_types_list (list): List of lists each containing a string with coercion_type and a string with reason_for_coercion # noqa: DAR102
             subset_by (str): String indicating whether data is being subset based on coercion type, reason or both
             n (int, optional): Number of rows to return. Defaults to None.
 
@@ -79,19 +78,19 @@ class LoadCoercion:
                     reason_for_coercion=id[1],
                     n=n,
                 )
-                for id in coercion_types_lists
+                for id in coercion_types_list
             ]
 
         if subset_by == "type":
             dfs = [
                 LoadCoercion.coercion(coercion_type=id[0], n=n)
-                for id in coercion_types_lists
+                for id in coercion_types_list
             ]
 
         if subset_by == "reason":
             dfs = [
                 LoadCoercion.coercion(reason_for_coercion=id[0], n=n)
-                for id in coercion_types_lists
+                for id in coercion_types_list
             ]
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
@@ -108,6 +107,15 @@ class LoadCoercion:
         ]
 
         return LoadCoercion._aggregate_coercion(
-            coercion_types_lists=coercion_types_lists,
+            coercion_types_list=coercion_types_lists,
+            subset_by="both",
+            n=n,
+        )
+
+    @data_loaders.register("bælte")
+    def bælte(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion(
+            coercion_type="Bælte",
             n=n,
         )
