@@ -42,7 +42,7 @@ def create_feature_description_from_dir(
 
     feature_description_df = generate_feature_description_df(
         df=train_predictors,
-        predictor_list=PREDICTOR_LIST,
+        predictor_list=predictor_dicts,
     )
 
     feature_description_df.to_csv(path / "train_feature_description.csv", index=False)
