@@ -7,6 +7,7 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadCoercion:
+    @data_loaders.register("coercion")
     def coercion(
         coercion_type: Optional[str] = None,
         reason_for_coercion: Optional[str] = None,
@@ -50,6 +51,7 @@ class LoadCoercion:
 
     def _aggregate_coercion(
         coercion_types_lists: list,
+        subset_by: Optional[int] = "both",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple types of coercion with multiple reasons into one
@@ -57,15 +59,40 @@ class LoadCoercion:
 
         Args:
             coercion_types_lists (list): List of lists each containing a string with coercion_type and a string with reason_for_coercion # noqa: DAR102
+            subset_by (str): String indicating whether data is being subset based on coercion type, reason or both
             n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame
         """
-        dfs = [
-            LoadCoercion.coercion(coercion_type=id[0], reason_for_coercion=id[1], n=n)
-            for id in coercion_types_lists
-        ]
+        subset_choices = ["type", "reason", "both"]
+
+        if subset_by not in subset_choices:
+            raise ValueError(
+                "Invalid subset_by argument. Expected one of: %s" % subset_choices,
+            )
+
+        if subset_by == "both":
+            dfs = [
+                LoadCoercion.coercion(
+                    coercion_type=id[0],
+                    reason_for_coercion=id[1],
+                    n=n,
+                )
+                for id in coercion_types_lists
+            ]
+
+        if subset_by == "type":
+            dfs = [
+                LoadCoercion.coercion(coercion_type=id[0], n=n)
+                for id in coercion_types_lists
+            ]
+
+        if subset_by == "reason":
+            dfs = [
+                LoadCoercion.coercion(reason_for_coercion=id[0], n=n)
+                for id in coercion_types_lists
+            ]
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
