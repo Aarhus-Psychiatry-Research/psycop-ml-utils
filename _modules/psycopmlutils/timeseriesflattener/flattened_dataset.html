@@ -223,7 +223,7 @@
 <span class="kn">from</span> <span class="nn">wasabi</span> <span class="kn">import</span> <span class="n">msg</span>
 
 <span class="kn">from</span> <span class="nn">psycopmlutils.timeseriesflattener.resolve_multiple_functions</span> <span class="kn">import</span> <span class="n">resolve_fns</span>
-<span class="kn">from</span> <span class="nn">psycopmlutils.utils</span> <span class="kn">import</span> <span class="n">data_loaders</span>
+<span class="kn">from</span> <span class="nn">psycopmlutils.utils</span> <span class="kn">import</span> <span class="n">data_loaders</span><span class="p">,</span> <span class="n">generate_feature_colname</span>
 
 
 <div class="viewcode-block" id="FlattenedDataset"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset">[docs]</a><span class="k">class</span> <span class="nc">FlattenedDataset</span><span class="p">:</span>
@@ -793,7 +793,13 @@
         <span class="k">if</span> <span class="n">new_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No name for new colum&quot;</span><span class="p">)</span>
 
-        <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">new_col_name_prefix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">interval_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">full_col_str</span> <span class="o">=</span> <span class="n">generate_feature_colname</span><span class="p">(</span>
+            <span class="n">prefix</span><span class="o">=</span><span class="n">new_col_name_prefix</span><span class="p">,</span>
+            <span class="n">out_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
+            <span class="n">interval_days</span><span class="o">=</span><span class="n">interval_days</span><span class="p">,</span>
+            <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
+            <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="c1"># Resolve values_df if not already a dataframe.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values_df</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
