@@ -10,10 +10,10 @@ from features_medications import create_medication_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders.raw  # noqa
-from psycopmlutils.timeseriesflattener import FlattenedDataset
-from psycopmlutils.timeseriesflattener.data_integrity import (
+from psycopmlutils.data_checks.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
+from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
