@@ -37,19 +37,19 @@ def create_feature_description_from_dir(
     """
     msg = Printer(timestamp=True)
 
-    msg.info("Loading train data")
     for split in splits:
-        msg.info(f"Creating feature description for {split}")
+        msg.info(f"{split}: Creating feature description")
 
         predictors = load_split_predictors(path=path, split=split, include_id=False)
 
-        msg.info("Generating feature description dataframe")
+        msg.info(f"{split}: Generating feature description dataframe")
         feature_description_df = generate_feature_description_df(
             df=predictors,
             predictor_list=predictor_dicts,
         )
 
-        msg.info("Writing feature description to disk")
+        msg.info("{split}: Writing feature description to disk")
+
         feature_description_df.to_csv(
             path / "{split}_feature_description.csv",
             index=False,
