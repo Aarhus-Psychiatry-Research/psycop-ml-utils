@@ -160,3 +160,4 @@ pytest-coverage.txt
 *test_load_data.py
 wandb
 poetry.lock
+*.html
