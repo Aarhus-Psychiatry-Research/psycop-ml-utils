@@ -4,17 +4,22 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from features_diagnoses import create_diag_feature_combinations
-from features_medications import create_medication_feature_combinations
 from wasabi import msg
 
 import psycopmlutils.loaders.raw  # noqa
+from psycopmlutils.feature_describer.feature_describer import (
+    create_feature_description_from_dir,
+)
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.timeseriesflattener.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
 from psycopmlutils.utils import FEATURE_SETS_PATH
 from src.application.t2d.features_blood_samples import create_lab_feature_combinations
+from src.application.t2d.features_diagnoses import create_diag_feature_combinations
+from src.application.t2d.features_medications import (
+    create_medication_feature_combinations,
+)
 
 if __name__ == "__main__":
     # set path to save features to
@@ -159,4 +164,6 @@ if __name__ == "__main__":
     wandb.finish()
 
     ## Create data integrity report
-    check_feature_set_integrity_from_dir(sub_dir, splits=["train", "val", "test"])
+    check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
+
+    create_feature_description_from_dir(path=sub_dir, predictor_dicts=PREDICTOR_LIST)

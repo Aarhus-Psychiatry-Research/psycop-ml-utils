@@ -1,18 +1,15 @@
 from pathlib import Path
 
-import pandas as pd
-from wasabi import Printer
-
-from application.t2d.features_blood_samples import create_lab_feature_combinations
-from application.t2d.features_diagnoses import create_diag_feature_combinations
-from application.t2d.features_medications import create_medication_feature_combinations
 from psycopmlutils.feature_describer.feature_describer import (
-    generate_feature_description_df,
+    create_feature_description_from_dir,
+)
+from src.application.t2d.features_blood_samples import create_lab_feature_combinations
+from src.application.t2d.features_diagnoses import create_diag_feature_combinations
+from src.application.t2d.features_medications import (
+    create_medication_feature_combinations,
 )
 
 if __name__ == "__main__":
-    msg = Printer(timestamp=True)
-
     feature_set_dir = Path(
         "C:/shared_resources/feature_sets/t2d/adminmanber_260_features_2022_08_26_14_10/",
     )
@@ -45,15 +42,7 @@ if __name__ == "__main__":
 
     PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
 
-    msg.info("Loading features")
-    features = pd.read_csv(feature_set_path, nrows=10_000)
-
-    msg.info("Generating feature description df")
-    feature_description_df = generate_feature_description_df(
-        df=features,
+    create_feature_description_from_dir(
+        path=feature_set_dir,
         predictor_dicts=PREDICTOR_LIST,
     )
-
-    # Output dataframe as word document
-    msg.info("Outputting feature description df")
-    feature_description_df.to_csv(out_dir / "train_description.csv")
