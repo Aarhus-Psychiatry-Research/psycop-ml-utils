@@ -24,17 +24,19 @@ class LoadCoercion:
         """
         view = "[FOR_tvang_alt_hele_kohorten_inkl_2021]"
 
-        if coercion_type is None and reason_for_coercion is None:
+        sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view}"
 
-            sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view}"
+        if coercion_type and reason_for_coercion is None:
 
-        elif coercion_type is not None and reason_for_coercion is None:
+            sql += f"WHERE typetekst_sei = '{coercion_type}'"
 
-            sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view} WHERE typetekst_sei = '{coercion_type}'"
+        if coercion_type is None and reason_for_coercion:
 
-        else:
+            sql += f"WHERE begrundtekst_sei = '{reason_for_coercion}'"
 
-            sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view} WHERE typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
+        if coercion_type and reason_for_coercion:
+
+            sql += f"WHERE typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
