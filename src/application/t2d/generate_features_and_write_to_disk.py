@@ -7,6 +7,9 @@ import wandb
 from wasabi import msg
 
 import psycopmlutils.loaders.raw  # noqa
+from psycopmlutils.feature_describer.feature_describer import (
+    create_feature_description_from_dir,
+)
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.timeseriesflattener.data_integrity import (
     check_feature_set_integrity_from_dir,
@@ -161,4 +164,6 @@ if __name__ == "__main__":
     wandb.finish()
 
     ## Create data integrity report
-    check_feature_set_integrity_from_dir(sub_dir, splits=["train", "val", "test"])
+    check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
+
+    create_feature_description_from_dir(path=sub_dir, predictor_dicts=PREDICTOR_LIST)

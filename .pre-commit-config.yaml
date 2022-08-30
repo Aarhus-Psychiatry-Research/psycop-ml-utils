@@ -34,3 +34,8 @@ repos:
     hooks:
       - id: flake8
         args: [--config, .flake8]
+
+  - repo: https://github.com/terrencepreilly/darglint
+    rev: v1.8.1
+    hooks:
+    - id: darglint

@@ -4,6 +4,7 @@ from typing import Dict, List
 import numpy as np
 import pandas as pd
 
+from psycopmlutils.loaders.flattened.local_feature_loaders import load_split_predictors
 from psycopmlutils.utils import generate_feature_colname
 from src.application.t2d.features_blood_samples import create_lab_feature_combinations
 from src.application.t2d.features_diagnoses import create_diag_feature_combinations
@@ -24,6 +25,27 @@ UNICODE_HIST = {
 }
 
 HIST_BINS = 8
+
+
+def create_feature_description_from_dir(
+    path: Path,
+    predictor_dicts: List[Dict[str, str]],
+) -> pd.DataFrame:
+    """Write a csv with feature descriptions in the directory.
+
+    Args:
+        path (Path): Path to directory with data frames.
+        predictor_dicts (List[Dict[str, str]]): List of dictionaries with predictor information.
+    """
+
+    train_predictors = load_split_predictors(path=path, split="train", include_id=False)
+
+    feature_description_df = generate_feature_description_df(
+        df=train_predictors,
+        predictor_list=PREDICTOR_LIST,
+    )
+
+    feature_description_df.to_csv(path / "train_feature_description.csv", index=False)
 
 
 def generate_feature_description_df(
@@ -95,8 +117,7 @@ def generate_feature_description_row(
 
 
 def get_value_proportion(series, value):
-    """Get the proportion of values in the column that are equal to the value
-    argument."""
+    """Get proportion of series that is equal to the value argument."""
     if np.isnan(value):
         return round(series.isna().mean(), 2)
     else:
