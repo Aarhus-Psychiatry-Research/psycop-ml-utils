@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -74,7 +74,24 @@ def generate_synth_data(
     return df
 
 
-def generate_data_columns(predictors, n_samples, df):
+def generate_data_columns(
+    predictors: Iterable[Dict],
+    n_samples: int,
+    df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Generate a dataframe with columns from the predictors iterable.
+
+    Args:
+        predictors (Iterable[Dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
+        n_samples (int): Number of rows to generate.
+        df (pd.DataFrame): Dataframe to append to
+
+    Raises:
+        ValueError: If column_type isn't either uniform_float, uniform_int, normal or datetime_uniform.
+
+    Returns:
+        pd.DataFrame: The generated dataframe.
+    """
     for col_name, col_props in predictors.items():
         # np.nan objects turn into "nan" strings in the real life dataframe.
         # imitate this in the synthetic data as well.
@@ -146,21 +163,6 @@ if __name__ == "__main__":
             "fallback": np.nan,
         },
     }
-
-    PREDICTOR_DICTS = [
-        {
-            "predictor_df": "hba1c",
-            "lookbehind_days": 100,
-            "resolve_multiple": "max",
-            "fallback": 0,
-        },
-        {
-            "predictor_df": "hdl",
-            "lookbehind_days": 100,
-            "resolve_multiple": "max",
-            "fallback": "np.nan",
-        },
-    ]
 
     df = generate_synth_data(
         predictors=column_specifications,
