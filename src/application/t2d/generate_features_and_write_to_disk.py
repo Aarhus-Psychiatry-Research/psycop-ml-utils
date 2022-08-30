@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from wasabi import msg
+from wasabi import Printer
 
 import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
@@ -24,14 +24,17 @@ from psycopmlutils.timeseriesflattener.data_integrity import (
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
+    msg = Printer(timestamp=True)
     # set path to save features to
     SAVE_PATH = FEATURE_SETS_PATH / "t2d"
 
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
-    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
-    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
+    RESOLVE_MULTIPLE = ["max"]
+    #  , "min", "mean", "latest"]
+    LOOKBEHIND_DAYS = [365]
+    # , 730, 1825, 9999]
 
     LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
@@ -50,7 +53,7 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
+    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS  # + LAB_PREDICTORS + MEDICATION_PREDICTORS
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
