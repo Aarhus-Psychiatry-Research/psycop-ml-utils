@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from features_blood_samples import create_lab_feature_combinations
 from features_diagnoses import create_diag_feature_combinations
 from features_medications import create_medication_feature_combinations
 from wasabi import msg
@@ -15,6 +14,7 @@ from psycopmlutils.timeseriesflattener.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
 from psycopmlutils.utils import FEATURE_SETS_PATH
+from src.application.t2d.features_blood_samples import create_lab_feature_combinations
 
 if __name__ == "__main__":
     # set path to save features to
