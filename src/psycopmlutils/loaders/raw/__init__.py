@@ -1,3 +1,6 @@
+from .check_feature_combination_formatting import (  # noqa
+    check_feature_combinations_return_correct_formatting,
+)
 from .load_demographic import LoadDemographic  # noqa
 from .load_diagnoses import LoadDiagnoses  # noqa
 from .load_ids import LoadIDs  # noqa

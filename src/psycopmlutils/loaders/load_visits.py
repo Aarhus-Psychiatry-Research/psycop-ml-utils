@@ -8,16 +8,14 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 
 class LoadVisits:
     def physical_visits_to_psychiatry(
-        where_clause: Optional[str] = None,  # noqa: DAR102
+        where_clause: Optional[str] = None,
         where_separator: Optional[str] = "AND",
-        n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load physical visits.
 
         Args:
             where_clause (Optional[str], optional): Extra where-clauses to add to the SQL call. E.g. dw_ek_borger = 1. Defaults to None. # noqa: DAR102
             where_separator (Optional[str], optional): Separator between where-clauses. Defaults to "AND".
-            n (Optional[int], optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: Dataframe with all physical visits to psychiatry. Has columns dw_ek_borger and timestamp.
@@ -67,7 +65,7 @@ class LoadVisits:
             if where_clause is not None:
                 sql += f" {where_separator} {where_clause}"
 
-            df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+            df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
             df.rename(columns={meta["datetime_col"]: "timestamp"}, inplace=True)
 
             dfs.append(df)
