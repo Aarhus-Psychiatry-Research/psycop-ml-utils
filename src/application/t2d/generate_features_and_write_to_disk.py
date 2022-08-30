@@ -1,3 +1,4 @@
+import random
 import time
 from pathlib import Path
 
@@ -7,19 +8,20 @@ import wandb
 from wasabi import msg
 
 import psycopmlutils.loaders.raw  # noqa
+from application.t2d.features_blood_samples import create_lab_feature_combinations
+from application.t2d.features_diagnoses import create_diag_feature_combinations
+from application.t2d.features_medications import create_medication_feature_combinations
 from psycopmlutils.feature_describer.feature_describer import (
     create_feature_description_from_dir,
+)
+from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
+    check_feature_combinations_return_correct_formatting,
 )
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.timeseriesflattener.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
 from psycopmlutils.utils import FEATURE_SETS_PATH
-from src.application.t2d.features_blood_samples import create_lab_feature_combinations
-from src.application.t2d.features_diagnoses import create_diag_feature_combinations
-from src.application.t2d.features_medications import (
-    create_medication_feature_combinations,
-)
 
 if __name__ == "__main__":
     # set path to save features to
@@ -37,18 +39,29 @@ if __name__ == "__main__":
     )
 
     DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
-        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        resolve_multiple=RESOLVE_MULTIPLE,
+        lookbehind_days=LOOKBEHIND_DAYS,
+        fallback=0,
     )
 
     MEDICATION_PREDICTORS = create_medication_feature_combinations(
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
         RESOLVE_MULTIPLE=["count"],
+        fallback=0,
     )
 
-    PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
+    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
 
-    event_times = psycopmlutils.loaders.LoadOutcome.t2d()
+    # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
+    # at the end of the list.
+    random.shuffle(PREDICTOR_LIST)
+
+    check_feature_combinations_return_correct_formatting(
+        predictor_dict_list=PREDICTOR_LIST,
+        n=100,
+    )
+
+    event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
     msg.info(f"Generating {len(PREDICTOR_LIST)} features")
 
@@ -71,7 +84,6 @@ if __name__ == "__main__":
             lookahead_days=lookahead_days,
             resolve_multiple="max",
             fallback=0,
-            outcome_df_values_col_name="value",
             new_col_name="t2d",
             incident=True,
             dichotomous=True,
@@ -118,21 +130,15 @@ if __name__ == "__main__":
     # Version table with current date and time
     # prefix with user name to avoid potential clashes
     current_user = Path().home().name
-    file_prefix = current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create directory to store all files related to this run
-    sub_dir = SAVE_PATH / current_user + f"_{time.strftime('%Y_%m_%d_%H_%M')}"
+    sub_dir = (
+        SAVE_PATH
+        / f"{current_user}_{len(PREDICTOR_LIST)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
+    )
     sub_dir.mkdir()
 
-    # Log poetry lock file and file prefix to WandB for reproducibility
-    feature_settings = {
-        "file_prefix": file_prefix,
-        "save_path": sub_dir / file_prefix,
-        "predictor_list": PREDICTOR_LIST,
-    }
-
-    run = wandb.init(project="psycop-feature-files", config=feature_settings)
-    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_LIST)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create splits
     for dataset_name in splits:
@@ -147,13 +153,13 @@ if __name__ == "__main__":
         ]
 
         msg.warn(
-            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge",
+            f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
         split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
 
         # Version table with current date and time
-        filename = f"psycop_t2d_{file_prefix}_{dataset_name}.csv"
+        filename = f"{file_prefix}_{dataset_name}.csv"
         msg.info(f"Saving {filename} to disk")
 
         file_path = sub_dir / filename
@@ -161,6 +167,17 @@ if __name__ == "__main__":
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
+
+    # Log poetry lock file and file prefix to WandB for reproducibility
+    feature_settings = {
+        "file_prefix": file_prefix,
+        "save_path": sub_dir / file_prefix,
+        "predictor_list": PREDICTOR_LIST,
+    }
+
+    run = wandb.init(project="psycop-feature-files", config=feature_settings)
+    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+
     wandb.finish()
 
     ## Create data integrity report

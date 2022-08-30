@@ -10,16 +10,14 @@ from psycopmlutils.utils import data_loaders
 class LoadMedications:
     def aggregate_medications(
         output_col_name: str,
-        atc_code_prefixes: list[str],
-        n: Optional[int] = None,
+        atc_code_prefixes: list,
     ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
         column.
 
         Args:
-            output_col_name (str): Name for new column.  # noqa: DAR102
-            atc_code_prefixes (list[str]): List of atc_codes.
-            n (int, optional): Number of atc_codes to aggregate. Defaults to None.
+            output_col_name (str): Name for new column. # noqa: DAR102
+            atc_code_prefixes (list): List of atc_codes.
 
         Returns:
             pd.DataFrame
@@ -28,7 +26,6 @@ class LoadMedications:
             LoadMedications.load(
                 blood_sample_id=f"{id}",
                 output_col_name=output_col_name,
-                n=n,
             )
             for id in atc_code_prefixes
         ]
@@ -37,11 +34,10 @@ class LoadMedications:
 
     def load(
         atc_code: str,
-        output_col_name: Optional[str] = None,
+        output_col_name: Optional[str] = "value",
         load_prescribed: Optional[bool] = True,
         load_administered: Optional[bool] = True,
         wildcard_icd_code: Optional[bool] = True,
-        n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load medications. Aggregates prescribed/administered if both true.
         If wildcard_icd_code, match from atc_code*. Aggregates all that match.
@@ -60,7 +56,6 @@ class LoadMedications:
                 Defaults to True.
             wildcard_icd_code (bool, optional): Whether to match on atc_code* or
                 atc_code.
-            n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: Cols: dw_ek_borger, timestamp, {atc_code_prefix}_value = 1
@@ -81,7 +76,6 @@ class LoadMedications:
                 view="FOR_Medicin_ordineret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
-                n=n,
             )
             df = pd.concat([df, df_medication_prescribed])
 
@@ -92,7 +86,6 @@ class LoadMedications:
                 view="FOR_Medicin_administreret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
-                n=n,
             )
             df = pd.concat([df, df_medication_administered])
 
@@ -109,12 +102,11 @@ class LoadMedications:
         return df.reset_index(drop=True)
 
     def _load_one_source(
-        atc_code: str,
+        atc_code: str,  # noqa: DAR102
         source_timestamp_col_name: str,
         view: str,
         output_col_name: Optional[str] = None,
         wildcard_icd_code: Optional[bool] = False,
-        n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load the prescribed medications that match atc. If
         wildcard_icd_code, match from atc_code*. Aggregates all that match.
@@ -131,7 +123,6 @@ class LoadMedications:
                 None.
             wildcard_icd_code (bool, optional): Whether to match on atc_code* or
                 atc_code.
-            n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
@@ -146,10 +137,10 @@ class LoadMedications:
         view = f"[{view}]"
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-            + f" WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+            + " WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
         )
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
 
         if output_col_name is None:
             output_col_name = atc_code
@@ -165,11 +156,10 @@ class LoadMedications:
         )
 
     @data_loaders.register("antipsychotics")
-    def antipsychotics(n: Optional[int] = None) -> pd.DataFrame:
+    def antipsychotics() -> pd.DataFrame:
         return LoadMedications.load(
-            atc_code="N05A",
+            atc_code="N05A",  # noqa: DAR102
             load_prescribed=True,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
         )
