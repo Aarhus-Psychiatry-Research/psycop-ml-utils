@@ -8,8 +8,8 @@ from psycopmlutils.utils import data_loaders
 
 class LoadCoercion:
     def coercion(
-        coercion_type: str,
-        reason_for_coercion: str,
+        coercion_type: Optional[str] = None,
+        reason_for_coercion: Optional[str] = None,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load coarcion data.
@@ -24,7 +24,17 @@ class LoadCoercion:
         """
         view = "[FOR_tvang_alt_hele_kohorten_inkl_2021]"
 
-        sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view} WHERE typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
+        if coercion_type is None and reason_for_coercion is None:
+
+            sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view}"
+
+        elif coercion_type is not None and reason_for_coercion is None:
+
+            sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view} WHERE typetekst_sei = '{coercion_type}'"
+
+        else:
+
+            sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view} WHERE typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
