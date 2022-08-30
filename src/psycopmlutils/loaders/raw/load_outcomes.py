@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 from wasabi import msg
 
@@ -7,7 +9,7 @@ from psycopmlutils.utils import data_loaders
 
 class LoadOutcome:
     @data_loaders.register("t2d")
-    def t2d():
+    def t2d(n: Optional[int] = None) -> pd.DataFrame:
         # msg.info("Loading t2d event times")
 
         df = sql_load(
@@ -15,6 +17,7 @@ class LoadOutcome:
             database="USR_PS_FORSK",
             chunksize=None,
             format_timestamp_cols_to_datetime=True,
+            n=n,
         )
         df["value"] = 1
 
@@ -22,11 +25,12 @@ class LoadOutcome:
         return df.reset_index(drop=True)
 
     @data_loaders.register("any_diabetes")
-    def any_diabetes():
+    def any_diabetes(n: Optional[int] = None):
         df = sql_load(
             "SELECT * FROM [fct].[psycop_t2d_first_diabetes_any]",
             database="USR_PS_FORSK",
             chunksize=None,
+            n=n,
         )
 
         df = df[["dw_ek_borger", "datotid_first_diabetes_any"]]

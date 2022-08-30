@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pandas as pd
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
@@ -6,11 +8,12 @@ from psycopmlutils.utils import data_loaders
 
 class LoadDemographic:
     @data_loaders.register("birthdays")
-    def birthdays():
+    def birthdays(n: Optional[int] = None) -> pd.DataFrame:
         view = "[FOR_kohorte_demografi_inkl_2021_feb2022]"
+
         sql = f"SELECT dw_ek_borger, foedselsdato FROM [fct].{view}"
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         # Typically handled by sql_load, but because foedselsdato doesn't contain "datotid" in its name,
         # We must handle it manually here
@@ -22,11 +25,12 @@ class LoadDemographic:
         return df.reset_index(drop=True)
 
     @data_loaders.register("sex_female")
-    def sex_female():
+    def sex_female(n: Optional[int] = None) -> pd.DataFrame:
         view = "[FOR_kohorte_demografi_inkl_2021_feb2022]"
+
         sql = f"SELECT dw_ek_borger, koennavn FROM [fct].{view}"
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         df.loc[df["koennavn"] == "Mand", "koennavn"] = False
         df.loc[df["koennavn"] == "Kvinde", "koennavn"] = True
