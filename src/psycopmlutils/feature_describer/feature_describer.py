@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -26,25 +26,34 @@ HIST_BINS = 8
 def create_feature_description_from_dir(
     path: Path,
     predictor_dicts: List[Dict[str, str]],
+    splits: Optional[List[str]] = ["train"],
 ) -> pd.DataFrame:
     """Write a csv with feature descriptions in the directory.
 
     Args:
         path (Path): Path to directory with data frames.
         predictor_dicts (List[Dict[str, str]]): List of dictionaries with predictor information.
+        splits (List[str]): List of splits to include in the description. Defaults to ["train"].
     """
     msg = Printer(timestamp=True)
 
     msg.info("Loading train data")
-    train_predictors = load_split_predictors(path=path, split="train", include_id=False)
+    for split in splits:
+        msg.info(f"Creating feature description for {split}")
 
-    msg.info("Generating feature description dataframe")
-    feature_description_df = generate_feature_description_df(
-        df=train_predictors,
-        predictor_list=predictor_dicts,
-    )
+        predictors = load_split_predictors(path=path, split=split, include_id=False)
 
-    feature_description_df.to_csv(path / "train_feature_description.csv", index=False)
+        msg.info("Generating feature description dataframe")
+        feature_description_df = generate_feature_description_df(
+            df=predictors,
+            predictor_list=predictor_dicts,
+        )
+
+        msg.info("Writing feature description to disk")
+        feature_description_df.to_csv(
+            path / "{split}_feature_description.csv",
+            index=False,
+        )
 
 
 def generate_feature_description_df(
@@ -96,7 +105,7 @@ def generate_feature_description_row(
 
     d = {}
 
-    d["Raw values"] = predictor_dict["predictor_df"]
+    d["Predictor df"] = predictor_dict["predictor_df"]
     d["Lookbehind days"] = predictor_dict["lookbehind_days"]
     d["Resolve multiple strategy"] = predictor_dict["resolve_multiple"]
 
