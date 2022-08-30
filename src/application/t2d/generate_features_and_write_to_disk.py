@@ -11,6 +11,9 @@ import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
 from application.t2d.features_diagnoses import create_diag_feature_combinations
 from application.t2d.features_medications import create_medication_feature_combinations
+from psycopmlutils.feature_describer.feature_describer import (
+    create_feature_description_from_dir,
+)
 from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
     check_feature_combinations_return_correct_formatting,
 )
@@ -179,3 +182,5 @@ if __name__ == "__main__":
 
     ## Create data integrity report
     check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
+
+    create_feature_description_from_dir(path=sub_dir, predictor_dicts=PREDICTOR_LIST)

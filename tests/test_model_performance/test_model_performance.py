@@ -60,7 +60,6 @@ def binary_score_mapping():
 
 
 def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_mapping):
-
     res = ModelPerformance.performance_metrics_from_df(
         multiclass_df,
         id_col_name="id",
@@ -76,7 +75,6 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
 
 
 def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
-
     res = ModelPerformance.performance_metrics_from_df(
         df=binary_df,
         id_col_name="id",
@@ -97,7 +95,6 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
 
 
 def test_binary_transform_from_dataframe_with_float(binary_float_df):
-
     res = ModelPerformance.performance_metrics_from_df(
         df=binary_float_df,
         metadata_col_names="all",
