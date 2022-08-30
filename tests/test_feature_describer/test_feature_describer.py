@@ -35,8 +35,7 @@ def df():
 
 
 def test_load_dataset(df):
-    """Load the synthetic data set and check that it has the correct number of
-    rows and columns."""
+    """Check loading of synthetic dataset."""
     assert df.shape[0] == 10_000
 
 

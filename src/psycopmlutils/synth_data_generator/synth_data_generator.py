@@ -18,20 +18,12 @@ def generate_synth_data(
     noise_mean_sd: Optional[Tuple[float, float]] = (0, 1),
 ) -> pd.DataFrame:
     """Takes a dict and generates synth data from it.
+
     Args:
-        predictors (Dict): A dict representing each column of shape:
-            {"col_name":
-                {
-                "column_type": str,
-                "output_type": ["float"|"int"],
-                "min": int,
-                "max": int,
-                }
-            }
-        outcome_column_name: str, name of the outcome column
+        predictors (Dict): A dict representing each column. Key is col_name (str), values are column_type (str), output_type (float|int), min (int), max(int).
+        outcome_column_name (str): Name of the outcome column.
         n_samples (int): Number of samples (rows) to generate.
-        logistic_outcome_model (str): The statistical model used to generate outcome
-            values, e.g. specified as'1*col_name+1*col_name2'
+        logistic_outcome_model (str): The statistical model used to generate outcome values, e.g. specified as'1*col_name+1*col_name2'.
         intercept (float, optional): The intercept of the logistic outcome model. Defaults to 0.
         na_prob (float, optional): Probability of changing a value in a predictor column
             to NA.
@@ -39,6 +31,7 @@ def generate_synth_data(
         prob_outcome (float): Probability of a given row receiving "1" for the outcome.
         noise_mean_sd (Tuple[float, float], optional): mean and sd of the noise.
             Increase SD to obtain more uncertain models.
+
     Returns:
         pd.DataFrame: The synthetic dataset
     """
