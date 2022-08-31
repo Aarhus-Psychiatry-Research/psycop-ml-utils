@@ -49,7 +49,7 @@ class LoadCoercion:
 
         return df.reset_index(drop=True)
 
-    def _aggregate_coercion(
+    def _concatenate_coercion(
         coercion_types_list: List[Dict[str, str]],
         subset_by: Optional[int] = "both",
         n: Optional[int] = None,
@@ -113,7 +113,7 @@ class LoadCoercion:
             },
         ]
 
-        return LoadCoercion._aggregate_coercion(
+        return LoadCoercion._concatenate_coercion(
             coercion_types_list=coercion_types_lists,
             subset_by="both",
             n=n,
