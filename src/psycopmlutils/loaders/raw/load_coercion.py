@@ -89,8 +89,8 @@ class LoadCoercion:
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
-    @data_loaders.register("coercion_dangerous")
-    def coercion_dangerous(n: Optional[int] = None) -> pd.DataFrame:
+    @data_loaders.register("coercion_farlighed")
+    def coercion_farlighed(n: Optional[int] = None) -> pd.DataFrame:
 
         coercion_types_lists = [
             {
