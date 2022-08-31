@@ -40,7 +40,7 @@ def validate_raw_data(
     failed_checks = {}
 
     savepath = (
-        RAW_DATA_VALIDATION_PATH / {feature_set_name} / time.strftime("%Y_%m_%d_%H_%M")
+        RAW_DATA_VALIDATION_PATH / feature_set_name / time.strftime("%Y_%m_%d_%H_%M")
     )
     if not savepath.exists():
         savepath.mkdir(parents=True)
@@ -57,7 +57,6 @@ def validate_raw_data(
         suite_results.save_as_html(str(savepath / "data_integrity.html"))
         failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
     msg.good("Finished data integrity checks.")
-    suite_results.save_as_html(str(savepath / "deepchecks.html"))
 
     # Data description
     data_columns = [
@@ -67,9 +66,12 @@ def validate_raw_data(
         data_description = [
             generate_column_description(df[col]) for col in data_columns
         ]
+
     msg.good("Finished data description.")
 
     data_description = pd.DataFrame(data_description)
+    if timestamp_col_name:
+        data_description["prop NaT"] = calculate_prop_not_a_time(df[timestamp_col_name])
     data_description.to_csv(savepath / "data_description.csv", index=False)
     # Highlight rows with large deviations from the baseline
     data_description = data_description.style.apply(
@@ -79,12 +81,20 @@ def validate_raw_data(
         variation_column=deviation_variation_column,
         axis=1,
     )
-    to_html_pretty(
+
+    data_description_html = df_to_pretty_html(
         data_description,
-        "data_description.html",
         title=f"Data description - {feature_set_name}",
-        subtitle=f"Yellow rows indicate large deviations from the {deviation_baseline_column}\n(99th/1st percentile within +- {deviation_variation_column} * threshold={deviation_threshold}) from the baseline.)",
+        subtitle=f"Yellow rows indicate large deviations from the {deviation_baseline_column}\n(99th/1st percentile within {deviation_baseline_column} +- {deviation_variation_column} * threshold={deviation_threshold}) from the baseline.)",
     )
+    with open(savepath / "data_description.html", "w", encoding="utf-8") as f:
+        f.write(HTML_TEMPLATE1 + data_description_html + HTML_TEMPLATE2)
+
+    msg.info(f"All files saved to {savepath}")
+    if failed_checks:
+        print(
+            f"The following checks failed - look through the generated reports!\n{failed_checks}"
+        )
 
 
 def generate_column_description(series: pd.Series) -> dict:
@@ -114,6 +124,15 @@ def generate_column_description(series: pd.Series) -> dict:
         d[f"{percentile}th_percentile"] = round(series.quantile(percentile), 1)
 
     return d
+
+
+def calculate_prop_not_a_time(series: pd.Series):
+    """Calculates the propotion of rows that are NaT
+
+    Args:
+        series (pd.Series): Series of timestamps
+    """
+    return series.isna().sum() / len(series)
 
 
 def median_absolute_deviation(series: pd.Series) -> np.array:
@@ -162,9 +181,8 @@ def highlight_large_deviation(
     ]
 
 
-def to_html_pretty(
+def df_to_pretty_html(
     df: pd.DataFrame,
-    filename: str,
     title: Optional[str] = None,
     subtitle: Optional[str] = None,
 ) -> None:
@@ -173,7 +191,6 @@ def to_html_pretty(
 
     Args:
         df (pd.DataFrame): Dataframe to write.
-        filename (str): File name to write to.
         title (Optional[str], optional): Title for the table. Defaults to None.
         subtitle (Optional[str], optional): Subtitle for the table. Defaults to None.
     """
@@ -185,8 +202,7 @@ def to_html_pretty(
         ht += "<h3> %s </h3>\n" % subtitle
     ht += df.to_html(classes="wide", escape=False)
 
-    with open(filename, "w") as f:
-        f.write(HTML_TEMPLATE1 + ht + HTML_TEMPLATE2)
+    return ht
 
 
 # Templates for saving dataframes as pretty html tables
