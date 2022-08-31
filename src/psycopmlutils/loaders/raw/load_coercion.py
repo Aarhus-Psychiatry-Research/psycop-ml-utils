@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, List, Optional
 
 import pandas as pd
 
@@ -7,18 +7,19 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadCoercion:
-    @data_loaders.register("coercion")
-    def coercion(
+    @data_loaders.register("coercion_duration")
+    def coercion_duration(
         coercion_type: Optional[str] = None,
         reason_for_coercion: Optional[str] = None,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
-        """Load coercion data. Defaults to entire coercion data view.
+        """Load coercion data. By default returns entire coercion data view
+        with duration in hours as the value column.
 
         Args:
             coercion_type (str): Type of coercion, e.g. 'tvangsindlæggelse', 'bæltefiksering'. Defaults to None. # noqa: DAR102
             reason_for_coercion (str): Reason for coercion, e.g. 'farlighed'. Defaults to None.
-            n: Number of rows to return. Defaults to None.
+            n: Number of rows to return. Defaults to None which returns entire coercion data view.
 
         Returns:
             pd.DataFrame
@@ -49,7 +50,7 @@ class LoadCoercion:
         return df.reset_index(drop=True)
 
     def _aggregate_coercion(
-        coercion_types_list: list,
+        coercion_types_list: List[Dict[str, str]],
         subset_by: Optional[int] = "both",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
@@ -65,26 +66,23 @@ class LoadCoercion:
             pd.DataFrame
         """
 
-        for current_dict in coercion_types_list:  # Make sure proper keys are given
-            if (
-                "coercion_type" not in current_dict
-                and "reason_for_coercion" not in current_dict
-            ):
+        for d in coercion_types_list:  # Make sure proper keys are given
+            if "coercion_type" not in d and "reason_for_coercion" not in d:
                 raise KeyError(
-                    'One of the passed dicts does not contain any of the necessary keys. Each dict must contain either "coercion_type"  or "reason_for_coercion" or both',
+                    f'{d} does not contain either "coercion_type"  or "reason_for_coercion". At least one is required.',
                 )
-            if "coercion_type" not in current_dict:
-                current_dict["coercion_type"] = None
-            if "reason_for_coercion" not in current_dict:
-                current_dict["reason_for_coercion"] = None
+            if "coercion_type" not in d:
+                d["coercion_type"] = None
+            if "reason_for_coercion" not in d:
+                d["reason_for_coercion"] = None
 
         dfs = [
-            LoadCoercion.coercion(
-                coercion_type=current_dict["coercion_type"],
-                reason_for_coercion=current_dict["reason_for_coercion"],
+            LoadCoercion.coercion_duration(
+                coercion_type=d["coercion_type"],
+                reason_for_coercion=d["reason_for_coercion"],
                 n=n,
             )
-            for current_dict in coercion_types_list
+            for d in coercion_types_list
         ]
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
@@ -124,7 +122,7 @@ class LoadCoercion:
     @data_loaders.register("bælte")
     def bælte(n: Optional[int] = None) -> pd.DataFrame:
 
-        return LoadCoercion.coercion(
+        return LoadCoercion.coercion_duration(
             coercion_type="Bælte",
             n=n,
         )
