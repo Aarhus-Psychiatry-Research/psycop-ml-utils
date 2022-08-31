@@ -1,14 +1,33 @@
-from psycopmlutils.loaders.raw import LoadVisits
+from pathlib import Path
+
+import pandas as pd
+
+from psycopmlutils.loaders.flattened import load_split_predictors
+
+
+def get_duplicates_from_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Get duplicates from a dataframe.
+
+    Args:
+        df (pd.DataFrame): Dataframe to get duplicates from.
+
+    Returns:
+        pd.DataFrame: Dataframe with duplicates.
+    """
+    return df[df.duplicated(keep=False)]
+
 
 if __name__ == "__main__":
-    df = LoadVisits.physical_visits_to_psychiatry(
-        #  where_clause="dw_ek_borger = '5296254'",
+    df = load_split_predictors(
+        path=Path(
+            "E:/shared_resources/feature_sets/t2d/adminmanber_4_features_2022_08_30_15_49",
+        ),
+        split="train",
+        include_id=True,
     )
 
-    # Only one duplicate visit, why does this result in duplicates
-
-    # Get duplicates from df
-    duplicate_series = df.duplicated(subset=["timestamp", "dw_ek_borger"], keep=False)
-    duplicates = df[duplicate_series].sort_values(by=["dw_ek_borger"])
+    inspect = get_duplicates_from_df(df=df)[["dw_ek_borger", "timestamp"]].sort_values(
+        by=["dw_ek_borger", "timestamp"],
+    )
 
     pass
