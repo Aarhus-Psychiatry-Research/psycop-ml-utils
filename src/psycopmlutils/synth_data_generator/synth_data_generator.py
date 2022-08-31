@@ -96,6 +96,7 @@ def generate_data_columns(
         # np.nan objects turn into "nan" strings in the real life dataframe.
         # imitate this in the synthetic data as well.
         if "nan" in col_name:
+            df = df.replace({col_name: col_name.replace("np.nan", "nan")})
             col_name = col_name.replace("np.nan", "nan")
 
         column_type = col_props["column_type"]
@@ -168,7 +169,7 @@ if __name__ == "__main__":
         predictors=column_specifications,
         outcome_column_name="outc_dichotomous_t2d_within_30_days_max_fallback_0",
         n_samples=10_000,
-        logistic_outcome_model="1*pred_hba1c_within_100_days_max_fallback_nan+1*pred_hdl_within_100_days_max_fallback_nan",
+        logistic_outcome_model="1*pred_hba1c_within_100_days_max_fallback_np.nan+1*pred_hdl_within_100_days_max_fallback_np.nan",
         prob_outcome=0.08,
     )
 
