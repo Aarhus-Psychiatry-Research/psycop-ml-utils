@@ -1,6 +1,7 @@
 import time
 from typing import List, Optional
 
+import numpy as np
 import pandas as pd
 from deepchecks.tabular import Dataset
 from deepchecks.tabular.suites import data_integrity
@@ -14,11 +15,9 @@ from psycopmlutils.utils import RAW_DATA_VALIDATION_PATH
 def validate_raw_data(
     df: pd.DataFrame,
     feature_set_name: str,
-    timestamp_col_name: Optional[str] = "timestamp",
-    id_col_name: Optional[str] = "dw_ek_borger",
     deviation_baseline_column: Optional[str] = "median",
     deviation_threshold: Optional[float] = 4.0,
-    deviation_variation_column: Optional[str] = "mad",
+    deviation_variation_column: Optional[str] = "median_absolute_deviation",
 ) -> None:
     """Validates raw data from SQL database (or any dataframe, really). Runs
     data integrity checks from deepchecks, and calculates summary statistics.
@@ -32,10 +31,6 @@ def validate_raw_data(
     Args:
         df (pd.DataFrame): Dataframe to validate.
         feature_set_name (str): Name of the feature set.
-        timestamp_col_name (Optional[str], optional): Name of timestamp column.
-        Set to None if no timestamps in data. Defaults to "timestamp".
-        id_col_name (Optional[str], optional):  Name of id column. Set to None
-        if no ids in data.. Defaults to "dw_ek_borger".
         deviation_baseline_column (Optional[str], optional): _description_. Defaults to "mean".
         deviation_threshold (Optional[float], optional): _description_. Defaults to 3.0.
         deviation_variation_column (Optional[str], optional): _description_. Defaults to "std".
@@ -49,6 +44,10 @@ def validate_raw_data(
     )
     if not savepath.exists():
         savepath.mkdir(parents=True)
+
+    # check if `timestamp` and `dw_ek_borger` columns exist
+    timestamp_col_name = "timestamp" if "timestamp" in df.columns else None
+    id_col_name = "dw_ek_borger" if "dw_ek_borger" in df.columns else None
 
     # Deepchecks
     ds = Dataset(df=df, index_name=id_col_name, datetime_name=timestamp_col_name)
@@ -80,7 +79,12 @@ def validate_raw_data(
         variation_column=deviation_variation_column,
         axis=1,
     )
-    to_html_pretty(data_description, "data_description.html", "Data description")
+    to_html_pretty(
+        data_description,
+        "data_description.html",
+        title=f"Data description - {feature_set_name}",
+        subtitle=f"Yellow rows indicate large deviations from the {deviation_baseline_column}\n(99th/1st percentile within +- {deviation_variation_column} * threshold={deviation_threshold}) from the baseline.)",
+    )
 
 
 def generate_column_description(series: pd.Series) -> dict:
@@ -103,13 +107,26 @@ def generate_column_description(series: pd.Series) -> dict:
         "mean": series.mean(),
         "std": series.std(),
         "median": series.median(),
-        "mad": series.mad(),
+        "median_absolute_deviation": median_absolute_deviation(series),
     }
     d["histogram"] = create_unicode_hist(series)
     for percentile in [0.01, 0.25, 0.5, 0.75, 0.99]:
         d[f"{percentile}th_percentile"] = round(series.quantile(percentile), 1)
 
     return d
+
+
+def median_absolute_deviation(series: pd.Series) -> np.array:
+    """Calculates the median absolute deviation of a series.
+
+    Args:
+        series (pd.Series): Series to calculate the median absolute deviation of.
+
+    Returns:
+        np.array: Median absolute deviation of the series.
+    """
+    med = np.median(series)
+    return np.median(np.abs(series - med))
 
 
 def highlight_large_deviation(
@@ -145,19 +162,27 @@ def highlight_large_deviation(
     ]
 
 
-def to_html_pretty(df: pd.DataFrame, filename: str, title: Optional[str] = "") -> None:
+def to_html_pretty(
+    df: pd.DataFrame,
+    filename: str,
+    title: Optional[str] = None,
+    subtitle: Optional[str] = None,
+) -> None:
     """Write dataframe to a HTML file with nice formatting. Stolen from
     stackoverflow: https://stackoverflow.com/a/52722850.
 
     Args:
         df (pd.DataFrame): Dataframe to write.
         filename (str): File name to write to.
-        title (Optional[str], optional): Title for the table. Defaults to ''.
+        title (Optional[str], optional): Title for the table. Defaults to None.
+        subtitle (Optional[str], optional): Subtitle for the table. Defaults to None.
     """
 
     ht = ""
-    if title != "":
+    if title:
         ht += "<h2> %s </h2>\n" % title
+    if subtitle:
+        ht += "<h3> %s </h3>\n" % subtitle
     ht += df.to_html(classes="wide", escape=False)
 
     with open(filename, "w") as f:
