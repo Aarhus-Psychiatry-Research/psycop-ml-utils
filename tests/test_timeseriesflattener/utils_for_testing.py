@@ -5,7 +5,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
-from psycopmlutils.utils import data_loaders
+from psycopmlutils.utils import data_loaders, generate_feature_colname
 
 
 def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:
@@ -197,7 +197,13 @@ def assert_flattened_values_as_expected(
     else:
         raise ValueError("direction only takes look ahead or behind")
 
-    flattened_values_colname = f"{new_col_name_prefix}_{values_colname}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+    flattened_values_colname = generate_feature_colname(
+        prefix=new_col_name_prefix,
+        out_col_name=values_colname,
+        interval_days=interval_days,
+        resolve_multiple=resolve_multiple,
+        fallback=fallback,
+    )
 
     expected_flattened_values = pd.DataFrame(
         {flattened_values_colname: expected_flattened_values},
