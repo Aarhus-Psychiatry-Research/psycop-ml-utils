@@ -25,7 +25,7 @@ class LoadCoercion:
         """
         view = "[FOR_tvang_alt_hele_kohorten_inkl_2021]"
 
-        sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed FROM [fct].{view}"
+        sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed_timer_sei FROM [fct].{view}"
 
         if coercion_type and reason_for_coercion is None:
 
@@ -42,7 +42,7 @@ class LoadCoercion:
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         df.rename(
-            columns={"datotid_start_sei": "timestamp", "varighed": "value"},
+            columns={"datotid_start_sei": "timestamp", "varighed_timer_sei": "value"},
             inplace=True,
         )
 
