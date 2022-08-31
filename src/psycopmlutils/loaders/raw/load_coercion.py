@@ -57,41 +57,35 @@ class LoadCoercion:
         column.
 
         Args:
-            coercion_types_list (list): List of lists each containing a string with coercion_type and a string with reason_for_coercion # noqa: DAR102
+            coercion_types_list (list): List of dictionaries containing a 'coercion_type' key and a 'reason_for_coercion' key. If keys not in dicts, they are set to None # noqa: DAR102
             subset_by (str): String indicating whether data is being subset based on coercion type, reason or both
             n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame
         """
-        subset_choices = ["type", "reason", "both"]
 
-        if subset_by not in subset_choices:
-            raise ValueError(
-                "Invalid subset_by argument. Expected one of: %s" % subset_choices,
-            )
-
-        if subset_by == "both":
-            dfs = [
-                LoadCoercion.coercion(
-                    coercion_type=id[0],
-                    reason_for_coercion=id[1],
-                    n=n,
+        for current_dict in coercion_types_list:  # Make sure proper keys are given
+            if (
+                "coercion_type" not in current_dict
+                and "reason_for_coercion" not in current_dict
+            ):
+                raise KeyError(
+                    'One of the passed dicts does not contain any of the necessary keys. Each dict must contain either "coercion_type"  or "reason_for_coercion" or both',
                 )
-                for id in coercion_types_list
-            ]
+            if "coercion_type" not in current_dict:
+                current_dict["coercion_type"] = None
+            if "reason_for_coercion" not in current_dict:
+                current_dict["reason_for_coercion"] = None
 
-        if subset_by == "type":
-            dfs = [
-                LoadCoercion.coercion(coercion_type=id[0], n=n)
-                for id in coercion_types_list
-            ]
-
-        if subset_by == "reason":
-            dfs = [
-                LoadCoercion.coercion(reason_for_coercion=id[0], n=n)
-                for id in coercion_types_list
-            ]
+        dfs = [
+            LoadCoercion.coercion(
+                coercion_type=current_dict["coercion_type"],
+                reason_for_coercion=current_dict["reason_for_coercion"],
+                n=n,
+            )
+            for current_dict in coercion_types_list
+        ]
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
@@ -99,11 +93,26 @@ class LoadCoercion:
     def coercion_dangerous(n: Optional[int] = None) -> pd.DataFrame:
 
         coercion_types_lists = [
-            ["Bælte", "Farlighed"],
-            ["Remme", "Farlighed"],
-            ["Fastholden", "Farlighed"],
-            ["Handsker", "Farlighed"],
-            ["Tvangstilbageholdelse", "På grund af farlighed"],
+            {
+                "coercion_type": "Bælte",
+                "reason_for_coercion": "Farlighed",
+            },
+            {
+                "coercion_type": "Remme",
+                "reason_for_coercion": "Farlighed",
+            },
+            {
+                "coercion_type": "Fastholden",
+                "reason_for_coercion": "Farlighed",
+            },
+            {
+                "coercion_type": "Handsker",
+                "reason_for_coercion": "Farlighed",
+            },
+            {
+                "coercion_type": "Tvangstilbageholdelse",
+                "reason_for_coercion": "På grund af farlighed",
+            },
         ]
 
         return LoadCoercion._aggregate_coercion(
