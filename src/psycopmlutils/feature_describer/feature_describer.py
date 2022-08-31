@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from wasabi import Printer
 
+from psycopmlutils.data_checks.validate_raw_data import save_df_to_pretty_html
 from psycopmlutils.loaders.flattened.local_feature_loaders import load_split_predictors
 from psycopmlutils.utils import generate_feature_colname
 
@@ -36,6 +37,7 @@ def create_feature_description_from_dir(
         splits (List[str]): List of splits to include in the description. Defaults to ["train"].
     """
     msg = Printer(timestamp=True)
+    save_dir = path / "feature_descriptions"
 
     for split in splits:
         msg.info(f"{split}: Creating feature description")
@@ -51,8 +53,14 @@ def create_feature_description_from_dir(
         msg.info("{split}: Writing feature description to disk")
 
         feature_description_df.to_csv(
-            path / "{split}_feature_description.csv",
+            save_dir / "{split}_feature_description.csv",
             index=False,
+        )
+        # Writing html table as well
+        save_df_to_pretty_html(
+            feature_description_df,
+            save_dir / f"{split}_feature_description.html",
+            title="Feature description",
         )
 
 
@@ -131,10 +139,6 @@ def get_value_proportion(series, value):
         return round(series.isna().mean(), 2)
     else:
         return round(series.eq(value).mean(), 2)
-
-
-if __name__ == "__main__":
-    raise NotImplementedError()
 
 
 def create_unicode_hist(series: pd.Series) -> pd.Series:

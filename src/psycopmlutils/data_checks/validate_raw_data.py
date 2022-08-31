@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
@@ -82,18 +83,17 @@ def validate_raw_data(
         axis=1,
     )
 
-    data_description_html = df_to_pretty_html(
+    save_df_to_pretty_html(
         data_description,
+        savepath / "data_description.html",
         title=f"Data description - {feature_set_name}",
         subtitle=f"Yellow rows indicate large deviations from the {deviation_baseline_column}\n(99th/1st percentile within {deviation_baseline_column} +- {deviation_variation_column} * threshold={deviation_threshold}) from the baseline.)",
     )
-    with open(savepath / "data_description.html", "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE1 + data_description_html + HTML_TEMPLATE2)
 
     msg.info(f"All files saved to {savepath}")
     if failed_checks:
         print(
-            f"The following checks failed - look through the generated reports!\n{failed_checks}"
+            f"The following checks failed - look through the generated reports!\n{failed_checks}",
         )
 
 
@@ -126,11 +126,14 @@ def generate_column_description(series: pd.Series) -> dict:
     return d
 
 
-def calculate_prop_not_a_time(series: pd.Series):
-    """Calculates the propotion of rows that are NaT
+def calculate_prop_not_a_time(series: pd.Series) -> pd.Series:
+    """Calculates the propotion of rows that are NaT.
 
     Args:
         series (pd.Series): Series of timestamps
+
+    Returns:
+        pd.Series: Series with proportion of NaT
     """
     return series.isna().sum() / len(series)
 
@@ -181,8 +184,9 @@ def highlight_large_deviation(
     ]
 
 
-def df_to_pretty_html(
+def save_df_to_pretty_html(
     df: pd.DataFrame,
+    filename: Path,
     title: Optional[str] = None,
     subtitle: Optional[str] = None,
 ) -> None:
@@ -191,6 +195,7 @@ def df_to_pretty_html(
 
     Args:
         df (pd.DataFrame): Dataframe to write.
+        filename (Path): Path to save the HTML file to.
         title (Optional[str], optional): Title for the table. Defaults to None.
         subtitle (Optional[str], optional): Subtitle for the table. Defaults to None.
     """
@@ -202,7 +207,8 @@ def df_to_pretty_html(
         ht += "<h3> %s </h3>\n" % subtitle
     ht += df.to_html(classes="wide", escape=False)
 
-    return ht
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(HTML_TEMPLATE1 + ht + HTML_TEMPLATE2)
 
 
 # Templates for saving dataframes as pretty html tables
