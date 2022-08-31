@@ -186,4 +186,8 @@ if __name__ == "__main__":
     ## Create data integrity report
     check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
 
-    create_feature_description_from_dir(path=sub_dir, predictor_dicts=PREDICTOR_LIST)
+    create_feature_description_from_dir(
+        path=sub_dir,
+        predictor_dicts=PREDICTOR_LIST,
+        splits=["train"],
+    )
