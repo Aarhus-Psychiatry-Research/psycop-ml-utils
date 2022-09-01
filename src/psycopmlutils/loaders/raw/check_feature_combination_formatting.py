@@ -63,10 +63,10 @@ def check_feature_combinations_return_correct_formatting(
                         source_failures.append(f"{col}: invalid datetime format")
 
             # Check for NaN in cols
-            n_na = df[col].isna().sum()
+            na_prop = round(df[col].isna().sum() / df.shape[0], 2) * 100
 
-            if n_na > 0:
-                source_failures.append(f"{col}: {n_na} NaN")
+            if na_prop > 0:
+                source_failures.append(f"{col}: {na_prop}% NaN")
 
         # Check for duplicates
         if df.duplicated(subset=subset_duplicates_columns).any():
