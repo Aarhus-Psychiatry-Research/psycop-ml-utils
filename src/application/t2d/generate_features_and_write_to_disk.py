@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     check_feature_combinations_return_correct_formatting(
         predictor_dict_list=PREDICTOR_LIST,
-        n=100,
+        n=10_000,
     )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
