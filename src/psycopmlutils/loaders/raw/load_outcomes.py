@@ -10,7 +10,7 @@ from psycopmlutils.utils import data_loaders
 class LoadOutcome:
     @data_loaders.register("t2d")
     def t2d(n: Optional[int] = None) -> pd.DataFrame:
-        # msg.info("Loading t2d event times")
+        msg.info("Loading t2d event times")
 
         df = sql_load(
             "SELECT dw_ek_borger, timestamp FROM [fct].[psycop_t2d_first_diabetes_t2d]",
@@ -20,6 +20,9 @@ class LoadOutcome:
             n=n,
         )
         df["value"] = 1
+
+        # 2 duplicates, dropping
+        df.drop_duplicates(keep=False, inplace=True)
 
         msg.good("Finished loading t2d event times")
         return df.reset_index(drop=True)

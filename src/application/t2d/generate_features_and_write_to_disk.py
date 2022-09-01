@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wandb
-from wasabi import msg
+from wasabi import Printer
 
 import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
@@ -24,13 +24,14 @@ from psycopmlutils.timeseriesflattener.data_integrity import (
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
+    msg = Printer(timestamp=True)
     # set path to save features to
     SAVE_PATH = FEATURE_SETS_PATH / "t2d"
 
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
-    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
+    RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     LAB_PREDICTORS = create_lab_feature_combinations(
@@ -156,7 +157,12 @@ if __name__ == "__main__":
             f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
-        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
+        split_df = pd.merge(
+            flattened_df.df,
+            df_split_ids,
+            how="inner",
+            validate="many_to_one",
+        )
 
         # Version table with current date and time
         filename = f"{file_prefix}_{dataset_name}.csv"
@@ -183,4 +189,8 @@ if __name__ == "__main__":
     ## Create data integrity report
     check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
 
-    create_feature_description_from_dir(path=sub_dir, predictor_dicts=PREDICTOR_LIST)
+    create_feature_description_from_dir(
+        path=sub_dir,
+        predictor_dicts=PREDICTOR_LIST,
+        splits=["train"],
+    )
