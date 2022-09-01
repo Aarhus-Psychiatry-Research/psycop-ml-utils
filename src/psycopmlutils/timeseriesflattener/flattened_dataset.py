@@ -241,7 +241,6 @@ class FlattenedDataset:
             how="left",
             on=self.pred_time_uuid_col_name,
             suffixes=("", ""),
-            validate="1:1",
         )
 
         self.df = self.df.copy()
@@ -387,7 +386,6 @@ class FlattenedDataset:
             how="left",
             on=self.id_col_name,
             suffixes=("", ""),
-            validate="m:1",
         )
 
     def add_temporal_outcome(
@@ -420,7 +418,6 @@ class FlattenedDataset:
                 how="left",
                 on=self.id_col_name,
                 suffixes=("_prediction", "_outcome"),
-                validate="1:1",
             )
 
             df = df.drop(
@@ -531,13 +528,7 @@ class FlattenedDataset:
             new_col_name_prefix=new_col_name_prefix,
         )
 
-        self.df = pd.merge(
-            self.df,
-            df,
-            how="left",
-            on=self.pred_time_uuid_col_name,
-            validate="1:1",
-        )
+        self.df = pd.merge(self.df, df, how="left", on=self.pred_time_uuid_col_name)
 
     @staticmethod
     def flatten_temporal_values_to_df(
@@ -613,12 +604,11 @@ class FlattenedDataset:
         # Generate df with one row for each prediction time x event time combination
         # Drop dw_ek_borger for faster merge
         df = pd.merge(
-            left=prediction_times_with_uuid_df,
-            right=values_df,
+            prediction_times_with_uuid_df,
+            values_df,
             how="left",
             on=id_col_name,
             suffixes=("_pred", "_val"),
-            validate="1:m",
         ).drop("dw_ek_borger", axis=1)
 
         # Drop prediction times without event times within interval days
