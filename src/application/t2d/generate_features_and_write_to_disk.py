@@ -31,10 +31,8 @@ if __name__ == "__main__":
     if not SAVE_PATH.exists():
         SAVE_PATH.mkdir()
 
-    RESOLVE_MULTIPLE = ["max"]
-    #  , "min", "mean", "latest"]
-    LOOKBEHIND_DAYS = [365]
-    # , 730, 1825, 9999]
+    RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
+    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
@@ -53,7 +51,7 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS  # + LAB_PREDICTORS + MEDICATION_PREDICTORS
+    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
@@ -159,7 +157,12 @@ if __name__ == "__main__":
             f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
-        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
+        split_df = pd.merge(
+            flattened_df.df,
+            df_split_ids,
+            how="inner",
+            validate="many_to_one",
+        )
 
         # Version table with current date and time
         filename = f"{file_prefix}_{dataset_name}.csv"
