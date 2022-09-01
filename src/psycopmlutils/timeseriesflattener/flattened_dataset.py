@@ -433,7 +433,7 @@ class FlattenedDataset:
                 how="left",
                 on=self.id_col_name,
                 suffixes=("_prediction", "_outcome"),
-                validate="1:1",
+                validate="m:1",
             )
 
             df = df.drop(
@@ -631,7 +631,7 @@ class FlattenedDataset:
             how="left",
             on=id_col_name,
             suffixes=("_pred", "_val"),
-            validate="1:m",
+            validate="m:m",
         ).drop("dw_ek_borger", axis=1)
 
         # Drop prediction times without event times within interval days

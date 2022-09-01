@@ -216,7 +216,7 @@ def test_static_predictor():
 def test_add_age():
     prediction_times_df_str = """dw_ek_borger,timestamp,
                             1,1994-12-31 00:00:00
-                            1,2021-12-31 00:00:00
+                            1,2021-12-30 00:00:00
                             1,2021-12-31 00:00:00
                             """
     static_predictor = """dw_ek_borger,date_of_birth
@@ -249,7 +249,7 @@ def test_add_age():
 def test_add_age_error():
     prediction_times_df_str = """dw_ek_borger,timestamp,
                             1,1994-12-31 00:00:00
-                            1,2021-12-31 00:00:00
+                            1,2021-11-28 00:00:00
                             1,2021-12-31 00:00:00
                             """
     static_predictor = """dw_ek_borger,date_of_birth
@@ -270,7 +270,7 @@ def test_incident_outcome_removing_prediction_times():
                             1,2021-12-31 00:00:00
                             1,2023-12-31 00:00:00
                             2,2021-12-31 00:00:00
-                            2,2023-12-31 00:00:00
+                            2,2023-12-30 00:00:00
                             3,2023-12-31 00:00:00
                             """
 
