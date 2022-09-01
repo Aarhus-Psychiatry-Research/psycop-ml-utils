@@ -51,7 +51,6 @@ class LoadCoercion:
 
     def _concatenate_coercion(
         coercion_types_list: List[Dict[str, str]],
-        subset_by: Optional[int] = "both",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple types of coercion with multiple reasons into one
@@ -59,7 +58,6 @@ class LoadCoercion:
 
         Args:
             coercion_types_list (list): List of dictionaries containing a 'coercion_type' key and a 'reason_for_coercion' key. If keys not in dicts, they are set to None # noqa: DAR102
-            subset_by (str): String indicating whether data is being subset based on coercion type, reason or both
             n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
@@ -87,35 +85,108 @@ class LoadCoercion:
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
-    @data_loaders.register("coercion_farlighed")
-    def coercion_farlighed(n: Optional[int] = None) -> pd.DataFrame:
+    @data_loaders.register("farlighed")
+    def farlighed(n: Optional[int] = None) -> pd.DataFrame:
 
-        coercion_types_lists = [
+        coercion_types_list = [
             {
-                "coercion_type": "Bælte",
                 "reason_for_coercion": "Farlighed",
             },
             {
-                "coercion_type": "Remme",
-                "reason_for_coercion": "Farlighed",
-            },
-            {
-                "coercion_type": "Fastholden",
-                "reason_for_coercion": "Farlighed",
-            },
-            {
-                "coercion_type": "Handsker",
-                "reason_for_coercion": "Farlighed",
-            },
-            {
-                "coercion_type": "Tvangstilbageholdelse",
                 "reason_for_coercion": "På grund af farlighed",
             },
         ]
 
         return LoadCoercion._concatenate_coercion(
-            coercion_types_list=coercion_types_lists,
-            subset_by="both",
+            coercion_types_list=coercion_types_list,
+            n=n,
+        )
+
+    @data_loaders.register("urolig_tilstand")
+    def urolig_tilstand(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            reason_for_coercion="Urolig tilstand",
+            n=n,
+        )
+
+    @data_loaders.register("anden_begrundelse")
+    def anden_begrundelse(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            reason_for_coercion="Anden begrundelse",
+            n=n,
+        )
+
+    @data_loaders.register("magtanvendelse")
+    def magtanvendelse(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
+            {
+                "coercion_type": "Bælte",
+            },
+            {
+                "coercion_type": "Remme",
+            },
+            {
+                "coercion_type": "Fastholden",
+            },
+            {
+                "coercion_type": "Beroligende medicin",
+            },
+            {
+                "coercion_type": "Døraflåsning",
+            },
+            {
+                "coercion_type": "Personlig afskærmning over 24 timer",
+            },
+            {
+                "coercion_type": "Handsker",
+            },
+        ]
+
+        return LoadCoercion._concatenate_coercion(
+            coercion_types_list=coercion_types_list,
+            n=n,
+        )
+
+    @data_loaders.register("frihedsberøvelser")
+    def frihedsberøvelser(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
+            {
+                "coercion_type": "Tvangsindlæggelse",
+            },
+            {
+                "coercion_type": "Tvangstilbageholdelse",
+            },
+        ]
+
+        return LoadCoercion._concatenate_coercion(
+            coercion_types_list=coercion_types_list,
+            n=n,
+        )
+
+    @data_loaders.register("tvangsbehandlinger")
+    def tvangsbehandlinger(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
+            {
+                "coercion_type": "Af legemlig lidelse",
+            },
+            {
+                "coercion_type": "Medicinering",
+            },
+            {
+                "coercion_type": "Ernæring",
+            },
+            {
+                "coercion_type": "ECT",
+            },
+        ]
+
+        return LoadCoercion._concatenate_coercion(
+            coercion_types_list=coercion_types_list,
             n=n,
         )
 
