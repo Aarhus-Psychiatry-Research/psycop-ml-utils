@@ -85,6 +85,8 @@ class LoadCoercion:
 
         return pd.concat(dfs, axis=0).reset_index(drop=True)
 
+    ### REASON (begrundtekst_sei) ###
+
     @data_loaders.register("farlighed")
     def farlighed(n: Optional[int] = None) -> pd.DataFrame:
 
@@ -117,6 +119,8 @@ class LoadCoercion:
             reason_for_coercion="Anden begrundelse",
             n=n,
         )
+
+    ### GENERAL TYPE (tabeltekst) ###
 
     @data_loaders.register("magtanvendelse")
     def magtanvendelse(n: Optional[int] = None) -> pd.DataFrame:
@@ -189,6 +193,8 @@ class LoadCoercion:
             coercion_types_list=coercion_types_list,
             n=n,
         )
+
+    ### SPECIFIC TYPE (typetekst_sei) ###
 
     @data_loaders.register("bælte")
     def bælte(n: Optional[int] = None) -> pd.DataFrame:
