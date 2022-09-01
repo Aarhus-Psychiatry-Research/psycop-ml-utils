@@ -196,6 +196,25 @@ def test_resolve_multiple_count():
     )
 
 
+def test_resolve_multiple_bool():
+    prediction_times_str = """dw_ek_borger,timestamp,
+                            1,2021-12-31 00:00:00
+                            2,2021-12-31 00:00:00
+                            """
+    event_times_str = """dw_ek_borger,timestamp,value,
+                        1,2022-01-01 00:00:01, 1
+                        1,2022-01-01 00:00:02, 2
+                        """
+
+    assert_flattened_outcome_as_expected(
+        prediction_times_df_str=prediction_times_str,
+        outcome_df_str=event_times_str,
+        resolve_multiple="bool",
+        lookahead_days=2,
+        expected_flattened_values=[1, 0],
+    )
+
+
 def test_resolve_multiple_change_per_day():
     prediction_times_str = """dw_ek_borger,timestamp,
                             1,2021-12-31 00:00:00
