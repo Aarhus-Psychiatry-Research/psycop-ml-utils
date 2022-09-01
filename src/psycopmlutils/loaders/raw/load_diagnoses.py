@@ -59,8 +59,8 @@ class LoadDiagnoses:
 
     def from_physical_visits(
         icd_code: str,
-        n: Optional[int] = None,
         output_col_name: Optional[str] = "value",
+        n: Optional[int] = None,
         wildcard_icd_code: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load diagnoses from all physical visits. If icd_code is a list, will
@@ -97,6 +97,7 @@ class LoadDiagnoses:
                 icd_code=icd_code,
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
+                n=n,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
