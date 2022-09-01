@@ -56,6 +56,22 @@ def get_count_in_group(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.count()
 
 
+@resolve_fns.register("bool")
+def get_bool_in_group(grouped_df: DataFrame) -> DataFrame:
+    """Returns boolean value indicating whether or not event has occured in
+    look ahead/behind window.
+
+    Args:
+        grouped_df (DataFrame): A dataframe sorted by descending timestamp, grouped by citizen.
+
+    Returns:
+        DataFrame: Dataframe with value column containing only 0 or 1s.
+    """
+    grouped_df = grouped_df.count().reset_index()
+    grouped_df[grouped_df["value"] > 0] = grouped_df.assign(value=1)
+    return grouped_df
+
+
 @resolve_fns.register("change_per_day")
 def get_change_in_value_per_day(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.apply(

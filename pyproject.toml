@@ -18,16 +18,17 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
+# Manually specify catalogue dependencies
+pydantic = "1.9.*"
+
+# Other dependencies
 python = ">=3.8,<3.11"
-numpy = "1.22.*"
+numpy = "1.*"
 scipy = "1.8.*"
 pandas = "1.4.*"
 catalogue = "2.0.*"
 wasabi = "0.9.*"
-scikit-learn = "1.1.*"
-
-# Manually specify catalogue dependencies
-pydantic = "1.9.*"
+scikit-learn = "1.*"
 srsly = "2.4.*"
 wandb = ">=0.12.21,<0.13.0"
 deepchecks = "^0.8.3"
@@ -45,9 +46,6 @@ myst-parser = "0.18.*"
 flake8 = "4.0.*"
 docformatter = "1.4"
 darglint = "^1.8.1"
-
-[tool.poetry.extras] # Install with --extras "sql"
-sql = ["SQLAlchemy", "pyodbc"]
 
 [tool.coverage.run]
 omit = [
