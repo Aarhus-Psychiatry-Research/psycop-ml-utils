@@ -156,7 +156,7 @@ if __name__ == "__main__":
             f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
-        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner")
+        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner", validate="m:1")
 
         # Version table with current date and time
         filename = f"{file_prefix}_{dataset_name}.csv"
