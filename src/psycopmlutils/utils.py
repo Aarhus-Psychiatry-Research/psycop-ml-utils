@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import List
 
 import catalogue
+import pandas as pd
 
 data_loaders = catalogue.create("timeseriesflattener", "data_loaders")
 
@@ -30,3 +32,16 @@ def generate_feature_colname(
         str: _description_
     """
     return f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+
+
+def df_contains_duplicates(df=pd.DataFrame, col_subset=List[str]):
+    """Check if a dataframe contains duplicates.
+
+    Args:
+        df (pd.DataFrame): Dataframe to check.
+        col_subset (List[str]): Columns to check for duplicates.
+
+    Returns:
+        bool: True if duplicates are found.
+    """
+    return df.duplicated(subset=col_subset).any()

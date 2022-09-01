@@ -10,7 +10,11 @@ from pandas import DataFrame
 from wasabi import msg
 
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
-from psycopmlutils.utils import data_loaders, generate_feature_colname
+from psycopmlutils.utils import (
+    data_loaders,
+    df_contains_duplicates,
+    generate_feature_colname,
+)
 
 
 class FlattenedDataset:
@@ -77,12 +81,10 @@ class FlattenedDataset:
                 )
 
         # Check for duplicates
-        duplicates = self.df.duplicated(
-            subset=[self.id_col_name, self.timestamp_col_name],
-            keep=False,
-        )
-
-        if duplicates.shape[0] > 0:
+        if df_contains_duplicates(
+            df=self.df,
+            col_subset=[self.id_col_name, self.timestamp_col_name],
+        ):
             raise ValueError(
                 "Duplicate patient/timestamp combinations in prediction_times_df, aborting",
             )
