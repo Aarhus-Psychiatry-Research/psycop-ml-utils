@@ -25,24 +25,28 @@ def create_diag_feature_combinations(
                 "lookbehind_days": lookbehind_days,
                 "resolve_multiple": resolve_multiple,
                 "fallback": fallback,
+                "allowed_nan_value_prop": 0.0,
             },
             {
                 "predictor_df": "hyperlipidemia",
                 "lookbehind_days": lookbehind_days,
                 "resolve_multiple": resolve_multiple,
                 "fallback": fallback,
+                "allowed_nan_value_prop": 0.0,
             },
             {
                 "predictor_df": "polycystic_ovarian_syndrome",
                 "lookbehind_days": lookbehind_days,
                 "resolve_multiple": resolve_multiple,
                 "fallback": fallback,
+                "allowed_nan_value_prop": 0.0,
             },
             {
                 "predictor_df": "sleep_apnea",
                 "lookbehind_days": lookbehind_days,
                 "resolve_multiple": resolve_multiple,
                 "fallback": fallback,
+                "allowed_nan_value_prop": 0.0,
             },
         ],
     )

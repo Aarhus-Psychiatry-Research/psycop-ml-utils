@@ -23,9 +23,17 @@ def check_feature_combinations_return_correct_dfs(
 
     msg.info("Checking that feature combinations comform to correct formatting")
 
-    # Get all unique dataframes sources in predictor_df_vals
-    predictor_df_vals = [d["predictor_df"] for d in predictor_dict_list]
-    predictor_df_vals = list(set(predictor_df_vals))
+    # Find all dicts that are unique on keys predictor_df and allowed_nan_value_prop
+    unique_subset_dicts = []
+
+    dicts_with_subset_keys = [
+        {k: bigdict[k] for k in ("predictor_df", "allowed_nan_value_prop")}
+        for bigdict in predictor_dict_list
+    ]
+
+    for predictor_dict in dicts_with_subset_keys:
+        if predictor_dict not in unique_subset_dicts:
+            unique_subset_dicts.append(predictor_dict)
 
     msg.info(f"Loading {n} rows from each predictor_df")
 
@@ -33,19 +41,19 @@ def check_feature_combinations_return_correct_dfs(
 
     failure_dicts = []
 
-    for i, predictor_df_str in enumerate(predictor_df_vals):
+    for i, d in enumerate(unique_subset_dicts):
         # Check that it returns a dataframe
         try:
-            df = loader_fns_dict[predictor_df_str](n=n)
+            df = loader_fns_dict[d["predictor_df"]](n=n)
         except KeyError:
             msg.warn(
-                f"{predictor_df_str} does not appear to be a loader function in catalogue, assuming a dataframe. Continuing.",
+                f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a dataframe. Continuing.",
             )
             continue
 
         source_failures = []
 
-        prefix = f"{i}/{len(predictor_df_vals)} {predictor_df_str}:"
+        prefix = f"{i}/{len(unique_subset_dicts)} {d['predictor_df']}:"
 
         # Check that the dataframe has a meaningful length
         if df.shape[0] == 0:
@@ -63,10 +71,17 @@ def check_feature_combinations_return_correct_dfs(
                         source_failures.append(f"{col}: invalid datetime format")
 
             # Check for NaN in cols
-            na_prop = round(df[col].isna().sum() / df.shape[0], 2) * 100
+            na_prop = round(df[col].isna().sum() / df.shape[0], 2)
 
             if na_prop > 0:
-                source_failures.append(f"{col}: {na_prop}% NaN")
+                if col != "value":
+                    source_failures.append(f"{col}: {na_prop}% NaN")
+                else:
+                    if d["allowed_nan_value_prop"] is not None:
+                        if na_prop > d["allowed_nan_value_prop"]:
+                            source_failures.append(
+                                f"{col}: {na_prop}% NaN (allowed {d['allowed_nan_value_prop']}%)",
+                            )
 
         # Check for duplicates
         if df.duplicated(subset=subset_duplicates_columns).any():
@@ -74,14 +89,14 @@ def check_feature_combinations_return_correct_dfs(
 
         # Return errors
         if len(source_failures) != 0:
-            failure_dicts.append({predictor_df_str["predictor_df"]: source_failures})
+            failure_dicts.append({d["predictor_df"]: source_failures})
             msg.fail(f"{prefix} failed, errors: {source_failures}")
         else:
             msg.good(f"{prefix} Conforms to criteria")
 
     if not failure_dicts:
         msg.good(
-            f"Checked {len(predictor_df_vals)} predictor_dfs, all returned appropriate dfs",
+            f"Checked {len(unique_subset_dicts)} predictor_dfs, all returned appropriate dfs",
         )
     else:
         raise ValueError(f"{failure_dicts}")
