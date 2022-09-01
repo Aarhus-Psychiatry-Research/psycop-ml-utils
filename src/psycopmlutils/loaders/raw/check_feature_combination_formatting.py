@@ -5,7 +5,7 @@ from wasabi import Printer
 from psycopmlutils.utils import data_loaders
 
 
-def check_feature_combinations_return_correct_formatting(
+def check_feature_combinations_return_correct_dfs(
     predictor_dict_list: List[Dict[str, Union[str, float, int]]],
     n: Optional[int] = 1_000,
     required_columns: Optional[List[str]] = ["dw_ek_borger", "timestamp", "value"],
