@@ -59,13 +59,13 @@ def get_count_in_group(grouped_df: DataFrame) -> DataFrame:
 @resolve_fns.register("bool")
 def get_bool_in_group(grouped_df: DataFrame) -> DataFrame:
     """Returns boolean value indicating whether or not event has occured in
-    look ahead/behind window
+    look ahead/behind window.
 
     Args:
         grouped_df (DataFrame): A dataframe sorted by descending timestamp, grouped by citizen.
 
     Returns:
-        DataFrame: Dataframe with value column containing only 0 or 1s
+        DataFrame: Dataframe with value column containing only 0 or 1s.
     """
     grouped_df = grouped_df.count().reset_index()
     grouped_df[grouped_df["value"] > 0] = grouped_df.assign(value=1)
