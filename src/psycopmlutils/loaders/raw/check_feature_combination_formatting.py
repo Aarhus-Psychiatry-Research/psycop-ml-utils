@@ -21,7 +21,7 @@ def check_feature_combinations_return_correct_dfs(
     """
     msg = Printer(timestamp=True)
 
-    msg.info("Checking that feature combinations comform to correct formatting")
+    msg.info("Checking that feature combinations conform to correct formatting")
 
     # Find all dicts that are unique on keys predictor_df and allowed_nan_value_prop
     unique_subset_dicts = []
