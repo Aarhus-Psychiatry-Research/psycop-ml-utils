@@ -11,6 +11,7 @@ def check_feature_combinations_return_correct_dfs(
     n: int = 1_000,
     required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
+    allowed_nan_value_prop: float = 0.01,
 ):
     """Test that all predictor_dfs in predictor_list return a valid df.
 
@@ -19,6 +20,7 @@ def check_feature_combinations_return_correct_dfs(
         n (int): Number of rows to test. Defaults to 1_000.
         required_columns (List[str]): List of required columns. Defaults to ["dw_ek_borger", "timestamp", "value"].
         subset_duplicates_columns (List[str]): List of columns to subset on when checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
+        allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
     """
     msg = Printer(timestamp=True)
 
@@ -54,6 +56,12 @@ def check_feature_combinations_return_correct_dfs(
             continue
 
         prefix = f"{i+1}/{len(unique_subset_dicts)} {d['predictor_df']}:"
+
+        allowed_nan_value_prop = (
+            d["allowed_nan_value_prop"]
+            if d["allowed_nan_value_prop"]
+            else allowed_nan_value_prop
+        )
 
         source_failures, duplicates = check_raw_df(
             df=df,
@@ -121,7 +129,7 @@ def check_raw_df(
             else:
                 if na_prop > allowed_nan_value_prop:
                     source_failures.append(
-                        f"{col}: {na_prop}% NaN (allowed {allowed_nan_value_prop}%)",
+                        f"{col}: {na_prop} NaN (allowed {allowed_nan_value_prop})",
                     )
 
     # Check for duplicates

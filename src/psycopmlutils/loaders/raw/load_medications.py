@@ -113,7 +113,10 @@ class LoadMedications:
             inplace=True,
         )
 
-        return df.reset_index(drop=True)
+        return df.reset_index(drop=True).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
 
     def _load_one_source(
         atc_code: str,
