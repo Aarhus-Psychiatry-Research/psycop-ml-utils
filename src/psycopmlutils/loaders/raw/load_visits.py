@@ -22,8 +22,6 @@ class LoadVisits:
         Returns:
             pd.DataFrame: Dataframe with all physical visits to psychiatry. Has columns dw_ek_borger and timestamp.
         """
-        # msg.info("Loading physical visits to psychiatry")
-
         # SHAK = 6600 ≈ in psychiatry
         d = {
             "LPR3": {
@@ -57,12 +55,10 @@ class LoadVisits:
         for table, meta in d.items():
             cols = f"{meta['datetime_col']}, dw_ek_borger"
 
-            sql = f"SELECT {cols} FROM [fct].{meta['view']}"
+            sql = f"SELECT {cols} FROM [fct].{meta['view']} WHERE {meta['datetime_col']} IS NOT NULL"
 
             if "where" in meta:
-                sql += (
-                    f" WHERE left({meta['location_col']}, 4) = '6600' {meta['where']}"
-                )
+                sql += f" left({meta['location_col']}, 4) = '6600' {meta['where']}"
 
             if where_clause is not None:
                 sql += f" {where_separator} {where_clause}"

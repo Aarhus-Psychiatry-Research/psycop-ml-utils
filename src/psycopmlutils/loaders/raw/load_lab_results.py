@@ -19,7 +19,7 @@ class LoadLabResults:
         """
         view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
 
-        sql = f"SELECT dw_ek_borger, datotid_sidstesvar, numerisksvar FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND datotid_sidstesvar IS NOT NULL"
+        sql = f"SELECT dw_ek_borger, datotid_sidstesvar, numerisksvar FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 

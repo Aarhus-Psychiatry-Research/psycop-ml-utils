@@ -8,7 +8,7 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
-    def aggregate_medications(
+    def _concat_medications(
         output_col_name: str,
         atc_code_prefixes: list[str],
         n: Optional[int] = None,
@@ -146,7 +146,7 @@ class LoadMedications:
         view = f"[{view}]"
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-            + f" WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+            + f" WHERE {source_timestamp_col_name} IS NOT NULL AND (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
         )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
