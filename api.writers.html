@@ -230,8 +230,48 @@
         <article role="main">
           <section id="writers">
 <h1>Writers<a class="headerlink" href="#writers" title="Permalink to this heading">#</a></h1>
-<section id="writers-sql-writer">
-<h2>writers.sql_writer<a class="headerlink" href="#writers-sql-writer" title="Permalink to this heading">#</a></h2>
+<section id="module-psycopmlutils.writers.sql_writer">
+<span id="writers-sql-writer"></span><h2>writers.sql_writer<a class="headerlink" href="#module-psycopmlutils.writers.sql_writer" title="Permalink to this heading">#</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.writers.sql_writer.chunker">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.writers.sql_writer.</span></span><span class="sig-name descname"><span class="pre">chunker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/writers/sql_writer.html#chunker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.writers.sql_writer.chunker" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.writers.sql_writer.insert_with_progress">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.writers.sql_writer.</span></span><span class="sig-name descname"><span class="pre">insert_with_progress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows_per_chunk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">if_exists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/writers/sql_writer.html#insert_with_progress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.writers.sql_writer.insert_with_progress" title="Permalink to this definition">#</a></dt>
+<dd><p>Chunk dataframe and insert each chunk, showing a progress bar.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pd.DataFrame</em>) – Dataframe to insert.</p></li>
+<li><p><strong>table_name</strong> (<em>str</em>) – SQL table name to insert into.</p></li>
+<li><p><strong>conn</strong> (<em>_type_</em>) – Connected sqlalchemy engine.</p></li>
+<li><p><strong>rows_per_chunk</strong> (<em>int</em>) – How many rows to fit into each chunk.</p></li>
+<li><p><strong>if_exists</strong> (<em>str</em>) – What to do if table exists. Takes {‘fail’, ‘replace’, ‘append’}.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="psycopmlutils.writers.sql_writer.write_df_to_sql">
+<span class="sig-prename descclassname"><span class="pre">psycopmlutils.writers.sql_writer.</span></span><span class="sig-name descname"><span class="pre">write_df_to_sql</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rows_per_chunk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'BI-DPA-PROD'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'USR_PS_Forsk'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">if_exists</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'fail'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/psycopmlutils/writers/sql_writer.html#write_df_to_sql"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#psycopmlutils.writers.sql_writer.write_df_to_sql" title="Permalink to this definition">#</a></dt>
+<dd><p>Writes a pandas dataframe to the SQL server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df</strong> (<em>pd.DataFrame</em>) – dataframe to write</p></li>
+<li><p><strong>table_name</strong> (<em>str</em>) – name of table to write to</p></li>
+<li><p><strong>rows_per_chunk</strong> (<em>int</em>) – rows per chunk for loading bar</p></li>
+<li><p><strong>server</strong> (<em>str</em><em>, </em><em>optional</em>) – The SQL server. Defaults to “BI-DPA_PROD”.</p></li>
+<li><p><strong>database</strong> (<em>str</em><em>, </em><em>optional</em>) – The SQL database. Defaults to “USR_PS_Forsk”.</p></li>
+<li><p><strong>if_exists</strong> (<em>str</em><em>, </em><em>optional</em>) – What to do if the table already exists. Takes {‘fail’, ‘replace’, ‘append’}. Defaults to “fail”.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
@@ -285,7 +325,7 @@
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Writers</a><ul>
-<li><a class="reference internal" href="#writers-sql-writer">writers.sql_writer</a></li>
+<li><a class="reference internal" href="#module-psycopmlutils.writers.sql_writer">writers.sql_writer</a></li>
 </ul>
 </li>
 </ul>
