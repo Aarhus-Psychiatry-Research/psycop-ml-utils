@@ -18,7 +18,7 @@ from psycopmlutils.feature_describer.feature_describer import (
     create_feature_description_from_dir,
 )
 from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
-    check_feature_combinations_return_correct_formatting,
+    check_feature_combinations_return_correct_dfs,
 )
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
@@ -57,9 +57,9 @@ if __name__ == "__main__":
     # at the end of the list.
     random.shuffle(PREDICTOR_LIST)
 
-    check_feature_combinations_return_correct_formatting(
+    check_feature_combinations_return_correct_dfs(
         predictor_dict_list=PREDICTOR_LIST,
-        n=10_000,
+        n=1_000,
     )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
