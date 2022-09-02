@@ -19,7 +19,7 @@ def check_feature_combinations_return_correct_formatting(
     """
     msg = Printer(timestamp=True)
 
-    msg.info("Checking that feature combinations comform to correct formatting")
+    msg.info("Checking that feature combinations conform to correct formatting")
 
     # Get all unique dataframes sources in predictor_df_vals
     predictor_df_vals = [d["predictor_df"] for d in predictor_dict_list]
@@ -42,7 +42,7 @@ def check_feature_combinations_return_correct_formatting(
 
         source_failures = []
 
-        prefix = f"{i}/{len(predictor_df_vals)} {predictor_df_str}:"
+        prefix = f"{i+1}/{len(predictor_df_vals)} {predictor_df_str}:"
 
         if df.shape[0] == 0:
             source_failures.append("No rows returned")
@@ -51,13 +51,14 @@ def check_feature_combinations_return_correct_formatting(
             if col not in df.columns:
                 source_failures.append(f"{col} not in columns")
 
-                if "timestamp" in col:
-                    # Check that column has a valid datetime format
-                    if col.dtype not in ("datetime64[ns]"):
-                        source_failures.append(f"{col} has invalid datetime format")
+            if "timestamp" in col:
+                # Check that column has a valid datetime format
+                if df[col].dtype != "datetime64[ns]":
+                    source_failures.append(f"{col} has invalid datetime format")
 
         if len(source_failures) != 0:
-            failed.append({predictor_df_str["predictor_df"]: source_failures})
+            msg.warn(f"{prefix} {source_failures}, agregating")
+            failed.append({predictor_df_str: source_failures})
         else:
             msg.good(f"{prefix} Conforms to criteria")
 
@@ -66,4 +67,4 @@ def check_feature_combinations_return_correct_formatting(
             f"Checked {len(predictor_df_vals)} predictor_dfs, all returned appropriate dfs",
         )
     else:
-        raise ValueError(f"{failed} all returned empty dfs")
+        raise ValueError(failed)

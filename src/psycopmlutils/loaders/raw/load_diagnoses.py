@@ -97,6 +97,7 @@ class LoadDiagnoses:
                 icd_code=icd_code,
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
+                n=n,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
@@ -151,20 +152,25 @@ class LoadDiagnoses:
                         f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}%'",
                     )
                 else:
-                    code_must_equal = "lower(diagnosegruppestreng)"
+                    # If the string is at the end of diagnosegruppestreng, it doesn't end with a hashtag
+                    match_col_sql_strings.append(
+                        f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}'",
+                    )
 
-                match_col_sql_strings.append(
-                    f"{code_must_equal} = '{code_str.lower()}'",
-                )
+                    # But if it is at the end, it does
+                    match_col_sql_strings.append(
+                        f"lower(diagnosegruppestreng) LIKE '%{code_str.lower()}#%'",
+                    )
 
             match_col_sql_str = " OR ".join(match_col_sql_strings)
         else:
             if wildcard_icd_code:
-                code_must_equal = f"left(lower(diagnosegruppestreng), {len(code_str)})"
-            else:
-                code_must_equal = "lower(diagnosegruppestreng)"
+                match_col_sql_str = (
+                    f"lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}%'"
+                )
 
-            match_col_sql_str = f"{code_must_equal} = '{code_str.lower()}'"
+            else:
+                match_col_sql_str = f"lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}' OR lower(diagnosegruppestreng) LIKE '%{icd_code.lower()}#%'"
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"

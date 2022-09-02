@@ -47,7 +47,7 @@ def create_feature_description_from_dir(
         msg.info(f"{split}: Generating feature description dataframe")
         feature_description_df = generate_feature_description_df(
             df=predictors,
-            predictor_list=predictor_dicts,
+            predictor_dicts=predictor_dicts,
         )
 
         msg.info("{split}: Writing feature description to disk")
