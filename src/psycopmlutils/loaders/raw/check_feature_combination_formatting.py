@@ -43,6 +43,7 @@ def check_feature_combinations_return_correct_dfs(
 
     for i, d in enumerate(unique_subset_dicts):
         # Check that it returns a dataframe
+
         try:
             df = loader_fns_dict[d["predictor_df"]](n=n)
         except KeyError:
@@ -53,7 +54,7 @@ def check_feature_combinations_return_correct_dfs(
 
         source_failures = []
 
-        prefix = f"{i}/{len(unique_subset_dicts)} {d['predictor_df']}:"
+        prefix = f"{i+1}/{len(unique_subset_dicts)} {d['predictor_df']}:"
 
         # Check that the dataframe has a meaningful length
         if df.shape[0] == 0:
@@ -77,11 +78,16 @@ def check_feature_combinations_return_correct_dfs(
                 if col != "value":
                     source_failures.append(f"{col}: {na_prop}% NaN")
                 else:
-                    if d["allowed_nan_value_prop"] is not None:
-                        if na_prop > d["allowed_nan_value_prop"]:
-                            source_failures.append(
-                                f"{col}: {na_prop}% NaN (allowed {d['allowed_nan_value_prop']}%)",
-                            )
+                    d["allowed_nan_value_prop"] = (
+                        0.0
+                        if d["allowed_nan_value_prop"] is not None
+                        else d["allowed_nan_value_prop"]
+                    )
+
+                    if na_prop > d["allowed_nan_value_prop"]:
+                        source_failures.append(
+                            f"{col}: {na_prop}% NaN (allowed {d['allowed_nan_value_prop']}%)",
+                        )
 
         # Check for duplicates
         if df.duplicated(subset=subset_duplicates_columns).any():
@@ -90,7 +96,7 @@ def check_feature_combinations_return_correct_dfs(
         # Return errors
         if len(source_failures) != 0:
             failure_dicts.append({d["predictor_df"]: source_failures})
-            msg.fail(f"{prefix} failed, errors: {source_failures}")
+            msg.fail(f"{prefix} errors: {source_failures}")
         else:
             msg.good(f"{prefix} Conforms to criteria")
 
