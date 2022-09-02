@@ -46,7 +46,6 @@ class LoadCoercion:
 
     def _concatenate_coercion(
         coercion_types_list: List[Dict[str, str]],
-        subset_by: Optional[int] = "both",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple types of coercion with multiple reasons into one
@@ -54,7 +53,6 @@ class LoadCoercion:
 
         Args:
             coercion_types_list (list): List of dictionaries containing a 'coercion_type' key and a 'reason_for_coercion' key. If keys not in dicts, they are set to None # noqa: DAR102
-            subset_by (str): String indicating whether data is being subset based on coercion type, reason or both
             n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
