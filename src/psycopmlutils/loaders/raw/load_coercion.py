@@ -78,7 +78,14 @@ class LoadCoercion:
             for d in coercion_types_list
         ]
 
-        return pd.concat(dfs, axis=0).reset_index(drop=True)
+        return (
+            pd.concat(dfs, axis=0)
+            .drop_duplicates(
+                subset=["dw_ek_borger", "timestamp", "value"],
+                keep="first",
+            )
+            .reset_index(drop=True)
+        )
 
     @data_loaders.register("coercion_farlighed")
     def coercion_farlighed(n: Optional[int] = None) -> pd.DataFrame:

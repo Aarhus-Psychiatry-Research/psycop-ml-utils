@@ -51,11 +51,18 @@ class LoadLabResults:
             LoadLabResults.blood_sample(
                 blood_sample_id=f"{id}",
                 n=n_per_df,
-            ).drop_duplicates(subset=["timestamp", "dw_ek_borger", "value"])
+            )
             for id in blood_sample_ids
         ]
 
-        return pd.concat(dfs, axis=0).reset_index(drop=True)
+        return (
+            pd.concat(dfs, axis=0)
+            .drop_duplicates(
+                subset=["timestamp", "dw_ek_borger", "value"],
+                keep="first",
+            )
+            .reset_index(drop=True)
+        )
 
     @data_loaders.register("hba1c")
     def hba1c(n: Optional[int] = None) -> pd.DataFrame:

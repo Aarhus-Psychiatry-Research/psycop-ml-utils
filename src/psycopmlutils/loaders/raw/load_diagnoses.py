@@ -58,7 +58,10 @@ class LoadDiagnoses:
             for source_name, kwargs in diagnoses_source_table_info.items()
         ]
 
-        df = pd.concat(dfs)
+        df = pd.concat(dfs).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
         return df.reset_index(drop=True)
 
     def from_physical_visits(

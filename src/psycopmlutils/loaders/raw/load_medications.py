@@ -33,7 +33,14 @@ class LoadMedications:
             for id in atc_code_prefixes
         ]
 
-        return pd.concat(dfs, axis=0).reset_index(drop=True)
+        return (
+            pd.concat(dfs, axis=0)
+            .drop_duplicates(
+                subset=["dw_ek_borger", "timestamp", "value"],
+                keep="first",
+            )
+            .reset_index(drop=True)
+        )
 
     def load(
         atc_code: str,

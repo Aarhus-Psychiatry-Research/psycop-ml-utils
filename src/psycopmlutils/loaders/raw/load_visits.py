@@ -72,10 +72,9 @@ class LoadVisits:
         output_df = pd.concat(dfs)
 
         # 0,8% of visits are duplicates. Unsure if overlap between sources or errors in source data. Removing.
-        output_df.drop_duplicates(
+        output_df = output_df.drop_duplicates(
             subset=["timestamp", "dw_ek_borger"],
             keep="first",
-            inplace=True,
         )
         msg.good("Loaded physical visits")
 

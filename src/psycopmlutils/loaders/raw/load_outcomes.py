@@ -22,7 +22,7 @@ class LoadOutcome:
         df["value"] = 1
 
         # 2 duplicates, dropping
-        df.drop_duplicates(keep=False, inplace=True)
+        df = df.drop_duplicates(keep="first")
 
         msg.good("Finished loading t2d event times")
         return df.reset_index(drop=True)
