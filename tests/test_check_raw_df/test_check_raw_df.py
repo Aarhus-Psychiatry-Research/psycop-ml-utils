@@ -1,6 +1,6 @@
 from utils_for_testing import check_any_item_in_list_has_str, str_to_df
 
-from psycopmlutils.loaders.raw.check_raw_df import check_raw_df
+from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 
 
 def test_raw_df_has_rows():
@@ -10,7 +10,7 @@ def test_raw_df_has_rows():
     df = str_to_df(df_str)
 
     assert check_any_item_in_list_has_str(
-        l=check_raw_df(df)[0],
+        list=check_raw_df(df)[0],
         str_="No rows returned",
     )
 
@@ -21,7 +21,10 @@ def test_raw_df_has_required_cols():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(l=check_raw_df(df)[0], str_="not in columns")
+    assert check_any_item_in_list_has_str(
+        list=check_raw_df(df)[0],
+        str_="not in columns",
+    )
 
 
 def test_raw_df_has_datetime_formatting():
@@ -32,7 +35,7 @@ def test_raw_df_has_datetime_formatting():
     df = str_to_df(df_str, convert_timestamp_to_datetime=False)
 
     assert check_any_item_in_list_has_str(
-        l=check_raw_df(df)[0],
+        list=check_raw_df(df)[0],
         str_="invalid datetime",
     )
 
@@ -44,17 +47,21 @@ def test_raw_df_has_expected_val_dtype():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(l=check_raw_df(df)[0], str_="invalid dtype")
+    assert check_any_item_in_list_has_str(
+        list=check_raw_df(df)[0],
+        str_="invalid dtype",
+    )
 
 
 def test_raw_df_has_invalid_na_prop():
+    """If raw df has a nan prop above 0.0, return an error."""
     df_str = """dw_ek_borger,timestamp,value
                 1,2021-01-01 00:00:00,np.nan
             """
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(l=check_raw_df(df)[0], str_="NaN")
+    assert check_any_item_in_list_has_str(list=check_raw_df(df)[0], str_="NaN")
 
 
 def test_raw_df_has_duplicates():
@@ -65,4 +72,4 @@ def test_raw_df_has_duplicates():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(l=check_raw_df(df)[0], str_="NaN")
+    assert check_any_item_in_list_has_str(list=check_raw_df(df)[0], str_="NaN")

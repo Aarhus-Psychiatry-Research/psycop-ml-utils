@@ -55,10 +55,7 @@ class LoadVisits:
         for table, meta in d.items():
             cols = f"{meta['datetime_col']}, dw_ek_borger"
 
-            sql = f"SELECT {cols} FROM [fct].{meta['view']} WHERE {meta['datetime_col']} IS NOT NULL"
-
-            if "where" in meta:
-                sql += f" left({meta['location_col']}, 4) = '6600' {meta['where']}"
+            sql = f"SELECT {cols} FROM [fct].{meta['view']} WHERE {meta['datetime_col']} IS NOT NULL AND left({meta['location_col']}, 4) = '6600' {meta['where']}"
 
             if where_clause is not None:
                 sql += f" {where_separator} {where_clause}"

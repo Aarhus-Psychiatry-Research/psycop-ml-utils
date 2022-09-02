@@ -1,3 +1,5 @@
+"""Check that any raw df conforms to the required format."""
+
 from typing import List
 
 import pandas as pd

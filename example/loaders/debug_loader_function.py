@@ -1,9 +1,16 @@
+"""Exemplifies how to debug an SQL loader function.
+
+Two primary purposes:
+1. Check the possible values the dataframe can contain and
+2. Check that the dataframe conforms to the required format.
+"""
+
 from typing import Any
 
 import pandas as pd
 
 import psycopmlutils.loaders.raw as raw_loaders
-from psycopmlutils.loaders.raw.check_feature_combination_formatting import check_raw_df
+from psycopmlutils.data_checks.raw.check_predictor_lists import check_raw_df
 
 
 def will_it_float(value: Any) -> bool:
@@ -68,5 +75,3 @@ if __name__ == "__main__":
         subset_duplicates_columns=["dw_ek_borger", "timestamp", "value"],
     )
     print(errors)
-
-    pass

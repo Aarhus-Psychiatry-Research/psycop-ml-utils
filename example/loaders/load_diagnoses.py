@@ -1,4 +1,4 @@
-from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
+from psycopmlutils.data_checks.raw.check_predictor_lists import (
     check_feature_combinations_return_correct_dfs,
 )
 from psycopmlutils.loaders.raw.load_diagnoses import LoadDiagnoses

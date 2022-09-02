@@ -1,4 +1,4 @@
-from psycopmlutils.data_checks.validate_raw_data import validate_raw_data
+from psycopmlutils.data_checks.raw.validate_raw_data import validate_raw_data
 from psycopmlutils.utils import data_loaders
 
 if __name__ == "__main__":

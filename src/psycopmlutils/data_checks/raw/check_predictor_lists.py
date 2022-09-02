@@ -1,8 +1,12 @@
+"""Check that all feature_dicts conform to correct formatting.
+
+Also check that they return meaningful dictionaries.
+"""
 from typing import Dict, List, Union
 
 from wasabi import Printer
 
-from psycopmlutils.loaders.raw.check_raw_df import check_raw_df
+from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 from psycopmlutils.utils import data_loaders
 
 
@@ -12,6 +16,7 @@ def check_feature_combinations_return_correct_dfs(
     required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     allowed_nan_value_prop: float = 0.01,
+    expected_val_dtype: str = "float64",
 ):
     """Test that all predictor_dfs in predictor_list return a valid df.
 
@@ -21,6 +26,7 @@ def check_feature_combinations_return_correct_dfs(
         required_columns (List[str]): List of required columns. Defaults to ["dw_ek_borger", "timestamp", "value"].
         subset_duplicates_columns (List[str]): List of columns to subset on when checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
         allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
+        expected_val_dtype (str): Expected value dtype. Defaults to "float64".
     """
     msg = Printer(timestamp=True)
 
@@ -51,7 +57,7 @@ def check_feature_combinations_return_correct_dfs(
             df = loader_fns_dict[d["predictor_df"]](n=n)
         except KeyError:
             msg.warn(
-                f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a dataframe. Continuing.",
+                f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a well-formatted dataframe. Continuing.",
             )
             continue
 
@@ -68,6 +74,7 @@ def check_feature_combinations_return_correct_dfs(
             required_columns=required_columns,
             subset_duplicates_columns=subset_duplicates_columns,
             allowed_nan_value_prop=allowed_nan_value_prop,
+            expected_val_dtype=expected_val_dtype,
         )
 
         # Return errors

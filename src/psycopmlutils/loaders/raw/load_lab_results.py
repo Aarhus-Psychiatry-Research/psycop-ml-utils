@@ -9,14 +9,12 @@ from psycopmlutils.utils import data_loaders
 class LoadLabResults:
     def blood_sample(
         blood_sample_id: str,
-        numerical_only: bool = False,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load a blood sample.
 
         Args:
             blood_sample_id (str): The blood_sample_id, typically an NPU code. # noqa: DAR102
-            numerical_only (bool): Whether to only return numerical values. Defaults toFalse.
             n: Number of rows to return. Defaults to None.
 
         Returns:
@@ -24,10 +22,7 @@ class LoadLabResults:
         """
         view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
 
-        if numerical_only:
-            val_col = "numerisksvar"
-        else:
-            val_col = "svar"
+        val_col = "svar"
 
         columns = f"dw_ek_borger, datotid_sidstesvar, {val_col}"
 
@@ -41,8 +36,7 @@ class LoadLabResults:
         )
 
         # Convert all values matching X,Y to X.Y and then to float
-        if not numerical_only:
-            df["value"] = df["value"].str.replace(",", ".")
+        df["value"] = df["value"].str.replace(",", ".")
 
         return df.reset_index(drop=True).drop_duplicates(
             subset=["dw_ek_borger", "timestamp", "value"],
@@ -52,7 +46,6 @@ class LoadLabResults:
     def _concatenate_blood_samples(
         blood_sample_ids: list,
         n: Optional[int] = None,
-        numerical_only: bool = False,
     ) -> pd.DataFrame:
         """Concatenate multiple blood_sample_ids (typically NPU-codes) into one
         column.
@@ -60,7 +53,6 @@ class LoadLabResults:
         Args:
             blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes. # noqa: DAR102
             n (int, optional): Number of rows to return. Defaults to None.
-            numerical_only (bool): Whether to only return numerical values. Defaults to False.
 
         Returns:
             pd.DataFrame
@@ -71,7 +63,6 @@ class LoadLabResults:
             LoadLabResults.blood_sample(
                 blood_sample_id=f"{id}",
                 n=n_per_df,
-                numerical_only=numerical_only,
             )
             for id in blood_sample_ids
         ]
@@ -90,7 +81,6 @@ class LoadLabResults:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU27300",
             n=n,
-            numerical_only=True,
         )
 
     @data_loaders.register("scheduled_glc")

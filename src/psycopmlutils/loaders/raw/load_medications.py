@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 from wasabi import msg
@@ -8,9 +8,9 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
-    def _concat_medications(
+    def concat_medications(
         output_col_name: str,
-        atc_code_prefixes: list[str],
+        atc_code_prefixes: List[str],
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
@@ -18,7 +18,7 @@ class LoadMedications:
 
         Args:
             output_col_name (str): Name for new column.  # noqa: DAR102
-            atc_code_prefixes (list[str]): List of atc_codes.
+            atc_code_prefixes (List[str]): List of atc_codes.
             n (int, optional): Number of atc_codes to aggregate. Defaults to None.
 
         Returns:

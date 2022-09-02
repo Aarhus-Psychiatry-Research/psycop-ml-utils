@@ -1,4 +1,4 @@
-from .check_feature_combination_formatting import (  # noqa
+from ...data_checks.raw.check_predictor_lists import (  # noqa
     check_feature_combinations_return_correct_dfs,
 )
 from .load_coercion import LoadCoercion  # noqa
