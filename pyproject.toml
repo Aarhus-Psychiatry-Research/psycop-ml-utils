@@ -46,6 +46,7 @@ myst-parser = "0.18.*"
 flake8 = "4.0.*"
 docformatter = "1.4"
 darglint = "^1.8.1"
+SQLAlchemy = "^1.4.40"
 
 [tool.coverage.run]
 omit = [
