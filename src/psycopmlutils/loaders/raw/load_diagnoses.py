@@ -99,18 +99,23 @@ class LoadDiagnoses:
             },
         }
 
+        n_per_df = int(n / len(diagnoses_source_table_info))
+
         dfs = [
             LoadDiagnoses._load(
                 icd_code=icd_code,
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
-                n=n,
+                n=n_per_df,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
         ]
 
-        df = pd.concat(dfs)
+        df = pd.concat(dfs).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
 
         return df.reset_index(drop=True)
 
