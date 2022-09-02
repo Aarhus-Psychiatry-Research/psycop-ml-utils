@@ -10,7 +10,7 @@ def check_feature_combinations_return_correct_dfs(
     predictor_dict_list: List[Dict[str, Union[str, float, int]]],
     n: int = 1_000,
     required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
-    subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp"],
+    subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
 ):
     """Test that all predictor_dfs in predictor_list return a valid df.
 
@@ -79,8 +79,8 @@ def check_feature_combinations_return_correct_dfs(
 
 def check_raw_df(
     df: pd.DataFrame,
-    required_columns: List[str],
-    subset_duplicates_columns: List[str],
+    required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
+    subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     allowed_nan_value_prop: float = 0.0,
 ) -> List[str]:
     """Check that the raw df conforms to the required format and doesn't
