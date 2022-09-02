@@ -5,6 +5,7 @@ from typing import Optional
 import pandas as pd
 from sqlalchemy import create_engine
 from tqdm import tqdm
+from wasabi import msg
 
 
 def chunker(seq, size):
@@ -72,6 +73,11 @@ def write_df_to_sql(
 
     engine = create_engine(url=url, fast_executemany=True)
     conn = engine.connect()
+
+    if if_exists == "replace":
+        msg.warn(
+            "'replace' only replaces rows, not the table. If you want to delete rows, drop the entire table first (sql_load(query='DROP TABLE [fct].[psycop_train_ids]')).",
+        )
 
     insert_with_progress(
         df=df,
