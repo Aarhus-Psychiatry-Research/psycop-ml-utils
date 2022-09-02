@@ -8,8 +8,8 @@ from deepchecks.tabular.suites import data_integrity
 from wasabi import Printer
 
 from psycopmlutils.data_checks.data_integrity import get_name_of_failed_checks
+from psycopmlutils.data_checks.feature_describer import create_unicode_hist
 from psycopmlutils.data_checks.utils import save_df_to_pretty_html
-from psycopmlutils.feature_describer.feature_describer import create_unicode_hist
 from psycopmlutils.utils import RAW_DATA_VALIDATION_PATH
 
 
@@ -17,7 +17,7 @@ def validate_raw_data(
     df: pd.DataFrame,
     feature_set_name: str,
     deviation_baseline_column: Optional[str] = "median",
-    deviation_threshold: Optional[float] = 4.0,
+    deviation_threshold_ratio: Optional[float] = 4.0,
     deviation_variation_column: Optional[str] = "median_absolute_deviation",
 ) -> None:
     """Validates raw data from SQL database (or any dataframe, really). Runs
@@ -32,9 +32,16 @@ def validate_raw_data(
     Args:
         df (pd.DataFrame): Dataframe to validate.
         feature_set_name (str): Name of the feature set.
-        deviation_baseline_column (Optional[str], optional): _description_. Defaults to "mean".
-        deviation_threshold (Optional[float], optional): _description_. Defaults to 3.0.
-        deviation_variation_column (Optional[str], optional): _description_. Defaults to "std".
+        deviation_baseline_column (Optional[str], optional): Which metric to use as
+            the baseline for identifying columns that might be problematic. Defaults to "median".
+        deviation_threshold_ratio (Optional[float], optional): Which threshold to
+            use as the cutoff for identifying problematic columns. Defaults to 4.0.
+        deviation_variation_column (Optional[str], optional): Which metric to use
+            as the measure of variation from the baseline when identifying problematic
+            columns. Defaults to "median_absolute_deviation".
+
+    Raises:
+        ValueError: If 'dw_ek_borger' or 'timestamp' are not columns in the dataframe.
     """
 
     msg = Printer(timestamp=True)
@@ -49,6 +56,10 @@ def validate_raw_data(
     # check if `timestamp` and `dw_ek_borger` columns exist
     timestamp_col_name = "timestamp" if "timestamp" in df.columns else None
     id_col_name = "dw_ek_borger" if "dw_ek_borger" in df.columns else None
+    if timestamp_col_name or id_col_name is None:
+        raise ValueError(
+            "Dataframe must contain `timestamp` and `dw_ek_borger` columns.",
+        )
 
     # Deepchecks
     ds = Dataset(df=df, index_name=id_col_name, datetime_name=timestamp_col_name)
@@ -71,13 +82,12 @@ def validate_raw_data(
     msg.good("Finished data description.")
 
     data_description = pd.DataFrame(data_description)
-    if timestamp_col_name:
-        data_description["prop NaT"] = calculate_prop_not_a_time(df[timestamp_col_name])
+    data_description["prop NaT"] = get_na_prob(df[timestamp_col_name])
     data_description.to_csv(savepath / "data_description.csv", index=False)
     # Highlight rows with large deviations from the baseline
     data_description = data_description.style.apply(
-        highlight_large_deviation,
-        threshold=deviation_threshold,
+        func=highlight_large_deviation,
+        threshold=deviation_threshold_ratio,
         baseline_column=deviation_baseline_column,
         variation_column=deviation_variation_column,
         axis=1,
@@ -87,7 +97,7 @@ def validate_raw_data(
         data_description,
         savepath / "data_description.html",
         title=f"Data description - {feature_set_name}",
-        subtitle=f"Yellow rows indicate large deviations from the {deviation_baseline_column}\n(99th/1st percentile within {deviation_baseline_column} +- {deviation_variation_column} * threshold={deviation_threshold}) from the baseline.)",
+        subtitle=f"Yellow rows indicate {deviation_threshold_ratio}x deviations from the {deviation_baseline_column}\n(99th/1st percentile within {deviation_baseline_column} +- {deviation_variation_column} * threshold={deviation_threshold_ratio}) from the baseline.)",
     )
 
     msg.info(f"All files saved to {savepath}")
@@ -110,8 +120,8 @@ def generate_column_description(series: pd.Series) -> dict:
     d = {
         "col_name": series.name,
         "dtype": series.dtype,
-        "nunique": series.nunique(),
-        "nmissing": series.isna().sum(),
+        "n_unique": series.nunique(),
+        "n_missing": series.isna().sum(),
         "min": series.min(),
         "max": series.max(),
         "mean": series.mean(),
@@ -126,7 +136,7 @@ def generate_column_description(series: pd.Series) -> dict:
     return d
 
 
-def calculate_prop_not_a_time(series: pd.Series) -> pd.Series:
+def get_na_prob(series: pd.Series) -> pd.Series:
     """Calculates the propotion of rows that are NaT.
 
     Args:
@@ -139,7 +149,7 @@ def calculate_prop_not_a_time(series: pd.Series) -> pd.Series:
 
 
 def median_absolute_deviation(series: pd.Series) -> np.array:
-    """Calculates the median absolute deviation of a series.
+    """Calculates a series' median absolute deviation from its own median.
 
     Args:
         series (pd.Series): Series to calculate the median absolute deviation of.
@@ -153,26 +163,26 @@ def median_absolute_deviation(series: pd.Series) -> np.array:
 
 def highlight_large_deviation(
     series: pd.Series,
-    threshold: float,
+    threshold_ratio: float,
     baseline_column: str,
     variation_column: str,
 ) -> List[str]:
-    """Highlights rows where the 99th/1st percentile is x times the standard
-    deviation larger/smaller than the column (probably mean or median).
+    """Highlights rows where the 99th/1st percentile is x times the variation
+    column larger/smaller than the baseline column (probably mean or median).
 
     Args:
         series (pd.Series): Series to describe.
-        threshold (float): Threshold for deviation. 3-4 might be a good value.
+        threshold_ratio (float): Threshold for deviation. 3-4 might be a good value.
         baseline_column (str): Name of the column to use as baseline. Commonly 'mean' or 'median'.
         variation_column (str): Name of the column containing the variation.
-        Commonly 'std' or 'mad' (mean aboslute deviation).
+        Commonly 'std' or 'median_absolute_deviation'
 
     Returns:
         List[str]: List of styles for each row.
     """
     above_threshold = pd.Series(data=False, index=series.index)
-    lower_bound = series[baseline_column] - series[variation_column] * threshold
-    upper_bound = series[baseline_column] + series[variation_column] * threshold
+    lower_bound = series[baseline_column] - series[variation_column] * threshold_ratio
+    upper_bound = series[baseline_column] + series[variation_column] * threshold_ratio
 
     above_threshold[baseline_column] = (
         series.loc["0.99th_percentile"] > upper_bound

@@ -58,8 +58,8 @@ def create_feature_description_from_dir(
         )
         # Writing html table as well
         save_df_to_pretty_html(
-            feature_description_df,
-            save_dir / f"{split}_feature_description.html",
+            df=feature_description_df,
+            path=save_dir / f"{split}_feature_description.html",
             title="Feature description",
         )
 

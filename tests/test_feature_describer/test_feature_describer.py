@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from psycopmlutils.feature_describer.feature_describer import (
+from psycopmlutils.data_checks.feature_describer import (
     generate_feature_description_df,
     generate_feature_description_row,
 )
