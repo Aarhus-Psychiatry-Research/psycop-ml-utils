@@ -55,7 +55,7 @@ def check_feature_combinations_return_correct_dfs(
 
         prefix = f"{i+1}/{len(unique_subset_dicts)} {d['predictor_df']}:"
 
-        source_failures, prefix = check_raw_df(
+        source_failures, duplicates = check_raw_df(
             df=df,
             required_columns=required_columns,
             subset_duplicates_columns=subset_duplicates_columns,
@@ -125,7 +125,12 @@ def check_raw_df(
                     )
 
     # Check for duplicates
-    if df.duplicated(subset=subset_duplicates_columns).any():
-        source_failures.append(f"Duplicates found on {subset_duplicates_columns}")
+    duplicates_idx = df.duplicated(subset=subset_duplicates_columns, keep=False)
 
-    return source_failures
+    if duplicates_idx.any():
+        source_failures.append(f"Duplicates found on {subset_duplicates_columns}")
+        duplicates = df[duplicates_idx]
+    else:
+        duplicates = None
+
+    return source_failures, duplicates
