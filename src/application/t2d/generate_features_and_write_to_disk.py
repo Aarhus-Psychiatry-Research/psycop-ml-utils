@@ -14,7 +14,7 @@ from application.t2d.features_medications import create_medication_feature_combi
 from psycopmlutils.data_checks.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
-from psycopmlutils.feature_describer.feature_describer import (
+from psycopmlutils.data_checks.feature_describer import (
     create_feature_description_from_dir,
 )
 from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
