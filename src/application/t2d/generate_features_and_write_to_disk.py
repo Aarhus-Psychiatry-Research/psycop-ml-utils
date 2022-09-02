@@ -11,16 +11,16 @@ import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
 from application.t2d.features_diagnoses import create_diag_feature_combinations
 from application.t2d.features_medications import create_medication_feature_combinations
-from psycopmlutils.feature_describer.feature_describer import (
+from psycopmlutils.data_checks.data_integrity import (
+    check_feature_set_integrity_from_dir,
+)
+from psycopmlutils.data_checks.feature_describer import (
     create_feature_description_from_dir,
 )
 from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
     check_feature_combinations_return_correct_formatting,
 )
 from psycopmlutils.timeseriesflattener import FlattenedDataset
-from psycopmlutils.timeseriesflattener.data_integrity import (
-    check_feature_set_integrity_from_dir,
-)
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":

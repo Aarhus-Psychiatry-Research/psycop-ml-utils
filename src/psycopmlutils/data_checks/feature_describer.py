@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from wasabi import Printer
 
+from psycopmlutils.data_checks.utils import save_df_to_pretty_html
 from psycopmlutils.loaders.flattened.local_feature_loaders import load_split_predictors
 from psycopmlutils.utils import generate_feature_colname
 
@@ -36,6 +37,7 @@ def create_feature_description_from_dir(
         splits (List[str]): List of splits to include in the description. Defaults to ["train"].
     """
     msg = Printer(timestamp=True)
+    save_dir = path / "feature_descriptions"
 
     for split in splits:
         msg.info(f"{split}: Creating feature description")
@@ -51,8 +53,14 @@ def create_feature_description_from_dir(
         msg.info("{split}: Writing feature description to disk")
 
         feature_description_df.to_csv(
-            path / "{split}_feature_description.csv",
+            save_dir / "{split}_feature_description.csv",
             index=False,
+        )
+        # Writing html table as well
+        save_df_to_pretty_html(
+            df=feature_description_df,
+            path=save_dir / f"{split}_feature_description.html",
+            title="Feature description",
         )
 
 
@@ -103,23 +111,24 @@ def generate_feature_description_row(
         Dict: Dictionary with feature description.
     """
 
-    d = {}
-
-    d["Predictor df"] = predictor_dict["predictor_df"]
-    d["Lookbehind days"] = predictor_dict["lookbehind_days"]
-    d["Resolve multiple strategy"] = predictor_dict["resolve_multiple"]
-
-    d["Fallback strategy"] = predictor_dict["fallback"]
-
-    d["Proportion using fallback"] = get_value_proportion(series=series, value=np.nan)
-
-    d["Mean"] = round(series.mean(), 2)
+    d = {
+        "Predictor df": predictor_dict["predictor_df"],
+        "Lookbehind days": predictor_dict["lookbehind_days"],
+        "Resolve multiple": predictor_dict["resolve_multiple"],
+        "N unique": series.nunique(),
+        "Fallback strategy": predictor_dict["fallback"],
+        "Proportion missing": series.isna().mean(),
+        "Mean": round(series.mean(), 2),
+        "Histogram": create_unicode_hist(series),
+        "Proportion using fallback": get_value_proportion(
+            series,
+            predictor_dict["fallback"],
+        ),
+    }
 
     for percentile in [0.01, 0.25, 0.5, 0.75, 0.99]:
         # Get the value representing the percentile
         d[f"{percentile*100}-percentile"] = round(series.quantile(percentile), 1)
-
-    d["Histogram"] = create_unicode_hist(series)
 
     return d
 
@@ -130,10 +139,6 @@ def get_value_proportion(series, value):
         return round(series.isna().mean(), 2)
     else:
         return round(series.eq(value).mean(), 2)
-
-
-if __name__ == "__main__":
-    raise NotImplementedError()
 
 
 def create_unicode_hist(series: pd.Series) -> pd.Series:
