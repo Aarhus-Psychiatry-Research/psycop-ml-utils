@@ -26,14 +26,12 @@ class LoadLabResults:
 
         if numerical_only:
             val_col = "numerisksvar"
-            where = f" AND {val_col} IS NOT NULL"
         else:
             val_col = "svar"
-            where = ""
 
         columns = f"dw_ek_borger, datotid_sidstesvar, {val_col}"
 
-        sql = f"SELECT {columns} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' {where}"
+        sql = f"SELECT {columns} FROM [fct].{view} WHERE npukode = '{blood_sample_id}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
