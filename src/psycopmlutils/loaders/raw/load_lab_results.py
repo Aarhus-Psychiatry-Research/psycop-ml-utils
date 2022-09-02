@@ -31,7 +31,7 @@ class LoadLabResults:
 
         columns = f"dw_ek_borger, datotid_sidstesvar, {val_col}"
 
-        sql = f"SELECT {columns} FROM [fct].{view} WHERE npukode = '{blood_sample_id}'"
+        sql = f"SELECT {columns} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND datotid_sidstesvar IS NOT NULL"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
@@ -44,7 +44,10 @@ class LoadLabResults:
         if not numerical_only:
             df["value"] = df["value"].str.replace(",", ".")
 
-        return df.reset_index(drop=True)
+        return df.reset_index(drop=True).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
 
     def _concatenate_blood_samples(
         blood_sample_ids: list,

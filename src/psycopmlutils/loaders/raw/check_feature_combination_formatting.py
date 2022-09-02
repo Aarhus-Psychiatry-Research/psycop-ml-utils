@@ -67,7 +67,7 @@ def check_feature_combinations_return_correct_dfs(
             df=df,
             required_columns=required_columns,
             subset_duplicates_columns=subset_duplicates_columns,
-            allowed_nan_value_prop=d["allowed_nan_value_prop"],
+            allowed_nan_value_prop=allowed_nan_value_prop,
         )
 
         # Return errors
@@ -90,6 +90,7 @@ def check_raw_df(
     required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     allowed_nan_value_prop: float = 0.0,
+    expected_val_dtype: str = "float64",
 ) -> List[str]:
     """Check that the raw df conforms to the required format and doesn't
     contain duplicates or missing values.
@@ -99,6 +100,7 @@ def check_raw_df(
         required_columns (List[str]): List of required columns. Defaults to ["dw_ek_borger", "timestamp", "value"].
         subset_duplicates_columns (List[str]): List of columns to subset on when checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
         allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
+        expected_val_dtype (str): Expected dtype of value column. Defaults to "float64".
 
     Returns:
         List[str]: List of errors.
@@ -114,18 +116,24 @@ def check_raw_df(
         if col not in df.columns:
             source_failures.append(f"{col}: not in columns")
 
-            # Check that columns are correctly formatted
-            if "timestamp" in col:
-                # Check that column has a valid datetime format
-                if col.dtype not in ("datetime64[ns]"):
-                    source_failures.append(f"{col}: invalid datetime format")
+        # Check that columns are correctly formatted
+        if "timestamp" in col:
+            # Check that column has a valid datetime format
+            if df[col].dtype != "datetime64[ns]":
+                source_failures.append(f"{col}: invalid datetime format")
+        elif "value" in col:
+            # Check that column has a valid numeric format
+            if df[col].dtype != expected_val_dtype:
+                source_failures.append(
+                    f"{col}: invalid dtype, expected {expected_val_dtype}",
+                )
 
             # Check for NaN in cols
         na_prop = round(df[col].isna().sum() / df.shape[0], 2)
 
         if na_prop > 0:
             if col != "value":
-                source_failures.append(f"{col}: {na_prop}% NaN")
+                source_failures.append(f"{col}: {na_prop} NaN")
             else:
                 if na_prop > allowed_nan_value_prop:
                     source_failures.append(

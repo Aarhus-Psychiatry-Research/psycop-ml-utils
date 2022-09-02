@@ -60,6 +60,7 @@ if __name__ == "__main__":
     check_feature_combinations_return_correct_dfs(
         predictor_dict_list=PREDICTOR_LIST,
         n=1_000,
+        allowed_nan_value_prop=0.6,
     )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()

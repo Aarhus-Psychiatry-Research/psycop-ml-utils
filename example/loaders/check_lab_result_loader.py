@@ -57,18 +57,16 @@ def get_prop_of_each_unique_value_for_non_floats(series: pd.Series) -> pd.Series
 
 
 if __name__ == "__main__":
-    df = raw_loaders.load_lab_results.LoadLabResults.hba1c(n=10_000)
+    df = raw_loaders.load_lab_results.LoadLabResults.hdl(n=10_000)
 
-    possible_problems = get_prop_of_each_unique_value_for_non_floats(df["value"])
-
-    print(possible_problems)
+    value_props = get_prop_of_each_unique_value_for_non_floats(df["value"])
+    print(value_props)
 
     errors, duplicates = check_raw_df(
         df=df,
         required_columns=["dw_ek_borger", "timestamp", "value"],
         subset_duplicates_columns=["dw_ek_borger", "timestamp", "value"],
     )
-
     print(errors)
 
     pass
