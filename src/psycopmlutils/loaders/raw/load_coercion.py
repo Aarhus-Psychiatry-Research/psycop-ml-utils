@@ -26,18 +26,13 @@ class LoadCoercion:
         """
         view = "[FOR_tvang_alt_hele_kohorten_inkl_2021]"
 
-        sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed_timer_sei FROM [fct].{view}"
+        sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed_timer_sei FROM [fct].{view} WHERE datotid_start_sei IS NOT NULL"
 
         if coercion_type and reason_for_coercion is None:
-
             sql += f"WHERE typetekst_sei = '{coercion_type}'"
-
         if coercion_type is None and reason_for_coercion:
-
             sql += f"WHERE begrundtekst_sei = '{reason_for_coercion}'"
-
         if coercion_type and reason_for_coercion:
-
             sql += f"WHERE typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
@@ -51,7 +46,6 @@ class LoadCoercion:
 
     def _concatenate_coercion(
         coercion_types_list: List[Dict[str, str]],
-        subset_by: Optional[int] = "both",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple types of coercion with multiple reasons into one
@@ -59,7 +53,6 @@ class LoadCoercion:
 
         Args:
             coercion_types_list (list): List of dictionaries containing a 'coercion_type' key and a 'reason_for_coercion' key. If keys not in dicts, they are set to None # noqa: DAR102
-            subset_by (str): String indicating whether data is being subset based on coercion type, reason or both
             n (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
@@ -85,7 +78,14 @@ class LoadCoercion:
             for d in coercion_types_list
         ]
 
-        return pd.concat(dfs, axis=0).reset_index(drop=True)
+        return (
+            pd.concat(dfs, axis=0)
+            .drop_duplicates(
+                subset=["dw_ek_borger", "timestamp", "value"],
+                keep="first",
+            )
+            .reset_index(drop=True)
+        )
 
     @data_loaders.register("coercion_farlighed")
     def coercion_farlighed(n: Optional[int] = None) -> pd.DataFrame:

@@ -13,7 +13,7 @@ class LoadOutcome:
         msg.info("Loading t2d event times")
 
         df = sql_load(
-            "SELECT dw_ek_borger, timestamp FROM [fct].[psycop_t2d_first_diabetes_t2d]",
+            "SELECT dw_ek_borger, timestamp FROM [fct].[psycop_t2d_first_diabetes_t2d] WHERE timestamp IS NOT NULL",
             database="USR_PS_FORSK",
             chunksize=None,
             format_timestamp_cols_to_datetime=True,
@@ -22,7 +22,7 @@ class LoadOutcome:
         df["value"] = 1
 
         # 2 duplicates, dropping
-        df.drop_duplicates(keep=False, inplace=True)
+        df = df.drop_duplicates(keep="first")
 
         msg.good("Finished loading t2d event times")
         return df.reset_index(drop=True)
@@ -30,7 +30,7 @@ class LoadOutcome:
     @data_loaders.register("any_diabetes")
     def any_diabetes(n: Optional[int] = None):
         df = sql_load(
-            "SELECT * FROM [fct].[psycop_t2d_first_diabetes_any]",
+            "SELECT * FROM [fct].[psycop_t2d_first_diabetes_any] WHERE timestamp IS NOT NULL",
             database="USR_PS_FORSK",
             chunksize=None,
             n=n,

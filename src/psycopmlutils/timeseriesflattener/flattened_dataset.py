@@ -10,7 +10,11 @@ from pandas import DataFrame
 from wasabi import msg
 
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
-from psycopmlutils.utils import data_loaders, generate_feature_colname
+from psycopmlutils.utils import (
+    data_loaders,
+    df_contains_duplicates,
+    generate_feature_colname,
+)
 
 
 class FlattenedDataset:
@@ -75,6 +79,15 @@ class FlattenedDataset:
                 raise ValueError(
                     f"{col_name} does not exist in prediction_times_df, change the df or set another argument",
                 )
+
+        # Check for duplicates
+        if df_contains_duplicates(
+            df=self.df,
+            col_subset=[self.id_col_name, self.timestamp_col_name],
+        ):
+            raise ValueError(
+                "Duplicate patient/timestamp combinations in prediction_times_df, aborting",
+            )
 
         # Check timestamp col type
         timestamp_col_type = type(self.df[self.timestamp_col_name][0]).__name__
@@ -241,6 +254,7 @@ class FlattenedDataset:
             how="left",
             on=self.pred_time_uuid_col_name,
             suffixes=("", ""),
+            validate="1:1",
         )
 
         self.df = self.df.copy()
@@ -386,6 +400,7 @@ class FlattenedDataset:
             how="left",
             on=self.id_col_name,
             suffixes=("", ""),
+            validate="m:1",
         )
 
     def add_temporal_outcome(
@@ -418,6 +433,7 @@ class FlattenedDataset:
                 how="left",
                 on=self.id_col_name,
                 suffixes=("_prediction", "_outcome"),
+                validate="m:1",
             )
 
             df = df.drop(
@@ -528,7 +544,13 @@ class FlattenedDataset:
             new_col_name_prefix=new_col_name_prefix,
         )
 
-        self.df = pd.merge(self.df, df, how="left", on=self.pred_time_uuid_col_name)
+        self.df = pd.merge(
+            self.df,
+            df,
+            how="left",
+            on=self.pred_time_uuid_col_name,
+            validate="1:1",
+        )
 
     @staticmethod
     def flatten_temporal_values_to_df(
@@ -604,11 +626,12 @@ class FlattenedDataset:
         # Generate df with one row for each prediction time x event time combination
         # Drop dw_ek_borger for faster merge
         df = pd.merge(
-            prediction_times_with_uuid_df,
-            values_df,
+            left=prediction_times_with_uuid_df,
+            right=values_df,
             how="left",
             on=id_col_name,
             suffixes=("_pred", "_val"),
+            validate="m:m",
         ).drop("dw_ek_borger", axis=1)
 
         # Drop prediction times without event times within interval days

@@ -11,14 +11,14 @@ import psycopmlutils.loaders.raw  # noqa
 from application.t2d.features_blood_samples import create_lab_feature_combinations
 from application.t2d.features_diagnoses import create_diag_feature_combinations
 from application.t2d.features_medications import create_medication_feature_combinations
-from psycopmlutils.data_checks.data_integrity import (
+from psycopmlutils.data_checks.flattened.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
-from psycopmlutils.data_checks.feature_describer import (
+from psycopmlutils.data_checks.flattened.feature_describer import (
     create_feature_description_from_dir,
 )
-from psycopmlutils.loaders.raw.check_feature_combination_formatting import (
-    check_feature_combinations_return_correct_formatting,
+from psycopmlutils.data_checks.raw.check_predictor_lists import (
+    check_feature_combinations_return_correct_dfs,
 )
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
@@ -57,9 +57,10 @@ if __name__ == "__main__":
     # at the end of the list.
     random.shuffle(PREDICTOR_LIST)
 
-    check_feature_combinations_return_correct_formatting(
+    check_feature_combinations_return_correct_dfs(
         predictor_dict_list=PREDICTOR_LIST,
-        n=100,
+        n=1_000,
+        allowed_nan_value_prop=0.0,
     )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
@@ -157,12 +158,7 @@ if __name__ == "__main__":
             f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
-        split_df = pd.merge(
-            flattened_df.df,
-            df_split_ids,
-            how="inner",
-            validate="many_to_one",
-        )
+        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner", validate="m:1")
 
         # Version table with current date and time
         filename = f"{file_prefix}_{dataset_name}.csv"

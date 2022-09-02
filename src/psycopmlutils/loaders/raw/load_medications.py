@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import pandas as pd
 from wasabi import msg
@@ -8,9 +8,9 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
-    def aggregate_medications(
+    def concat_medications(
         output_col_name: str,
-        atc_code_prefixes: list[str],
+        atc_code_prefixes: List[str],
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
@@ -18,7 +18,7 @@ class LoadMedications:
 
         Args:
             output_col_name (str): Name for new column.  # noqa: DAR102
-            atc_code_prefixes (list[str]): List of atc_codes.
+            atc_code_prefixes (List[str]): List of atc_codes.
             n (int, optional): Number of atc_codes to aggregate. Defaults to None.
 
         Returns:
@@ -33,7 +33,14 @@ class LoadMedications:
             for id in atc_code_prefixes
         ]
 
-        return pd.concat(dfs, axis=0).reset_index(drop=True)
+        return (
+            pd.concat(dfs, axis=0)
+            .drop_duplicates(
+                subset=["dw_ek_borger", "timestamp", "value"],
+                keep="first",
+            )
+            .reset_index(drop=True)
+        )
 
     def load(
         atc_code: str,
@@ -106,7 +113,10 @@ class LoadMedications:
             inplace=True,
         )
 
-        return df.reset_index(drop=True)
+        return df.reset_index(drop=True).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
 
     def _load_one_source(
         atc_code: str,
@@ -146,7 +156,7 @@ class LoadMedications:
         view = f"[{view}]"
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-            + f" WHERE (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+            + f" WHERE {source_timestamp_col_name} IS NOT NULL AND (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
         )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)

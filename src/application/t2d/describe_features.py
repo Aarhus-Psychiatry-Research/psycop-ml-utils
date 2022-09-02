@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from psycopmlutils.data_checks.feature_describer import (
+from psycopmlutils.data_checks.flattened.feature_describer import (
     create_feature_description_from_dir,
 )
 from src.application.t2d.features_blood_samples import create_lab_feature_combinations

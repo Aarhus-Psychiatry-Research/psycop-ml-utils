@@ -7,7 +7,7 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadDiagnoses:
-    def aggregate_from_physical_visits(
+    def concat_from_physical_visits(
         icd_codes: List[str],
         output_col_name: str,
         wildcard_icd_10_end: Optional[bool] = False,
@@ -28,15 +28,19 @@ class LoadDiagnoses:
 
         diagnoses_source_table_info = {
             "lpr3": {
-                "fct": "FOR_LPR3kontakter_psyk_somatik_inkl_2021",
+                "fct": "FOR_LPR3kontakter_psyk_somatik_inkl_2021_feb2022",
                 "source_timestamp_col_name": "datotid_lpr3kontaktstart",
             },
             "lpr2_inpatient": {
-                "fct": "FOR_indlaeggelser_psyk_somatik_LPR2_inkl_2021",
+                "fct": "FOR_indlaeggelser_psyk_somatik_LPR2_inkl_2021_feb2022",
                 "source_timestamp_col_name": "datotid_indlaeggelse",
             },
+            "lpr2_acute_outpatient": {
+                "fct": "FOR_akutambulantekontakter_psyk_somatik_LPR2_inkl_2021_feb2022",
+                "source_timestamp_col_name": "datotid_start",
+            },
             "lpr2_outpatient": {
-                "fct": "FOR_besoeg_psyk_somatik_LPR2_inkl_2021",
+                "fct": "FOR_besoeg_psyk_somatik_LPR2_inkl_2021_feb2022",
                 "source_timestamp_col_name": "datotid_start",
             },
         }
@@ -54,13 +58,16 @@ class LoadDiagnoses:
             for source_name, kwargs in diagnoses_source_table_info.items()
         ]
 
-        df = pd.concat(dfs)
+        df = pd.concat(dfs).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
         return df.reset_index(drop=True)
 
     def from_physical_visits(
         icd_code: str,
-        n: Optional[int] = None,
         output_col_name: Optional[str] = "value",
+        n: Optional[int] = None,
         wildcard_icd_code: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load diagnoses from all physical visits. If icd_code is a list, will
@@ -92,18 +99,23 @@ class LoadDiagnoses:
             },
         }
 
+        n_per_df = int(n / len(diagnoses_source_table_info))
+
         dfs = [
             LoadDiagnoses._load(
                 icd_code=icd_code,
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
-                n=n,
+                n=n_per_df,
                 **kwargs,
             )
             for source_name, kwargs in diagnoses_source_table_info.items()
         ]
 
-        df = pd.concat(dfs)
+        df = pd.concat(dfs).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
 
         return df.reset_index(drop=True)
 
@@ -174,7 +186,7 @@ class LoadDiagnoses:
 
         sql = (
             f"SELECT dw_ek_borger, {source_timestamp_col_name}, diagnosegruppestreng"
-            + f" FROM [fct].{fct} WHERE ({match_col_sql_str})"
+            + f" FROM [fct].{fct} WHERE {source_timestamp_col_name} IS NOT NULL AND ({match_col_sql_str})"
         )
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
