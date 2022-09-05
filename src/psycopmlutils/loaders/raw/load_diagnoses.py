@@ -10,7 +10,7 @@ class LoadDiagnoses:
     def concat_from_physical_visits(
         icd_codes: List[str],
         output_col_name: str,
-        wildcard_icd_10_end: Optional[bool] = False,
+        wildcard_icd_code: Optional[bool] = False,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load all diagnoses matching any icd_code in icd_codes. Create
@@ -19,7 +19,7 @@ class LoadDiagnoses:
         Args:
             icd_codes (List[str]): List of icd_codes. # noqa: DAR102
             output_col_name (str): Output column name
-            wildcard_icd_10_end (bool, optional): Whether to match on icd_codes* or icd_codes. Defaults to False.
+            wildcard_icd_code (bool, optional): Whether to match on icd_codes* or icd_codes. Defaults to False.
             n: Number of rows to return. Defaults to None.
 
         Returns:
@@ -51,7 +51,7 @@ class LoadDiagnoses:
             LoadDiagnoses._load(
                 icd_code=icd_codes,
                 output_col_name=output_col_name,
-                wildcard_icd_code=wildcard_icd_10_end,
+                wildcard_icd_code=wildcard_icd_code,
                 n=n,
                 **kwargs,
             )
@@ -151,7 +151,7 @@ class LoadDiagnoses:
 
         # Must be able to split a string like this:
         #   A:DF431#+:ALFC3#B:DF329
-        # Which means that if wildcard_icd_10_end is False, we must match on icd_code# or icd_code followed by nothing.
+        # Which means that if wildcard_icd_code is False, we must match on icd_code# or icd_code followed by nothing.
         # If it's true, we can match on icd_code*.
 
         # Handle if there are multiple ICD codes to count together.
@@ -252,5 +252,372 @@ class LoadDiagnoses:
         return LoadDiagnoses.from_physical_visits(
             icd_code="G479",
             wildcard_icd_code=False,
+            n=n,
+        )
+
+    @data_loaders.register("f0_disorders")
+    def f0_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f0",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("dementia")
+    def dementia(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f00", "f01", "f02", "f03", "f04"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("delirium")
+    def delirium(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f05",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("other organic mental disorders")
+    def other_organic_mental_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f06", "f07", "f09"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f1-chapter (mental and behavioural disorders due to psychoactive substance use)
+    @data_loaders.register("f1_disorders")
+    def f1_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f1",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("alcohol and tobacco dependencies")
+    def alcohol_and_tobacco(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f10", "f17"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("opioid and sedative dependencies")
+    def opioids_and_sedatives(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f11", "f13"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("cannabinoid and hallucinogen dependencies")
+    def cannabinoids_and_hallucinogens(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f12", "f16"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("stimulant dependencies")
+    def stimulants(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f14", "f15"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("other drug dependencies")
+    def other_drugs(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f18", "f19"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f2-chapter (schizophrenia, schizotypal and delusional disorders)
+
+    @data_loaders.register("f2_disorders")
+    def f2_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f2",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("schizophrenia")
+    def schizophrenia(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f20", "f21"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("schizoaffective")
+    def schizoaffective(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f25",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("other psychosis")
+    def other_psychosis(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f22", "f23", "f24", "f26", "f27", "f28", "f29"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f3-chapter (mood (affective) disorders).
+
+    @data_loaders.register("f3_disorders")
+    def f3_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f3",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("manic and bipolar")
+    def manic_and_bipolar(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f30", "f31"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("depressive disorders")
+    def depressive_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f32", "f33", "f34", "f38"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("other affective disorders")
+    def other_affective_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f38", "f39"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f4-chapter (neurotic, stress-related and somatoform disorders).
+
+    @data_loaders.register("f4_disorders")
+    def f4_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f4",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("phobic,anxiety and ocd")
+    def phobic_and_anxiety(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f40", "f41", "f42"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("reaction to severe stress and adjustment disorders")
+    def stress_and_adjustment(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f43",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("dissociative, somatoform and others")
+    def dissociative_somatoform_and_others(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f44", "f45", "f48"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f5-chapter (behavioural syndromes associated with physiological disturbances and physical factors).
+
+    @data_loaders.register("f5_disorders")
+    def f5_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f5",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("eating disorders")
+    def eating_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f50",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("sleeping and sexual disorders")
+    def sleeping_and_sexual_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f51", "f52"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("f5_others")
+    def f5_others(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f53", "f54", "f55", "f59"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f6-chapter (disorders of adult personality and behaviour).
+    @data_loaders.register("f6_disorders")
+    def f6_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f6",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("cluster_a")
+    def cluster_a(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f600", "f601"],
+            wildcard_icd_code=False,
+            n=n,
+        )
+
+    @data_loaders.register("cluster_b")
+    def cluster_b(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f602", "f603", "f604"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("cluster_c")
+    def cluster_c(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f605", "f606", "f607"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("other personality disorders")
+    def other_personality_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f608", "f609", "f61", "f62", "f63", "f68", "f69"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("sexual disorders")
+    def other_personality(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f65", "f66"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+        # should we exclude sexual identity disorders? f64
+
+    # data loaders for all diagnoses in the f7-chapter (mental retardation).
+    @data_loaders.register("f7_disorders")
+    def f7_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f7",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("mild mental retardation")
+    def mild_mental_retardation(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f70",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("moderate mental retardation")
+    def moderate_mental_retardation(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f71",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("severe mental retardation")
+    def severe_mental_retardation(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f72", "f73"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("other mental retardation")
+    def other_mental_retardation(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f78", "f79"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f8-chapter (disorders of psychological development).
+    @data_loaders.register("f8_disorders")
+    def f8_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f8",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("pervasive developmental disorders")
+    def pervasive_developmental_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f84",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("f8_others")
+    def f8_others(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f80", "f81", "f82", "f83", "f88", "f89"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    # data loaders for all diagnoses in the f9-chapter (child and adolescent disorders).
+    @data_loaders.register("f9_disorders")
+    def f9_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f9",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("hyperkinetic disorders")
+    def hyperkinetic_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f90",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("behavioural disorders")
+    def behavioural_disorders(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f91", "f92", "f93", "f94"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("tics and others")
+    def tics_and_others(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code=["f95", "f98"],
+            wildcard_icd_code=True,
             n=n,
         )
