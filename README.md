@@ -3,7 +3,7 @@
 
 Current priorities are on the [Board 🎬](https://github.com/orgs/Aarhus-Psychiatry-Research/projects/4/views/1).
 
-![python versions](https://img.shields.io/badge/Python-%3E=3.8-blue)
+![python versions](https://img.shields.io/badge/Python-%3E=3.10-blue)
 [![Code style: black](https://img.shields.io/badge/Code%20Style-Black-black)](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html)
 [![github actions pytest](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/pytest.yml/badge.svg)](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions)
 [![github actions docs](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/documentation.yml/badge.svg)](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/)
