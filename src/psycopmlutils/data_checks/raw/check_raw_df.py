@@ -10,7 +10,7 @@ def check_raw_df(
     required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     allowed_nan_value_prop: float = 0.0,
-    expected_val_dtype: str = "float64",
+    expected_val_dtypes: List[str] = ["float64", "int64"],
 ) -> List[str]:
     """Check that the raw df conforms to the required format and doesn't
     contain duplicates or missing values.
@@ -20,7 +20,7 @@ def check_raw_df(
         required_columns (List[str]): List of required columns. Defaults to ["dw_ek_borger", "timestamp", "value"].
         subset_duplicates_columns (List[str]): List of columns to subset on when checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
         allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
-        expected_val_dtype (str): Expected dtype of value column. Defaults to "float64".
+        expected_val_dtypes (List[str]): Expected dtype of value column. Defaults to "float64".
 
     Returns:
         List[str]: List of errors.
@@ -44,9 +44,9 @@ def check_raw_df(
                 source_failures.append(f"{col}: invalid datetime format")
         elif "value" in col:
             # Check that column has a valid numeric format
-            if df[col].dtype != expected_val_dtype:
+            if df[col].dtype not in expected_val_dtypes:
                 source_failures.append(
-                    f"{col}: invalid dtype, expected {expected_val_dtype}",
+                    f"{col}: invalid dtype, expected {expected_val_dtypes}",
                 )
 
         # Check for NaN in cols
