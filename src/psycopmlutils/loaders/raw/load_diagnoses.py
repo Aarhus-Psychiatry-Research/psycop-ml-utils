@@ -296,7 +296,7 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("alcohol and tobacco")
+    @data_loaders.register("alcohol and tobacco dependencies")
     def alcohol_and_tobacco(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["f10", "f17"],
@@ -304,7 +304,7 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("opioids and sedatives")
+    @data_loaders.register("opioid and sedative dependencies")
     def opioids_and_sedatives(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["f11", "f13"],
@@ -312,7 +312,7 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("cannabinoids and hallucinogens")
+    @data_loaders.register("cannabinoid and hallucinogen dependencies")
     def cannabinoids_and_hallucinogens(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["f12", "f16"],
@@ -320,7 +320,7 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("stimulants")
+    @data_loaders.register("stimulant dependencies")
     def stimulants(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["f14", "f15"],
@@ -328,7 +328,7 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("other drugs")
+    @data_loaders.register("other drug dependencies")
     def other_drugs(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["f18", "f19"],
@@ -422,7 +422,7 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("reaction to severe stress, and adjustment disorders")
+    @data_loaders.register("reaction to severe stress and adjustment disorders")
     def stress_and_adjustment(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code="f43",
@@ -484,7 +484,7 @@ class LoadDiagnoses:
     @data_loaders.register("cluster_a")
     def cluster_a(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f60.0", "f60.1"],
+            icd_code=["f600", "f601"],
             wildcard_icd_code=False,
             n=n,
         )
@@ -492,7 +492,7 @@ class LoadDiagnoses:
     @data_loaders.register("cluster_b")
     def cluster_b(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f60.2", "f60.3", "f60.4"],
+            icd_code=["f602", "f603", "f604"],
             wildcard_icd_code=True,
             n=n,
         )
@@ -500,15 +500,15 @@ class LoadDiagnoses:
     @data_loaders.register("cluster_c")
     def cluster_c(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f60.5", "f60.6", "f60.7"],
+            icd_code=["f605", "f606", "f607"],
             wildcard_icd_code=True,
             n=n,
         )
 
     @data_loaders.register("other personality disorders")
-    def other_personality(n: Optional[int] = None) -> pd.DataFrame:
+    def other_personality_disorders(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f60.8", "f60.9", "f61", "f62", "f63", "f68", "f69"],
+            icd_code=["f608", "f609", "f61", "f62", "f63", "f68", "f69"],
             wildcard_icd_code=True,
             n=n,
         )
