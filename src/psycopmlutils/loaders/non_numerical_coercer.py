@@ -39,4 +39,7 @@ def multiply_inequalities_in_df(
             .round(0)
         )
 
+    # Convert col_to_multiply dtype to float
+    df[col_to_multiply] = df[col_to_multiply].astype(float)
+
     return df

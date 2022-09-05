@@ -86,7 +86,7 @@ class LoadLabResults:
             )
 
         fn_dict = {
-            "coerce": LoadLabResults.load_non_numerical_values_and_coerce,
+            "coerce": LoadLabResults.load_non_numerical_values_and_coerce_inequalities,
             "numerical": LoadLabResults.load_numerical_values,
             "cancelled": LoadLabResults.load_cancelled,
             "all": LoadLabResults.load_all_values,
@@ -107,7 +107,7 @@ class LoadLabResults:
             keep="first",
         )
 
-    def load_non_numerical_values_and_coerce(
+    def load_non_numerical_values_and_coerce_inequalities(
         blood_sample_id: str,
         n: int,
         view: str,
@@ -125,7 +125,7 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the non-numerical values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         df.rename(
@@ -347,10 +347,11 @@ class LoadLabResults:
         )
 
     @data_loaders.register("egfr")
-    def egfr(n: Optional[int] = None) -> pd.DataFrame:
+    def egfr(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
         return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             n=n,
+            values_to_load=values_to_load,
         )
 
     @data_loaders.register("albumine_creatinine_ratio")
