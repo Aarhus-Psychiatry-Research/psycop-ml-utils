@@ -40,6 +40,19 @@ def get_prop_of_each_unique_value_for_non_floats(series: pd.Series) -> pd.Series
         pd.Series: A series with the proportion of each unique value in the
         original series.
     """
+    # Find all strings that start with a number
+    starts_with_number_idx = series.str.match(r"^\d+").fillna(False)
+
+    # Convert all strings that start with a number to floats
+    ## Replace all "," with "."
+    series[starts_with_number_idx] = series[starts_with_number_idx].str.replace(
+        ",",
+        ".",
+    )
+
+    ## Convert all str in series to float
+    series[starts_with_number_idx] = series[starts_with_number_idx].astype(float)
+
     # Get the unique values
     unique_values = series.unique()
 
@@ -64,7 +77,7 @@ def get_prop_of_each_unique_value_for_non_floats(series: pd.Series) -> pd.Series
 
 
 if __name__ == "__main__":
-    df = raw_loaders.load_lab_results.LoadLabResults.hdl(n=10_000)
+    df = raw_loaders.load_lab_results.LoadLabResults.hdl(n=10_000, values_to_load="all")
 
     value_props = get_prop_of_each_unique_value_for_non_floats(df["value"])
     print(value_props)

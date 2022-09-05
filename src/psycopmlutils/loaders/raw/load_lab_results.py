@@ -125,7 +125,7 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the non-numerical values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         df.rename(
@@ -151,7 +151,7 @@ class LoadLabResults:
         """
 
         cols = "dw_ek_borger, datotid_sidstesvar, numerisksvar"
-        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}' AND numerisksvar IS NOT NULL"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND numerisksvar IS NOT NULL"
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         df.rename(
@@ -173,7 +173,7 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the timestamps for cancelled values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar"
-        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}' AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
@@ -199,7 +199,7 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with all values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}'"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
@@ -298,8 +298,12 @@ class LoadLabResults:
         return LoadLabResults.blood_sample(blood_sample_id="NPU03620", n=n)
 
     @data_loaders.register("hdl")
-    def hdl(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(blood_sample_id="NPU01567", n=n)
+    def hdl(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU01567",
+            n=n,
+            values_to_load=values_to_load,
+        )
 
     @data_loaders.register("ldl")
     def ldl(n: Optional[int] = None) -> pd.DataFrame:
