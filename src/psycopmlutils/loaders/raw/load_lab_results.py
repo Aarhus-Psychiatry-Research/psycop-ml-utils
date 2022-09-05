@@ -231,7 +231,7 @@ class LoadLabResults:
         return df
 
     @data_loaders.register("hba1c")
-    def hba1c(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def hba1c(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU27300",
             n=n,
@@ -239,7 +239,10 @@ class LoadLabResults:
         )
 
     @data_loaders.register("scheduled_glc")
-    def scheduled_glc(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def scheduled_glc(
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
         npu_suffixes = [
             "08550",
             "08551",
@@ -296,7 +299,7 @@ class LoadLabResults:
     @data_loaders.register("unscheduled_p_glc")
     def unscheduled_p_glc(
         n: Optional[int] = None,
-        values_to_load="all",
+        values_to_load: str = "all",
     ) -> pd.DataFrame:
         npu_suffixes = [
             "02192",
@@ -316,7 +319,10 @@ class LoadLabResults:
         )
 
     @data_loaders.register("triglycerides")
-    def triglycerides(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def triglycerides(
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU04094",
             n=n,
@@ -326,7 +332,7 @@ class LoadLabResults:
     @data_loaders.register("fasting_triglycerides")
     def fasting_triglycerides(
         n: Optional[int] = None,
-        values_to_load="all",
+        values_to_load: str = "all",
     ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU03620",
@@ -343,7 +349,7 @@ class LoadLabResults:
         )
 
     @data_loaders.register("ldl")
-    def ldl(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def ldl(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["NPU01568", "AAB00101"],
             n=n,
@@ -351,7 +357,10 @@ class LoadLabResults:
         )
 
     @data_loaders.register("fasting_ldl")
-    def fasting_ldl(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def fasting_ldl(
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
         return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["NPU10171", "AAB00102"],
             n=n,
@@ -359,7 +368,7 @@ class LoadLabResults:
         )
 
     @data_loaders.register("alat")
-    def alat(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def alat(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19651",
             n=n,
@@ -367,7 +376,7 @@ class LoadLabResults:
         )
 
     @data_loaders.register("asat")
-    def asat(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def asat(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19654",
             n=n,
@@ -375,7 +384,10 @@ class LoadLabResults:
         )
 
     @data_loaders.register("lymphocytes")
-    def lymphocytes(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def lymphocytes(
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU02636",
             n=n,
@@ -383,7 +395,10 @@ class LoadLabResults:
         )
 
     @data_loaders.register("leukocytes")
-    def leukocytes(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def leukocytes(
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU02593",
             n=n,
@@ -391,7 +406,7 @@ class LoadLabResults:
         )
 
     @data_loaders.register("crp")
-    def crp(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def crp(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19748",
             n=n,
@@ -399,14 +414,17 @@ class LoadLabResults:
         )
 
     @data_loaders.register("creatinine")
-    def creatinine(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def creatinine(
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
         return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
             n=n,
         )
 
     @data_loaders.register("egfr")
-    def egfr(n: Optional[int] = None, values_to_load="all") -> pd.DataFrame:
+    def egfr(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             n=n,
@@ -416,7 +434,7 @@ class LoadLabResults:
     @data_loaders.register("albumine_creatinine_ratio")
     def albumine_creatinine_ratio(
         n: Optional[int] = None,
-        values_to_load="all",
+        values_to_load: str = "all",
     ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
             blood_sample_id="NPU19661",
