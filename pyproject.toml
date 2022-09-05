@@ -48,6 +48,7 @@ flake8 = "4.0.*"
 docformatter = "1.4"
 darglint = "^1.8.1"
 SQLAlchemy = "^1.4.40"
+pyodbc = "^4.0.34"
 
 [tool.coverage.run]
 omit = [
