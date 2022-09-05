@@ -12,7 +12,20 @@ def str_to_df(
     str,
     convert_timestamp_to_datetime: bool = True,
     convert_np_nan_to_nan: bool = True,
+    convert_str_to_float: bool = False,
 ) -> DataFrame:
+    """Convert a string representation of a dataframe to a dataframe.
+
+    Args:
+        str (str): A string representation of a dataframe.
+        convert_timestamp_to_datetime (bool): Whether to convert the timestamp column to datetime. Defaults to True.
+        convert_np_nan_to_nan (bool): Whether to convert np.nan to np.nan. Defaults to True.
+        convert_str_to_float (bool): Whether to convert strings to floats. Defaults to False.
+
+    Returns:
+        DataFrame: A dataframe.
+    """
+
     from io import StringIO
 
     df = pd.read_table(StringIO(str), sep=",", index_col=False)
@@ -23,6 +36,10 @@ def str_to_df(
     if convert_np_nan_to_nan:
         # Convert "np.nan" str to the actual np.nan
         df = df.replace("np.nan", np.nan)
+
+    if convert_str_to_float:
+        # Convert all str to float
+        df = df.apply(pd.to_numeric, axis=0, errors="coerce")
 
     # Drop "Unnamed" cols
     return df.loc[:, ~df.columns.str.contains("^Unnamed")]
@@ -67,8 +84,8 @@ def assert_flattened_outcome_as_expected(
             column of the flattened df.
         resolve_multiple (Callable): How to handle multiple values within the lookahead window.
             Takes a a function that takes a list as an argument and returns a float.
-        values_colname (str, optional): Column name for the new values. Defaults to "val".
-        fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0. # noqa: DAR101
+        values_colname (str): Column name for the new values. Defaults to "val".
+        fallback (List): What to fill if no outcome within lookahead days. Defaults to 0. # noqa: DAR101
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
