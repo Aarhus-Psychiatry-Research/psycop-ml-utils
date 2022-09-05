@@ -1,68 +1,46 @@
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 
+from psycopmlutils.loaders.non_numerical_coercer import multiply_inequalities_in_df
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
 class LoadLabResults:
-    def blood_sample(
-        blood_sample_id: str,
-        n: Optional[int] = None,
-    ) -> pd.DataFrame:
-        """Load a blood sample.
-
-        Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code. # noqa: DAR102
-            n: Number of rows to return. Defaults to None.
-
-        Returns:
-            pd.DataFrame
-        """
-        view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
-
-        val_col = "svar"
-
-        columns = f"dw_ek_borger, datotid_sidstesvar, {val_col}"
-
-        sql = f"SELECT {columns} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND datotid_sidstesvar IS NOT NULL"
-
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
-
-        df.rename(
-            columns={"datotid_sidstesvar": "timestamp", val_col: "value"},
-            inplace=True,
-        )
-
-        # Convert all values matching X,Y to X.Y and then to float
-        df["value"] = df["value"].str.replace(",", ".")
-
-        return df.reset_index(drop=True).drop_duplicates(
-            subset=["dw_ek_borger", "timestamp", "value"],
-            keep="first",
-        )
-
     def _concatenate_blood_samples(
         blood_sample_ids: list,
         n: Optional[int] = None,
+        values_to_load: str = "all",
     ) -> pd.DataFrame:
         """Concatenate multiple blood_sample_ids (typically NPU-codes) into one
         column.
 
         Args:
             blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes. # noqa: DAR102
-            n (int, optional): Number of rows to return. Defaults to None.
+            n (int): Number of rows to return. Defaults to None.
+            values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to "all".
 
         Returns:
             pd.DataFrame
         """
+        allowed_values_to_load = [
+            "numerical",
+            "numerical_and_coerce",
+            "cancelled",
+            "all",
+        ]
+
+        if values_to_load not in allowed_values_to_load:
+            raise ValueError(f"values_to_load must be one of {allowed_values_to_load}")
+
         n_per_df = int(n / len(blood_sample_ids))
 
         dfs = [
             LoadLabResults.blood_sample(
                 blood_sample_id=f"{id}",
                 n=n_per_df,
+                values_to_load=values_to_load,
             )
             for id in blood_sample_ids
         ]
@@ -75,6 +53,162 @@ class LoadLabResults:
             )
             .reset_index(drop=True)
         )
+
+    def blood_sample(
+        blood_sample_id: str,
+        n: Optional[int] = None,
+        values_to_load: str = "all",
+    ) -> pd.DataFrame:
+        """Load a blood sample.
+
+        Args:
+            blood_sample_id (str): The blood_sample_id, typically an NPU code. # noqa: DAR102
+            n: Number of rows to return. Defaults to None.
+            values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to "all".
+
+        Returns:
+            pd.DataFrame
+        """
+        view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
+
+        allowed_values_to_load = [
+            "numerical",
+            "numerical_and_coerce",
+            "cancelled",
+            "all",
+        ]
+
+        dfs = []
+
+        if values_to_load not in allowed_values_to_load:
+            raise ValueError(
+                f"values_to_load must be one of {allowed_values_to_load}, not {values_to_load}",
+            )
+
+        fn_dict = {
+            "coerce": LoadLabResults.load_non_numerical_values_and_coerce,
+            "numerical": LoadLabResults.load_numerical_values,
+            "cancelled": LoadLabResults.load_cancelled,
+            "all": LoadLabResults.load_all_values,
+        }
+
+        for k in fn_dict.keys():
+            if k in values_to_load:
+                dfs.append(fn_dict[k](blood_sample_id=blood_sample_id, n=n, view=view))
+
+        # Concatenate dfs
+        if len(dfs) > 1:
+            df = pd.concat(dfs)
+        else:
+            df = dfs[0]
+
+        return df.reset_index(drop=True).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
+
+    def load_non_numerical_values_and_coerce(
+        blood_sample_id: str,
+        n: int,
+        view: str,
+        ineq2mult: Dict[str, float] = None,
+    ) -> pd.DataFrame:
+        """Load non-numerical values for a blood sample.
+
+        Args:
+            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+            n: Number of rows to return. Defaults to None.
+            view (str): The view to load from.
+            ineq2mult (Dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
+
+        Returns:
+            pd.DataFrame: A dataframe with the non-numerical values.
+        """
+        cols = "dw_ek_borger, datotid_sidstesvar, svar"
+        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+
+        df.rename(
+            columns={"datotid_sidstesvar": "timestamp", "svar": "value"},
+            inplace=True,
+        )
+
+        if ineq2mult:
+            return multiply_inequalities_in_df(df, ineq2mult=ineq2mult)
+        else:
+            return multiply_inequalities_in_df(df)
+
+    def load_numerical_values(blood_sample_id: str, n: int, view: str):
+        """Load numerical values for a blood sample.
+
+        Args:
+            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+            n (int): Number of rows to return. Defaults to None.
+            view (str): The view to load from.
+
+        Returns:
+            pd.DataFrame: A dataframe with the numerical values.
+        """
+
+        cols = "dw_ek_borger, datotid_sidstesvar, numerisksvar"
+        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}' AND numerisksvar IS NOT NULL"
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+
+        df.rename(
+            columns={"datotid_sidstesvar": "timestamp", "numerisksvar": "value"},
+            inplace=True,
+        )
+
+        return df
+
+    def load_cancelled(blood_sample_id: str, n: int, view: str) -> pd.DataFrame:
+        """Load cancelled samples for a blood sample.
+
+        Args:
+            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+            n: Number of rows to return. Defaults to None.
+            view (str): The view to load from.
+
+        Returns:
+            pd.DataFrame: A dataframe with the timestamps for cancelled values.
+        """
+        cols = "dw_ek_borger, datotid_sidstesvar"
+        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}' AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+
+        # Create the value column == 1, since all timestamps here are from cancelled blood samples
+        df["value"] = 1
+
+        df.rename(
+            columns={"datotid_sidstesvar": "timestamp"},
+            inplace=True,
+        )
+
+        return df
+
+    def load_all_values(blood_sample_id: str, n: int, view: str) -> pd.DataFrame:
+        """Load all samples for a blood sample.
+
+        Args:
+            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+            n: Number of rows to return. Defaults to None.
+            view (str): The view to load from.
+
+        Returns:
+            pd.DataFrame: A dataframe with all values.
+        """
+        cols = "dw_ek_borger, datotid_sidstesvar, svar"
+        sql = f"SELECT {cols} FROM {view} WHERE npu = '{blood_sample_id}'"
+
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+
+        df.rename(
+            columns={"datotid_sidstesvar": "timestamp", "svar": "value"},
+            inplace=True,
+        )
+
+        return df
 
     @data_loaders.register("hba1c")
     def hba1c(n: Optional[int] = None) -> pd.DataFrame:
