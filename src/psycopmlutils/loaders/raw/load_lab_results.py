@@ -8,7 +8,7 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadLabResults:
-    def _concatenate_blood_samples(
+    def concatenate_blood_samples(
         blood_sample_ids: list,
         n: Optional[int] = None,
         values_to_load: str = "all",
@@ -266,7 +266,7 @@ class LoadLabResults:
 
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
 
-        return LoadLabResults._concatenate_blood_samples(
+        return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=blood_sample_ids,
             n=n,
         )
@@ -284,7 +284,7 @@ class LoadLabResults:
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
         blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
-        return LoadLabResults._concatenate_blood_samples(
+        return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=blood_sample_ids,
             n=n,
         )
@@ -303,14 +303,14 @@ class LoadLabResults:
 
     @data_loaders.register("ldl")
     def ldl(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._concatenate_blood_samples(
+        return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["NPU01568", "AAB00101"],
             n=n,
         )
 
     @data_loaders.register("fasting_ldl")
     def fasting_ldl(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._concatenate_blood_samples(
+        return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["NPU10171", "AAB00102"],
             n=n,
         )
@@ -337,14 +337,14 @@ class LoadLabResults:
 
     @data_loaders.register("creatinine")
     def creatinine(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._concatenate_blood_samples(
+        return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
             n=n,
         )
 
     @data_loaders.register("egfr")
     def egfr(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._concatenate_blood_samples(
+        return LoadLabResults.concatenate_blood_samples(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             n=n,
         )
