@@ -11,6 +11,7 @@ def test_non_numerical_coercion():
                 3,2021-12-31 00:00:01,<90
                 4,2021-12-31 00:00:01,<=90
                 5,2021-12-31 00:00:01,"<1,2"
+                6,2021-12-31 00:00:01,">90.0. Med forbehold - tidsfrist overskredet med 1 time."
             """
 
     expected_df_str = """dw_ek_borger,timestamp,value
@@ -19,6 +20,7 @@ def test_non_numerical_coercion():
                 3,2021-12-31 00:00:01,60.3
                 4,2021-12-31 00:00:01,72.0
                 5,2021-12-31 00:00:01,0.8
+                6,2021-12-31 00:00:01,135.0
             """
 
     df = str_to_df(df_str, convert_str_to_float=False)
