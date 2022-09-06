@@ -4,6 +4,7 @@ from multiprocessing import Pool
 from typing import Dict, List, Union
 
 import pandas as pd
+import tqdm
 from wasabi import Printer
 
 from psycopmlutils.utils import data_loaders
@@ -30,9 +31,14 @@ def pre_load_unique_dfs(
 
     n_workers = min(len(unique_predictor_dfs), 16)
 
-    pool = Pool(n_workers)
+    p = Pool(n_workers)
 
-    pre_loaded_dfs = pool.map(load_df, unique_predictor_dfs)
+    pre_loaded_dfs = list(
+        tqdm.tqdm(
+            p.imap(load_df, unique_predictor_dfs),
+            total=len(unique_predictor_dfs),
+        ),
+    )
 
     # Combined pre_loaded dfs into one dictionary
     pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
