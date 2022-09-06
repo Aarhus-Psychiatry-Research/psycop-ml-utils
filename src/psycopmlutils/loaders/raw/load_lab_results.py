@@ -14,7 +14,9 @@ class LoadLabResults:
         values_to_load: str = "all",
     ) -> pd.DataFrame:
         """Concatenate multiple blood_sample_ids (typically NPU-codes) into one
-        column.
+        column. Makes sense for similar blood samples with different NPU codes,
+        e.g. a scheduled blood-glucose at 9 a.m. has a different NPU-code from
+        one at 11 a.m.
 
         Args:
             blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes. # noqa: DAR102

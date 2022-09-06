@@ -75,6 +75,7 @@ def assert_flattened_outcome_as_expected(
     fallback: Any = np.NaN,
 ):
     """Run tests from string representations of dataframes.
+
     Args:
         prediction_times_df_str (str): A string-representation of prediction-times.
         outcome_df_str (str): A string-representation of an outcome df.
@@ -85,7 +86,8 @@ def assert_flattened_outcome_as_expected(
         resolve_multiple (Callable): How to handle multiple values within the lookahead window.
             Takes a a function that takes a list as an argument and returns a float.
         values_colname (str): Column name for the new values. Defaults to "val".
-        fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN. # noqa: DAR101
+        fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN.
+
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
@@ -93,7 +95,6 @@ def assert_flattened_outcome_as_expected(
         >>> outcome_df_str = '''dw_ek_borger,timestamp,value,
         >>>                     1,2021-12-30 23:59:59, 1
         >>>                     '''
-        >>>
         >>> assert_flattened_outcome_as_expected(
         >>>     prediction_times_df_str=prediction_times_df_str,
         >>>     outcome_df_str=outcome_df_str,
@@ -126,6 +127,7 @@ def assert_flattened_predictor_as_expected(
     fallback: Any = np.NaN,
 ):
     """Run tests from string representations of dataframes.
+
     Args:
         prediction_times_df_str (str): A string-representation of prediction-times df
         predictor_df_str (str): A string-representation of the predictor df
@@ -135,7 +137,6 @@ def assert_flattened_predictor_as_expected(
         values_colname (str): Column name for the new values. Defaults to "val".
         fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN.
 
-        # noqa: DAR101
     Example:
         >>> prediction_times_df_str =  '''dw_ek_borger,timestamp,
         >>>                            1,2021-12-31 00:00:00
@@ -143,7 +144,6 @@ def assert_flattened_predictor_as_expected(
         >>> predictor_df_str =  '''dw_ek_borger,timestamp,value,
         >>>                     1,2022-01-01 00:00:01, 1
         >>>                     '''
-        >>>
         >>> assert_flattened_predictor_as_expected(
         >>>     prediction_times_df_str=prediction_times_df_str,
         >>>     predictor_df_str=predictor_df_str,

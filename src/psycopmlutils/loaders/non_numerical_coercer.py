@@ -18,6 +18,7 @@ def multiply_inequalities_in_df(
     Args:
         df (pd.Dataframe): The dataframe to be modified.
         ineq2mult (Dict[str, float]): A dictionary with the inequalities as keys and the factors as values.
+            Current values are arbitrary, but ensure that inequalities are somewhat separated from the continuous part of the distribution.
         col_to_multiply (str): The column to multiply.
 
     Returns:
