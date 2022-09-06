@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Union
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import pandas as pd
@@ -71,8 +71,8 @@ def assert_flattened_outcome_as_expected(
     lookahead_days: float,
     expected_flattened_values: List,
     resolve_multiple: Union[Callable, str],
-    values_colname: Optional[str] = "value",
-    fallback: Optional[List] = np.NaN,
+    values_colname: str = "value",
+    fallback: Any = np.NaN,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -85,7 +85,7 @@ def assert_flattened_outcome_as_expected(
         resolve_multiple (Callable): How to handle multiple values within the lookahead window.
             Takes a a function that takes a list as an argument and returns a float.
         values_colname (str): Column name for the new values. Defaults to "val".
-        fallback (List): What to fill if no outcome within lookahead days. Defaults to 0. # noqa: DAR101
+        fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN. # noqa: DAR101
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
@@ -122,8 +122,8 @@ def assert_flattened_predictor_as_expected(
     lookbehind_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: Optional[str] = "value",
-    fallback: Optional[List] = np.NaN,
+    values_colname: str = "value",
+    fallback: Any = np.NaN,
 ):
     """Run tests from string representations of dataframes.
     Args:
@@ -132,8 +132,8 @@ def assert_flattened_predictor_as_expected(
         lookbehind_days (float): How far to look behind.
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
         expected_flattened_values (List): A list of the expected values in the value column of the flattened df.
-        values_colname (str, optional): Column name for the new values. Defaults to "val".
-        fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+        values_colname (str): Column name for the new values. Defaults to "val".
+        fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN.
 
         # noqa: DAR101
     Example:
@@ -173,8 +173,8 @@ def assert_flattened_values_as_expected(
     interval_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: Optional[str] = "value",
-    fallback: Optional[List] = np.NaN,
+    values_colname: str = "value",
+    fallback: Any = np.NaN,
 ):
     """Run tests from string representations of dataframes.
 
@@ -185,8 +185,8 @@ def assert_flattened_values_as_expected(
         interval_days (float): How far to look in direction
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
         expected_flattened_values (List): A list of the expected values in the value column of the flattened df
-        values_colname (str, optional): Column name for the new values. Defaults to "val".
-        fallback (List, optional): What to fill if no outcome within lookahead days. Defaults to 0.
+        values_colname (str): Column name for the new values. Defaults to "val".
+        fallback (Any): What to fill if no outcome within lookahead days. Defaults to 0.
 
     Raises:
         ValueError: If direction is neither ahead nor behind.

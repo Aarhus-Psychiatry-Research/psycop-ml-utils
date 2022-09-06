@@ -143,7 +143,7 @@ class LoadLabResults:
         else:
             return multiply_inequalities_in_df(df)
 
-    def load_numerical_values(blood_sample_id: str, n: int, view: str):
+    def load_numerical_values(blood_sample_id: str, n: int, view: str) -> pd.DataFrame:
         """Load numerical values for a blood sample.
 
         Args:
