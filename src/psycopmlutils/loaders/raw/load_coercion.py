@@ -29,11 +29,16 @@ class LoadCoercion:
         sql = f"SELECT dw_ek_borger, datotid_start_sei, varighed_timer_sei FROM [fct].{view} WHERE datotid_start_sei IS NOT NULL"
 
         if coercion_type and reason_for_coercion is None:
-            sql += f"WHERE typetekst_sei = '{coercion_type}'"
+
+            sql += f"AND typetekst_sei = '{coercion_type}'"
+
         if coercion_type is None and reason_for_coercion:
-            sql += f"WHERE begrundtekst_sei = '{reason_for_coercion}'"
+
+            sql += f"AND begrundtekst_sei = '{reason_for_coercion}'"
+
         if coercion_type and reason_for_coercion:
-            sql += f"WHERE typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
+
+            sql += f"AND typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
@@ -78,51 +83,211 @@ class LoadCoercion:
             for d in coercion_types_list
         ]
 
-        return (
-            pd.concat(dfs, axis=0)
-            .drop_duplicates(
-                subset=["dw_ek_borger", "timestamp", "value"],
-                keep="first",
-            )
-            .reset_index(drop=True)
-        )
+        return pd.concat(dfs, axis=0).reset_index(drop=True)
 
-    @data_loaders.register("coercion_farlighed")
-    def coercion_farlighed(n: Optional[int] = None) -> pd.DataFrame:
+    ### REASON (begrundtekst_sei) ###
 
-        coercion_types_lists = [
+    @data_loaders.register("farlighed")
+    def farlighed(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
             {
-                "coercion_type": "Bælte",
                 "reason_for_coercion": "Farlighed",
             },
             {
-                "coercion_type": "Remme",
-                "reason_for_coercion": "Farlighed",
-            },
-            {
-                "coercion_type": "Fastholden",
-                "reason_for_coercion": "Farlighed",
-            },
-            {
-                "coercion_type": "Handsker",
-                "reason_for_coercion": "Farlighed",
-            },
-            {
-                "coercion_type": "Tvangstilbageholdelse",
                 "reason_for_coercion": "På grund af farlighed",
             },
         ]
 
         return LoadCoercion._concatenate_coercion(
-            coercion_types_list=coercion_types_lists,
-            subset_by="both",
+            coercion_types_list=coercion_types_list,
             n=n,
         )
+
+    @data_loaders.register("urolig_tilstand")
+    def urolig_tilstand(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            reason_for_coercion="Urolig tilstand",
+            n=n,
+        )
+
+    @data_loaders.register("anden_begrundelse")
+    def anden_begrundelse(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            reason_for_coercion="Anden begrundelse",
+            n=n,
+        )
+
+    @data_loaders.register("af helbredsmæssige grunde")
+    def af_helbredsmæssige_grunde(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            reason_for_coercion=" Af helbredsmæssige grunde",
+            n=n,
+        )
+
+    @data_loaders.register("nærliggende eller væsentlig fare for patienten eller andre")
+    def nærliggende_fare(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            reason_for_coercion="Nærliggende eller væsentlig fare for patienten eller andre",
+            n=n,
+        )
+
+    ### GENERAL TYPE (tabeltekst) ###
+
+    @data_loaders.register("magtanvendelse")
+    def magtanvendelse(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
+            {
+                "coercion_type": "Bælte",
+            },
+            {
+                "coercion_type": "Remme",
+            },
+            {
+                "coercion_type": "Fastholden",
+            },
+            {
+                "coercion_type": "Beroligende medicin",
+            },
+            {
+                "coercion_type": "Døraflåsning",
+            },
+            {
+                "coercion_type": "Personlig afskærmning over 24 timer",
+            },
+            {
+                "coercion_type": "Handsker",
+            },
+        ]
+
+        return LoadCoercion._concatenate_coercion(
+            coercion_types_list=coercion_types_list,
+            n=n,
+        )
+
+    @data_loaders.register("frihedsberøvelser")
+    def frihedsberøvelser(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
+            {
+                "coercion_type": "Tvangsindlæggelse",
+            },
+            {
+                "coercion_type": "Tvangstilbageholdelse",
+            },
+        ]
+
+        return LoadCoercion._concatenate_coercion(
+            coercion_types_list=coercion_types_list,
+            n=n,
+        )
+
+    @data_loaders.register("tvangsbehandlinger")
+    def tvangsbehandlinger(n: Optional[int] = None) -> pd.DataFrame:
+
+        coercion_types_list = [
+            {
+                "coercion_type": "Af legemlig lidelse",
+            },
+            {
+                "coercion_type": "Medicinering",
+            },
+            {
+                "coercion_type": "Ernæring",
+            },
+            {
+                "coercion_type": "ECT",
+            },
+        ]
+
+        return LoadCoercion._concatenate_coercion(
+            coercion_types_list=coercion_types_list,
+            n=n,
+        )
+
+    ### SPECIFIC TYPE (typetekst_sei) ###
 
     @data_loaders.register("bælte")
     def bælte(n: Optional[int] = None) -> pd.DataFrame:
 
         return LoadCoercion.coercion_duration(
             coercion_type="Bælte",
+            n=n,
+        )
+
+    @data_loaders.register("remme")
+    def remme(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Remme",
+            n=n,
+        )
+
+    @data_loaders.register("fastholden")
+    def fastholden(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Fastholden",
+            n=n,
+        )
+
+    @data_loaders.register("beroligende medicin")
+    def beroligende_medicin(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Beroligende medicin",
+            n=n,
+        )
+
+    @data_loaders.register("handsker")
+    def handsker(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Handsker",
+            n=n,
+        )
+
+    @data_loaders.register("tvangsindlæggelse")
+    def tvangsindlæggelse(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Tvangsindlæggelse",
+            n=n,
+        )
+
+    @data_loaders.register("tvangstilbageholdelse ")
+    def tvangstilbageholdelse(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Tvangstilbageholdelse",
+            n=n,
+        )
+
+    @data_loaders.register("medicinering")
+    def medicinering(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Medicinering",
+            n=n,
+        )
+
+    @data_loaders.register("ect")
+    def ect(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="ECT",
+            n=n,
+        )
+
+    @data_loaders.register("ernæring")
+    def ernæring(n: Optional[int] = None) -> pd.DataFrame:
+
+        return LoadCoercion.coercion_duration(
+            coercion_type="Ernæring",
             n=n,
         )
