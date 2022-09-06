@@ -8,13 +8,21 @@ from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 from psycopmlutils.utils import data_loaders, generate_feature_colname
 
 
-def str_to_df(str, convert_timestamp_to_datetime: bool = True) -> DataFrame:
+def str_to_df(
+    str,
+    convert_timestamp_to_datetime: bool = True,
+    convert_np_nan_to_nan: bool = True,
+) -> DataFrame:
     from io import StringIO
 
     df = pd.read_table(StringIO(str), sep=",", index_col=False)
 
     if convert_timestamp_to_datetime:
         df = convert_cols_with_matching_colnames_to_datetime(df, "timestamp")
+
+    if convert_np_nan_to_nan:
+        # Convert "np.nan" str to the actual np.nan
+        df = df.replace("np.nan", np.nan)
 
     # Drop "Unnamed" cols
     return df.loc[:, ~df.columns.str.contains("^Unnamed")]
@@ -226,3 +234,16 @@ def load_event_times():
                     """
 
     return str_to_df(event_times_str)
+
+
+def check_any_item_in_list_has_str(list: List, str_: str):
+    """Check if any item in a list contains a string.
+
+    Args:
+        list (List): A list of strings.
+        str_ (str): A string.
+
+    Returns:
+        bool: True if any item in the list contains the string.
+    """
+    return any([str_ in item for item in list])

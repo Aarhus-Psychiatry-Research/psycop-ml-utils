@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from psycopmlutils.timeseriesflattener.data_integrity import (
+from psycopmlutils.data_checks.flattened.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
 

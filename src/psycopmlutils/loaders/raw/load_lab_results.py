@@ -7,7 +7,10 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadLabResults:
-    def blood_sample(blood_sample_id: str, n: Optional[int] = None) -> pd.DataFrame:
+    def blood_sample(
+        blood_sample_id: str,
+        n: Optional[int] = None,
+    ) -> pd.DataFrame:
         """Load a blood sample.
 
         Args:
@@ -19,23 +22,32 @@ class LoadLabResults:
         """
         view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
 
-        sql = f"SELECT dw_ek_borger, datotid_sidstesvar, numerisksvar FROM [fct].{view} WHERE npukode = '{blood_sample_id}'"
+        val_col = "svar"
+
+        columns = f"dw_ek_borger, datotid_sidstesvar, {val_col}"
+
+        sql = f"SELECT {columns} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND datotid_sidstesvar IS NOT NULL"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
         df.rename(
-            columns={"datotid_sidstesvar": "timestamp", "numerisksvar": "value"},
+            columns={"datotid_sidstesvar": "timestamp", val_col: "value"},
             inplace=True,
         )
 
-        # msg.good(f"Loaded {print_str}")
-        return df.reset_index(drop=True)
+        # Convert all values matching X,Y to X.Y and then to float
+        df["value"] = df["value"].str.replace(",", ".")
 
-    def _aggregate_blood_samples(
+        return df.reset_index(drop=True).drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
+
+    def _concatenate_blood_samples(
         blood_sample_ids: list,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
-        """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
+        """Concatenate multiple blood_sample_ids (typically NPU-codes) into one
         column.
 
         Args:
@@ -45,16 +57,31 @@ class LoadLabResults:
         Returns:
             pd.DataFrame
         """
+        n_per_df = int(n / len(blood_sample_ids))
+
         dfs = [
-            LoadLabResults.blood_sample(blood_sample_id=f"{id}", n=n)
+            LoadLabResults.blood_sample(
+                blood_sample_id=f"{id}",
+                n=n_per_df,
+            )
             for id in blood_sample_ids
         ]
 
-        return pd.concat(dfs, axis=0).reset_index(drop=True)
+        return (
+            pd.concat(dfs, axis=0)
+            .drop_duplicates(
+                subset=["timestamp", "dw_ek_borger", "value"],
+                keep="first",
+            )
+            .reset_index(drop=True)
+        )
 
     @data_loaders.register("hba1c")
     def hba1c(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(blood_sample_id="NPU27300", n=n)
+        return LoadLabResults.blood_sample(
+            blood_sample_id="NPU27300",
+            n=n,
+        )
 
     @data_loaders.register("scheduled_glc")
     def scheduled_glc(n: Optional[int] = None) -> pd.DataFrame:
@@ -105,7 +132,7 @@ class LoadLabResults:
 
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
 
-        return LoadLabResults._aggregate_blood_samples(
+        return LoadLabResults._concatenate_blood_samples(
             blood_sample_ids=blood_sample_ids,
             n=n,
         )
@@ -123,7 +150,7 @@ class LoadLabResults:
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
         blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
-        return LoadLabResults._aggregate_blood_samples(
+        return LoadLabResults._concatenate_blood_samples(
             blood_sample_ids=blood_sample_ids,
             n=n,
         )
@@ -142,14 +169,14 @@ class LoadLabResults:
 
     @data_loaders.register("ldl")
     def ldl(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._aggregate_blood_samples(
+        return LoadLabResults._concatenate_blood_samples(
             blood_sample_ids=["NPU01568", "AAB00101"],
             n=n,
         )
 
     @data_loaders.register("fasting_ldl")
     def fasting_ldl(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._aggregate_blood_samples(
+        return LoadLabResults._concatenate_blood_samples(
             blood_sample_ids=["NPU10171", "AAB00102"],
             n=n,
         )
@@ -176,14 +203,14 @@ class LoadLabResults:
 
     @data_loaders.register("creatinine")
     def creatinine(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._aggregate_blood_samples(
+        return LoadLabResults._concatenate_blood_samples(
             blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
             n=n,
         )
 
     @data_loaders.register("egfr")
     def egfr(n: Optional[int] = None) -> pd.DataFrame:
-        return LoadLabResults._aggregate_blood_samples(
+        return LoadLabResults._concatenate_blood_samples(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             n=n,
         )

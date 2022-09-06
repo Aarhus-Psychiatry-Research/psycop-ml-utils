@@ -45,3 +45,15 @@ def test_col_does_not_exist():
             resolve_multiple="max",
             fallback=2,
         )
+
+
+def test_duplicate_prediction_times():
+    with pytest.raises(ValueError):
+        prediction_times_df_str = """dw_ek_borger,timestamp,
+                                1,2021-12-31 00:00:00
+                                1,2021-11-31 00:00:00
+                                """
+
+        FlattenedDataset(
+            prediction_times_df=str_to_df(prediction_times_df_str),
+        )

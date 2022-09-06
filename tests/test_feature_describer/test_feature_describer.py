@@ -1,7 +1,8 @@
+import numpy as np
 import pandas as pd
 import pytest
 
-from psycopmlutils.feature_describer.feature_describer import (
+from psycopmlutils.data_checks.flattened.feature_describer import (
     generate_feature_description_df,
     generate_feature_description_row,
 )
@@ -15,13 +16,13 @@ def predictor_dicts():
             "predictor_df": "hba1c",
             "lookbehind_days": 100,
             "resolve_multiple": "max",
-            "fallback": "np.nan",
+            "fallback": np.nan,
         },
         {
             "predictor_df": "hdl",
             "lookbehind_days": 100,
             "resolve_multiple": "max",
-            "fallback": "np.nan",
+            "fallback": np.nan,
         },
     ]
 

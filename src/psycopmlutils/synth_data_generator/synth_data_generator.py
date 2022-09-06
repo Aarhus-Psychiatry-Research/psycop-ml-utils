@@ -96,6 +96,7 @@ def generate_data_columns(
         # np.nan objects turn into "nan" strings in the real life dataframe.
         # imitate this in the synthetic data as well.
         if "nan" in col_name:
+            df = df.rename({col_name: col_name.replace("np.nan", "nan")}, axis=1)
             col_name = col_name.replace("np.nan", "nan")
 
         column_type = col_props["column_type"]

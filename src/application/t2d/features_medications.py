@@ -13,6 +13,7 @@ def create_medication_feature_combinations(
                 "lookbehind_days": LOOKBEHIND_DAYS,
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": 0,
+                "allowed_nan_value_prop": 0.0,
             },
         ],
     )

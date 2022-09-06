@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psycopmlutils"
-version = "0.2.2"
+version = "0.3.0"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
 classifiers = [
@@ -32,6 +32,7 @@ scikit-learn = "1.*"
 srsly = "2.4.*"
 wandb = ">=0.12.21,<0.13.0"
 deepchecks = "^0.8.3"
+psutil = "5.9.1"
 
 [tool.poetry.dev-dependencies]
 black = "22.3.*"
@@ -46,6 +47,8 @@ myst-parser = "0.18.*"
 flake8 = "4.0.*"
 docformatter = "1.4"
 darglint = "^1.8.1"
+SQLAlchemy = "^1.4.40"
+pyodbc = "^4.0.34"
 
 [tool.coverage.run]
 omit = [
