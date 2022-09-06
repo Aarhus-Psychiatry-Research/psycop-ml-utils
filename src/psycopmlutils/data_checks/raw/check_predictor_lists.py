@@ -54,7 +54,13 @@ def check_feature_combinations_return_correct_dfs(
         # Check that it returns a dataframe
 
         try:
-            df = loader_fns_dict[d["predictor_df"]](n=n)
+            if "values_to_load" in d:
+                df = loader_fns_dict[d["predictor_df"]](
+                    n=n,
+                    values_to_laod=d["values_to_load"],
+                )
+            else:
+                df = loader_fns_dict[d["predictor_df"]](n=n)
         except KeyError:
             msg.warn(
                 f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a well-formatted dataframe. Continuing.",

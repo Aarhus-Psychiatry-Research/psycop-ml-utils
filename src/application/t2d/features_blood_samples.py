@@ -6,6 +6,7 @@ from psycopmlutils.timeseriesflattener import create_feature_combinations
 def create_lab_feature_combinations(
     LOOKBEHIND_DAYS=[365, 730, 1825, 9999],
     RESOLVE_MULTIPLE=["mean", "max", "min"],
+    VALUES_TO_LOAD="all",
 ):
     return create_feature_combinations(
         [
@@ -15,6 +16,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "alat",
@@ -22,6 +24,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "hdl",
@@ -29,6 +32,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "ldl",
@@ -36,6 +40,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "scheduled_glc",
@@ -43,6 +48,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "unscheduled_p_glc",
@@ -50,6 +56,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "triglycerides",
@@ -57,6 +64,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "fasting_ldl",
@@ -64,6 +72,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "alat",
@@ -71,6 +80,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "crp",
@@ -78,6 +88,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "egfr",
@@ -85,6 +96,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
             {
                 "predictor_df": "albumine_creatinine_ratio",
@@ -92,6 +104,7 @@ def create_lab_feature_combinations(
                 "resolve_multiple": RESOLVE_MULTIPLE,
                 "fallback": np.nan,
                 "allowed_nan_value_prop": 0.0,
+                "values_to_load": VALUES_TO_LOAD,
             },
         ],
     )

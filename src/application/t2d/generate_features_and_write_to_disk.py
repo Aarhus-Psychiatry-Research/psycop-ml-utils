@@ -37,6 +37,7 @@ if __name__ == "__main__":
     LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        VALUES_TO_LOAD="numerical_and_coerce",
     )
 
     DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(

@@ -224,6 +224,9 @@ class FlattenedDataset:
                 "new_col_name_prefix",
             ]
 
+            if "values_to_load" in arg_dict:
+                required_keys.append("values_to_load")
+
             processed_arg_dicts.append(
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys),
             )
@@ -565,6 +568,7 @@ class FlattenedDataset:
         pred_time_uuid_col_name: str,
         new_col_name: str,
         new_col_name_prefix: Optional[str] = None,
+        values_to_load: Optional[str] = None,
     ) -> DataFrame:
 
         """Create a dataframe with flattened values (either predictor or
@@ -593,7 +597,10 @@ class FlattenedDataset:
             new_col_name (str): Name of new column in returned
                 dataframe.
             new_col_name_prefix (str, optional): Prefix to use for new column name.
-
+                Defaults to None.
+            values_to_load (str, optional): Which values to load from lab results.
+                Takes either "numerical", "numerical_and_coerce", "cancelled" or "all".
+                Defaults to None.
 
         Returns:
             DataFrame
@@ -608,11 +615,15 @@ class FlattenedDataset:
             interval_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            values_to_load=values_to_load,
         )
 
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
-            values_df = values_df()
+            if values_to_load:
+                values_df = values_df(values_to_load=values_to_load)
+            else:
+                values_df = values_df()
 
         if not isinstance(values_df, DataFrame):
             raise ValueError("values_df is not a dataframe")
