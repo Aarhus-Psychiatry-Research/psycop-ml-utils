@@ -132,7 +132,7 @@ class LoadCoercion:
     def nærliggende_fare(n: Optional[int] = None) -> pd.DataFrame:
 
         return LoadCoercion.coercion_duration(
-            reason_for_coercion="Nærliggende eller væsentlig fare for patienten eller andre  ",
+            reason_for_coercion="Nærliggende eller væsentlig fare for patienten eller andre",
             n=n,
         )
 
