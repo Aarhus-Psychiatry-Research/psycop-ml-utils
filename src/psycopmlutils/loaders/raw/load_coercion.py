@@ -30,15 +30,15 @@ class LoadCoercion:
 
         if coercion_type and reason_for_coercion is None:
 
-            sql += f"AND typetekst_sei = '{coercion_type}'"
+            sql += f" AND typetekst_sei = '{coercion_type}'"
 
         if coercion_type is None and reason_for_coercion:
 
-            sql += f"AND begrundtekst_sei = '{reason_for_coercion}'"
+            sql += f" AND begrundtekst_sei = '{reason_for_coercion}'"
 
         if coercion_type and reason_for_coercion:
 
-            sql += f"AND typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
+            sql += f" AND typetekst_sei = '{coercion_type}' AND begrundtekst_sei = '{reason_for_coercion}'"
 
         df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
