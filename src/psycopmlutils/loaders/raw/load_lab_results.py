@@ -119,7 +119,7 @@ class LoadLabResults:
 
         Args:
             blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
-            n: Number of rows to return. Defaults to None.
+            n (int): Number of rows to return. Defaults to None.
             view (str): The view to load from.
             ineq2mult (Dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
 
@@ -178,7 +178,7 @@ class LoadLabResults:
 
         Args:
             blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
-            n: Number of rows to return. Defaults to None.
+            n (int): Number of rows to return. Defaults to None.
             view (str): The view to load from.
 
         Returns:
@@ -209,7 +209,7 @@ class LoadLabResults:
 
         Args:
             blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
-            n: Number of rows to return. Defaults to None.
+            n (int): Number of rows to return. Defaults to None.
             view (str): The view to load from.
 
         Returns:
