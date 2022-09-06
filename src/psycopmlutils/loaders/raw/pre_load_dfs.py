@@ -20,8 +20,13 @@ def pre_load_unique_dfs(
     Returns:
         Dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
     """
-    # Get unique predictor_dfs
-    unique_predictor_dfs = list({d["predictor_df"] for d in predictor_dict_list})
+    msg = Printer(timestamp=True)
+    msg.info("Pre-loading unique dataframes")
+
+    # Get unique predictor dfs
+    unique_predictor_dfs = {
+        predictor_dict["predictor_df"] for predictor_dict in predictor_dict_list
+    }
 
     n_workers = min(len(unique_predictor_dfs), 16)
 

@@ -198,17 +198,18 @@ class FlattenedDataset:
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = arg_dict["values_df"]
 
-            # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registry
-            if predictor_dfs is None:
-                predictor_dfs = self.loaders_catalogue.get_all()
-            else:
-                predictor_dfs = {
-                    **self.loaders_catalogue.get_all(),
-                    **predictor_dfs,
-                }
-
+            # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registr
+            loader_fns = self.loaders_catalogue.get_all()
             try:
-                arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
+                if predictor_dfs is not None:
+                    if arg_dict["values_df"] in predictor_dfs:
+                        msg.info(f"Found {arg_dict['values_df']} in predictor_dfs")
+
+                        arg_dict["values_df"] = predictor_dfs[
+                            arg_dict["values_df"]
+                        ].copy()
+                    else:
+                        arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
             except Exception:
                 # Error handling in _validate_processed_arg_dicts
                 # to handle in bulk
