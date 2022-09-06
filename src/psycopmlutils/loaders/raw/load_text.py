@@ -73,12 +73,12 @@ class LoadText:
             )
 
         # convert note_names to sql query
-        note_names = "(" + ", ".join(note_name) + ")"
+        note_names = "('" + "', '".join(note_name) + "')"
 
         view = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
 
         dfs = []
-        for year in [str(y) for y in np.arange(2011, 2022)]:
+        for year in [str(y) for y in np.arange(2011, 2021)]:
             df = LoadText.load_notes(note_names, year, view, n)
             if featurizer == "tfidf":
                 df = LoadText._tfidf_featurize(df)
@@ -89,7 +89,8 @@ class LoadText:
         dfs = pd.concat(dfs)
 
         dfs = dfs.rename(
-            {"datotid_senesst_aendret_i_sfien": "timestamp", "fritekst": "text"},
+            {"datotid_senest_aendret_i_sfien": "timestamp", "fritekst": "text"}, 
+            axis=1
         )
         return dfs
 
@@ -99,9 +100,12 @@ class LoadText:
         view: str = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
-        sql = "SELECT dw_ek_borger, datotid_senest_aendret_i_sfien, fritekst"
-        +f" FROM [fct].{view}_{year}_inkl_2021_feb2022]"
-        +f"WHERE overskrift IN {note_names}"
+
+        sql = (
+            "SELECT dw_ek_borger, datotid_senest_aendret_i_sfien, fritekst"
+            + f" FROM [fct].{view}_{year}_inkl_2021_feb2022]"
+            + f" WHERE overskrift IN {note_names}"
+        )
         return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
     def _tfidf_featurize() -> pd.DataFrame:
@@ -120,7 +124,7 @@ class LoadText:
 
     @data_loaders.register("all_notes")
     def load_all_notes(featurizer: str, n: Optional[int] = None) -> pd.DataFrame:
-        return LoadText.load_notes(
+        return LoadText.load_and_featurize_notes(
             LoadText.get_valid_note_types(),
             featurizer=featurizer,
             n=n,
