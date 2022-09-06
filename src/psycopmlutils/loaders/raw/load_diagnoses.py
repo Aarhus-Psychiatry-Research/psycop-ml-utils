@@ -254,7 +254,7 @@ class LoadDiagnoses:
             wildcard_icd_code=False,
             n=n,
         )
-        
+
     # Psychiatric diagnoses
     # data loaders for all diagnoses in the f0-chapter (organic mental disorders)
     @data_loaders.register("f0_disorders")
