@@ -48,11 +48,16 @@ class LoadLabResults:
 
         sources_to_load = [k for k in fn_dict.keys() if k in values_to_load]
 
+        if n:
+            n_per_fn = int(n / len(sources_to_load))
+        else:
+            n_per_fn = None
+
         for k in sources_to_load:
             dfs.append(
                 fn_dict[k](
                     blood_sample_id=blood_sample_id,
-                    n=int(n / len(sources_to_load)),
+                    n=n_per_fn,
                     view=view,
                 ),
             )

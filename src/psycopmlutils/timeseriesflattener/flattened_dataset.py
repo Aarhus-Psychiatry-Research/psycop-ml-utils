@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from catalogue import Registry  # noqa
 from pandas import DataFrame
-from wasabi import msg
+from wasabi import Printer, msg
 
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import resolve_fns
 from psycopmlutils.utils import (
@@ -605,6 +605,8 @@ class FlattenedDataset:
         Returns:
             DataFrame
         """
+        msg = Printer(timestamp=True)
+
         # Rename column
         if new_col_name is None:
             raise ValueError("No name for new colum")
@@ -621,6 +623,7 @@ class FlattenedDataset:
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
             if values_to_load:
+                msg.info(f"Loading values for {full_col_str}")
                 values_df = values_df(values_to_load=values_to_load)
             else:
                 values_df = values_df()

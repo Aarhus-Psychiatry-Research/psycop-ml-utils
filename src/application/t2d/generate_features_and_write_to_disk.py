@@ -20,7 +20,7 @@ from psycopmlutils.data_checks.flattened.feature_describer import (
 from psycopmlutils.data_checks.raw.check_predictor_lists import (
     check_feature_combinations_return_correct_dfs,
 )
-from psycopmlutils.loaders.raw import pre_load_dfs
+from psycopmlutils.loaders.raw.pre_load_dfs import pre_load_unique_dfs
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
@@ -53,17 +53,19 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    PREDICTOR_LIST = LAB_PREDICTORS  # + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
     random.shuffle(PREDICTOR_LIST)
 
-    check_feature_combinations_return_correct_dfs(
-        predictor_dict_list=PREDICTOR_LIST,
-        n=1_000,
-        allowed_nan_value_prop=0.0,
-    )
+    # check_feature_combinations_return_correct_dfs(
+    #     predictor_dict_list=PREDICTOR_LIST,
+    #     n=1_000,
+    #     allowed_nan_value_prop=0.0,
+    # )
+
+    pre_loaded_dfs = pre_load_unique_dfs(predictor_dict_list=PREDICTOR_LIST)
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
@@ -80,7 +82,7 @@ if __name__ == "__main__":
 
     # Outcome
     msg.info("Adding outcome")
-    for i in [0.5, 1, 2, 3, 4, 5]:
+    for i in [1, 3, 5]:
         lookahead_days = int(i * 365)
         msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
         flattened_df.add_temporal_outcome(
@@ -112,7 +114,7 @@ if __name__ == "__main__":
 
     flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictors=PREDICTOR_LIST,
-        predictor_dfs=pre_load_dfs(predictor_dict_list=PREDICTOR_LIST),
+        predictor_dfs=pre_loaded_dfs,
     )
 
     end_time = time.time()

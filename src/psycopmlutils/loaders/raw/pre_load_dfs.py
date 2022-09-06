@@ -25,9 +25,16 @@ def pre_load_unique_dfs(
 
     dfs = {}
 
+    # Get unique predictor_dfs
+    unique_predictor_dfs = list({d["predictor_df"] for d in predictor_dict_list})
+
+    i = 0
+
     for pred_d in predictor_dict_list:
         if pred_d["predictor_df"] not in dfs:
-            msg.info(f"Loading {pred_d['predictor_df']}")
+            i += 1
+            prefix = f"{i}/{len(unique_predictor_dfs)}"
+            msg.info(f"{prefix} Loading {pred_d['predictor_df']}")
 
             if "values_to_load" in pred_d:
                 dfs[pred_d["predictor_df"]] = loader_fns[pred_d["predictor_df"]](

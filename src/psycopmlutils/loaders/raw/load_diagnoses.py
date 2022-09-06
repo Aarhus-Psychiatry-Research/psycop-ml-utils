@@ -99,7 +99,10 @@ class LoadDiagnoses:
             },
         }
 
-        n_per_df = int(n / len(diagnoses_source_table_info))
+        if n:
+            n_per_df = int(n / len(diagnoses_source_table_info))
+        else:
+            n_per_df = None
 
         dfs = [
             LoadDiagnoses._load(

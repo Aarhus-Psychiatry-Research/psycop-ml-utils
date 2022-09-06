@@ -39,8 +39,8 @@ def multiply_inequalities_in_df(
 
         df.loc[starts_with_ineq_idxs, col_to_multiply] = (
             df.loc[starts_with_ineq_idxs, col_to_multiply]
-            .str.replace(in_eq, "")
             .str.replace(",", ".")  # Replace comma with dot for float conversion.
+            .str.extract(r"\d+(.*\d+)")  # Extract the number.
             .astype(float)
             .mul(ineq2mult[in_eq])
             .round(2)
