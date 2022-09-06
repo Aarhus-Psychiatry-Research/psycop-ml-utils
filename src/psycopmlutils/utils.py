@@ -18,7 +18,7 @@ def generate_feature_colname(
     interval_days: int,
     resolve_multiple: str,
     fallback: str,
-    values_to_load: str,
+    values_to_load: str = None,
 ) -> str:
     """Generates standardized column name from feature collapse information.
 
