@@ -20,6 +20,7 @@ def pre_load_unique_dfs(
         Dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
     """
     msg = Printer(timestamp=True)
+    msg.info("Pre-loading unique dataframes")
 
     loader_fns = data_loaders.get_all()
 

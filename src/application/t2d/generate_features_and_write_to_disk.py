@@ -1,4 +1,3 @@
-import random
 import time
 from pathlib import Path
 
@@ -16,9 +15,6 @@ from psycopmlutils.data_checks.flattened.data_integrity import (
 )
 from psycopmlutils.data_checks.flattened.feature_describer import (
     create_feature_description_from_dir,
-)
-from psycopmlutils.data_checks.raw.check_predictor_lists import (
-    check_feature_combinations_return_correct_dfs,
 )
 from psycopmlutils.loaders.raw.pre_load_dfs import pre_load_unique_dfs
 from psycopmlutils.timeseriesflattener import FlattenedDataset
@@ -53,11 +49,11 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = LAB_PREDICTORS  # + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    PREDICTOR_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
-    random.shuffle(PREDICTOR_LIST)
+    # random.shuffle(PREDICTOR_LIST)
 
     # check_feature_combinations_return_correct_dfs(
     #     predictor_dict_list=PREDICTOR_LIST,
