@@ -256,7 +256,6 @@ class LoadDiagnoses:
         )
         
     # Psychiatric diagnoses
-
     # data loaders for all diagnoses in the f0-chapter (organic mental disorders)
     @data_loaders.register("f0_disorders")
     def f0_disorders(n: Optional[int] = None) -> pd.DataFrame:
