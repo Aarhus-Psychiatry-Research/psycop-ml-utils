@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -8,63 +8,15 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadLabResults:
-    def concatenate_blood_samples(
-        blood_sample_ids: list,
-        n: Optional[int] = None,
-        values_to_load: str = "all",
-    ) -> pd.DataFrame:
-        """Concatenate multiple blood_sample_ids (typically NPU-codes) into one
-        column. Makes sense for similar blood samples with different NPU codes,
-        e.g. a scheduled blood-glucose at 9 a.m. has a different NPU-code from
-        one at 11 a.m.
-
-        Args:
-            blood_sample_ids (list): List of blood_sample_id, typically an NPU-codes. # noqa: DAR102
-            n (int): Number of rows to return. Defaults to None.
-            values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to "all".
-
-        Returns:
-            pd.DataFrame
-        """
-        allowed_values_to_load = [
-            "numerical",
-            "numerical_and_coerce",
-            "cancelled",
-            "all",
-        ]
-
-        if values_to_load not in allowed_values_to_load:
-            raise ValueError(f"values_to_load must be one of {allowed_values_to_load}")
-
-        n_per_df = int(n / len(blood_sample_ids))
-
-        dfs = [
-            LoadLabResults.blood_sample(
-                blood_sample_id=f"{id}",
-                n=n_per_df,
-                values_to_load=values_to_load,
-            )
-            for id in blood_sample_ids
-        ]
-
-        return (
-            pd.concat(dfs, axis=0)
-            .drop_duplicates(
-                subset=["timestamp", "dw_ek_borger", "value"],
-                keep="first",
-            )
-            .reset_index(drop=True)
-        )
-
     def blood_sample(
-        blood_sample_id: str,
+        blood_sample_id: Union[str, List],
         n: Optional[int] = None,
         values_to_load: str = "all",
     ) -> pd.DataFrame:
         """Load a blood sample.
 
         Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code. # noqa: DAR102
+            blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
             n: Number of rows to return. Defaults to None.
             values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to "all".
 
@@ -117,7 +69,7 @@ class LoadLabResults:
         )
 
     def load_non_numerical_values_and_coerce_inequalities(
-        blood_sample_id: str,
+        blood_sample_id: Union[str, List],
         n: int,
         view: str,
         ineq2mult: Dict[str, float] = {
@@ -130,7 +82,7 @@ class LoadLabResults:
         """Load non-numerical values for a blood sample.
 
         Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+            blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
             n (int): Number of rows to return. Defaults to None.
             view (str): The view to load from.
             ineq2mult (Dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
@@ -139,7 +91,15 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the non-numerical values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
+
+        if isinstance(blood_sample_id, list):
+            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+
+            npu_where = f"npukode in ({npu_codes})"
+        else:
+            npu_where = f"npukode = '{blood_sample_id}'"
+
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where} AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
 
         df = sql_load(
             sql,
@@ -171,7 +131,15 @@ class LoadLabResults:
         """
 
         cols = "dw_ek_borger, datotid_sidstesvar, numerisksvar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}' AND numerisksvar IS NOT NULL"
+
+        if isinstance(blood_sample_id, list):
+            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+
+            npu_where = f"npukode in ({npu_codes})"
+        else:
+            npu_where = f"npukode = '{blood_sample_id}'"
+
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where} AND numerisksvar IS NOT NULL"
         df = sql_load(
             sql,
             database="USR_PS_FORSK",
@@ -198,7 +166,15 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the timestamps for cancelled values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}' AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+
+        if isinstance(blood_sample_id, list):
+            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+
+            npu_where = f"npukode in ({npu_codes})"
+        else:
+            npu_where = f"npukode = '{blood_sample_id}'"
+
+        sql = f"SELECT {cols} FROM [fct].{view} {npu_where} AND datotid_sidstesvar IS NOT NULL AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
 
         df = sql_load(
             sql,
@@ -229,7 +205,15 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with all values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}'"
+
+        if isinstance(blood_sample_id, list):
+            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+
+            npu_where = f"npukode in ({npu_codes})"
+        else:
+            npu_where = f"npukode = '{blood_sample_id}'"
+
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where}"
 
         df = sql_load(
             sql,
@@ -305,7 +289,7 @@ class LoadLabResults:
 
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
 
-        return LoadLabResults.concatenate_blood_samples(
+        return LoadLabResults.blood_sample(
             blood_sample_ids=blood_sample_ids,
             n=n,
             values_to_load=values_to_load,
@@ -327,7 +311,7 @@ class LoadLabResults:
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
         blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
-        return LoadLabResults.concatenate_blood_samples(
+        return LoadLabResults.blood_sample(
             blood_sample_ids=blood_sample_ids,
             n=n,
             values_to_load=values_to_load,
@@ -365,7 +349,7 @@ class LoadLabResults:
 
     @data_loaders.register("ldl")
     def ldl(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
-        return LoadLabResults.concatenate_blood_samples(
+        return LoadLabResults.blood_sample(
             blood_sample_ids=["NPU01568", "AAB00101"],
             n=n,
             values_to_load=values_to_load,
@@ -376,7 +360,7 @@ class LoadLabResults:
         n: Optional[int] = None,
         values_to_load: str = "all",
     ) -> pd.DataFrame:
-        return LoadLabResults.concatenate_blood_samples(
+        return LoadLabResults.blood_sample(
             blood_sample_ids=["NPU10171", "AAB00102"],
             n=n,
             values_to_load=values_to_load,
@@ -433,14 +417,14 @@ class LoadLabResults:
         n: Optional[int] = None,
         values_to_load: str = "all",
     ) -> pd.DataFrame:
-        return LoadLabResults.concatenate_blood_samples(
+        return LoadLabResults.blood_sample(
             blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
             n=n,
         )
 
     @data_loaders.register("egfr")
     def egfr(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
-        return LoadLabResults.concatenate_blood_samples(
+        return LoadLabResults.blood_sample(
             blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             n=n,
             values_to_load=values_to_load,
