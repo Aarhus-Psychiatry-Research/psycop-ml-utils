@@ -32,7 +32,7 @@ if __name__ == "__main__":
         SAVE_PATH.mkdir()
 
     RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
-    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
+    LOOKBEHIND_DAYS = [365, 1825, 9999]
 
     LAB_PREDICTORS = create_lab_feature_combinations(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
+    PREDICTOR_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.

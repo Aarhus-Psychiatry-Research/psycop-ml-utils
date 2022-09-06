@@ -36,7 +36,10 @@ def check_feature_combinations_return_correct_dfs(
     unique_subset_dicts = []
 
     dicts_with_subset_keys = [
-        {k: bigdict[k] for k in ("predictor_df", "allowed_nan_value_prop")}
+        {
+            k: bigdict[k]
+            for k in ("predictor_df", "allowed_nan_value_prop", "values_to_load")
+        }
         for bigdict in predictor_dict_list
     ]
 
@@ -57,7 +60,7 @@ def check_feature_combinations_return_correct_dfs(
             if "values_to_load" in d:
                 df = loader_fns_dict[d["predictor_df"]](
                     n=n,
-                    values_to_laod=d["values_to_load"],
+                    values_to_load=d["values_to_load"],
                 )
             else:
                 df = loader_fns_dict[d["predictor_df"]](n=n)
@@ -88,7 +91,9 @@ def check_feature_combinations_return_correct_dfs(
             failure_dicts.append({d["predictor_df"]: source_failures})
             msg.fail(f"{prefix} errors: {source_failures}")
         else:
-            msg.good(f"{prefix} Conforms to criteria")
+            msg.good(
+                f"{prefix} Conforms to criteria. {df.shape[0]} rows checked after dropping duplicates.",
+            )
 
     if not failure_dicts:
         msg.good(

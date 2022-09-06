@@ -94,9 +94,16 @@ class LoadLabResults:
             "all": LoadLabResults.load_all_values,
         }
 
-        for k in fn_dict.keys():
-            if k in values_to_load:
-                dfs.append(fn_dict[k](blood_sample_id=blood_sample_id, n=n, view=view))
+        sources_to_load = [k for k in fn_dict.keys() if k in values_to_load]
+
+        for k in sources_to_load:
+            dfs.append(
+                fn_dict[k](
+                    blood_sample_id=blood_sample_id,
+                    n=int(n / len(sources_to_load)),
+                    view=view,
+                ),
+            )
 
         # Concatenate dfs
         if len(dfs) > 1:
@@ -113,7 +120,12 @@ class LoadLabResults:
         blood_sample_id: str,
         n: int,
         view: str,
-        ineq2mult: Dict[str, float] = None,
+        ineq2mult: Dict[str, float] = {
+            "<": 0.67,
+            "<=": 0.8,
+            ">": 1.5,
+            ">=": 1.2,
+        },
     ) -> pd.DataFrame:
         """Load non-numerical values for a blood sample.
 
@@ -127,7 +139,8 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the non-numerical values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}' AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
+
         df = sql_load(
             sql,
             database="USR_PS_FORSK",
@@ -158,7 +171,7 @@ class LoadLabResults:
         """
 
         cols = "dw_ek_borger, datotid_sidstesvar, numerisksvar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND numerisksvar IS NOT NULL"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}' AND numerisksvar IS NOT NULL"
         df = sql_load(
             sql,
             database="USR_PS_FORSK",
@@ -185,7 +198,7 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with the timestamps for cancelled values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}' AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}' AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
 
         df = sql_load(
             sql,
@@ -216,7 +229,7 @@ class LoadLabResults:
             pd.DataFrame: A dataframe with all values.
         """
         cols = "dw_ek_borger, datotid_sidstesvar, svar"
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE npukode = '{blood_sample_id}'"
+        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND npukode = '{blood_sample_id}'"
 
         df = sql_load(
             sql,

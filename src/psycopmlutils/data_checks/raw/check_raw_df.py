@@ -46,11 +46,11 @@ def check_raw_df(
             # Check that column has a valid numeric format
             if df[col].dtype not in expected_val_dtypes:
                 source_failures.append(
-                    f"{col}: invalid dtype, expected {expected_val_dtypes}",
+                    f"{col}: dtype {df[col].dtype}, expected {expected_val_dtypes}",
                 )
 
         # Check for NaN in cols
-        na_prop = round(df[col].isna().sum() / df.shape[0], 2)
+        na_prop = df[col].isna().sum() / df.shape[0]
 
         if na_prop > 0:
             if col != "value":
