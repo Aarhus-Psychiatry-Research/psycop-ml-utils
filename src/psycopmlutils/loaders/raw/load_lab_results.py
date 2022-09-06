@@ -83,7 +83,7 @@ class LoadLabResults:
         if isinstance(blood_sample_id, list):
             npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
 
-            npu_where = f"npukode in '{npu_codes}'"
+            npu_where = f"npukode in ({npu_codes})"
         else:
             npu_where = f"npukode = '{blood_sample_id}'"
 
@@ -123,7 +123,7 @@ class LoadLabResults:
         if isinstance(blood_sample_id, list):
             npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
 
-            npu_where = f"npukode in '{npu_codes}'"
+            npu_where = f"npukode in ({npu_codes})"
         else:
             npu_where = f"npukode = '{blood_sample_id}'"
 
@@ -158,7 +158,7 @@ class LoadLabResults:
         if isinstance(blood_sample_id, list):
             npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
 
-            npu_where = f"npukode in '{npu_codes}'"
+            npu_where = f"npukode in ({npu_codes})"
         else:
             npu_where = f"npukode = '{blood_sample_id}'"
 
@@ -197,7 +197,7 @@ class LoadLabResults:
         if isinstance(blood_sample_id, list):
             npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
 
-            npu_where = f"npukode in '{npu_codes}'"
+            npu_where = f"npukode in ({npu_codes})"
         else:
             npu_where = f"npukode = '{blood_sample_id}'"
 
