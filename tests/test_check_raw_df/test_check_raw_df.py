@@ -49,7 +49,7 @@ def test_raw_df_has_expected_val_dtype():
 
     assert check_any_item_in_list_has_str(
         list=check_raw_df(df)[0],
-        str_="invalid dtype",
+        str_="value: dtype",
     )
 
 
