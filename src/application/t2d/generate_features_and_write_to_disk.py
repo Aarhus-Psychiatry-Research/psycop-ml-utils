@@ -20,6 +20,7 @@ from psycopmlutils.data_checks.flattened.feature_describer import (
 from psycopmlutils.data_checks.raw.check_predictor_lists import (
     check_feature_combinations_return_correct_dfs,
 )
+from psycopmlutils.loaders.raw import pre_load_dfs
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
@@ -108,8 +109,10 @@ if __name__ == "__main__":
     start_time = time.time()
 
     msg.info("Adding temporal predictors")
+
     flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictors=PREDICTOR_LIST,
+        predictor_dfs=pre_load_dfs(predictor_dict_list=PREDICTOR_LIST),
     )
 
     end_time = time.time()
