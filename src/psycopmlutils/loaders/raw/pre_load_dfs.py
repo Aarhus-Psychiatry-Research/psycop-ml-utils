@@ -34,6 +34,8 @@ def pre_load_unique_dfs(
 
     pre_loaded_dfs = pool.map(load_df, unique_predictor_dfs)
 
+    # Combined pre_loaded dfs into one dictionary
+    pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
     return pre_loaded_dfs
 
 
@@ -58,4 +60,4 @@ def load_df(predictor_df: str) -> pd.DataFrame:
 
     msg.good(f"Loaded {predictor_df}.")
 
-    return df
+    return {predictor_df: df}
