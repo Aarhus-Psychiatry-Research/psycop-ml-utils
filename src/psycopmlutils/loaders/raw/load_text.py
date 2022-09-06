@@ -1,11 +1,13 @@
-# from typing import List, Optional
+from typing import List, Optional, Set, Union
 
+import numpy as np
 import pandas as pd
+
+from psycopmlutils.loaders.raw.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
 
 # from wasabi import msg
 
-# from psycopmlutils.loaders.raw.sql_load import sql_load
-# from psycopmlutils.utils import data_loaders
 
 # Load only 1 note type
 
@@ -18,21 +20,108 @@ import pandas as pd
 
 
 class LoadText:
-    def load_note_type() -> pd.DataFrame:
-        # FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret_2011_inkl_2021_feb2022
-        pass
+    def get_valid_note_types() -> Set[str]:
+        """Returns a set of valid note types. Notice that 'Konklusion' is
+        replaced by 'Vurdering/konklusion' in 2020, so make sure to use both.
+        'Ordination' was replaced by 'Ordination, Psykiatry' in 2022, but
+        'Ordination, Psykiatri' is not included in the table. Use with caution.
 
-    def load_note_types() -> pd.DataFrame:
-        pass
+        Returns:
+            Set[str]: Set of valid note types
+        """
+        return {
+            "Observation af patient, Psykiatri",
+            "Samtale med behandlingssigte",
+            "Ordination",  # OBS replaced "Ordination, Psykiatri" in 01/02-22
+            # but is not included in this table. Use with caution
+            "Aktuelt psykisk",
+            "Aktuelt socialt, Psykiatri",
+            "Aftaler, Psykiatri",
+            "Medicin",
+            "Aktuelt somatisk, Psykiatri",
+            "Objektivt psykisk",
+            "Kontaktårsag",
+            "Telefonkonsultation",
+            "Journalnotat",
+            "Telefonnotat",
+            "Objektivt, somatisk",
+            "Plan",
+            "Semistruktureret diagnostisk interview",
+            "Vurdering/konklusion",
+        }
 
-    def load_all_notes() -> pd.DataFrame:
-        pass
+    def load_and_featurize_notes(
+        note_name: Union[str, List[str]],
+        featurizer: str,
+        n: Optional[int] = None,
+        **kwargs,
+    ) -> pd.DataFrame:
 
-    def featurize_text() -> pd.DataFrame:
-        pass
+        valid_featurizers = {"tfidf", "huggingface", None}
+        if featurizer not in valid_featurizers:
+            raise ValueError(
+                f"featurizer must be one of {valid_featurizers}, got {featurizer}",
+            )
+
+        if isinstance(note_name, str):
+            note_name = [note_name]
+        # check for invalid note types
+        if not set(note_name).issubset(LoadText.get_valid_note_types()):
+            raise ValueError(
+                "Invalid note type. Valid note types are: "
+                + str(LoadText.get_valid_note_types()),
+            )
+
+        # convert note_names to sql query
+        note_names = "(" + ", ".join(note_name) + ")"
+
+        view = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
+
+        dfs = []
+        for year in [str(y) for y in np.arange(2011, 2022)]:
+            df = LoadText.load_notes(note_names, year, view, n)
+            if featurizer == "tfidf":
+                df = LoadText._tfidf_featurize(df)
+            elif featurizer == "huggingface":
+                df = LoadText._huggingface_featurize(df, **kwargs)
+            dfs.append(df)
+
+        dfs = pd.concat(dfs)
+
+        dfs = dfs.rename(
+            {"datotid_senesst_aendret_i_sfien": "timestamp", "fritekst": "text"},
+        )
+        return dfs
+
+    def load_notes(
+        note_names: Union[str, list[str]],
+        year: str,
+        view: str = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
+        n: Optional[int] = None,
+    ) -> pd.DataFrame:
+        sql = "SELECT dw_ek_borger, datotid_senest_aendret_i_sfien, fritekst"
+        +f" FROM [fct].{view}_{year}_inkl_2021_feb2022]"
+        +f"WHERE overskrift IN {note_names}"
+        return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
     def _tfidf_featurize() -> pd.DataFrame:
+        # Load pretrained sklearn tfidf vectorizer
+        # transform text
         pass
 
-    def _huggingface_featurize() -> pd.DataFrame:
+    def _huggingface_featurize(model_id: str) -> pd.DataFrame:
+        # Load paraphrase-multilingual-MiniLM-L12-v2
+        #  split tokens to list of list if longer than allowed sequence length
+        ## which is often 128 for sentence transformers
+        # encode tokens
+        ## average by list of list
+        # return embeddings
         pass
+
+    @data_loaders.register("all_notes")
+    def load_all_notes(featurizer: str, n: Optional[int] = None) -> pd.DataFrame:
+        return LoadText.load_notes(
+            LoadText.get_valid_note_types(),
+            featurizer=featurizer,
+            n=n,
+        )
