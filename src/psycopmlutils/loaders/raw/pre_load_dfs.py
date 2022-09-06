@@ -1,5 +1,6 @@
 """Pre-load dataframes to avoid duplicate loading."""
 
+from multiprocessing import Pool
 from typing import Dict, List, Union
 
 import pandas as pd
@@ -19,30 +20,37 @@ def pre_load_unique_dfs(
     Returns:
         Dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
     """
+    # Get unique predictor_dfs
+    unique_predictor_dfs = list({d["predictor_df"] for d in predictor_dict_list})
+
+    n_workers = min(len(unique_predictor_dfs), 16)
+
+    pool = Pool(n_workers)
+
+    pre_loaded_dfs = pool.map(load_df, unique_predictor_dfs)
+
+    return pre_loaded_dfs
+
+
+def load_df(predictor_df: str) -> pd.DataFrame:
+    """Load a dataframe from a SQL database.
+
+    Args:
+        predictor_df (str): The name of the SQL database.
+
+    Returns:
+        pd.DataFrame: The loaded dataframe.
+    """
     msg = Printer(timestamp=True)
 
     loader_fns = data_loaders.get_all()
 
-    dfs = {}
+    if predictor_df not in loader_fns:
+        msg.fail(f"Could not find loader for {predictor_df}.")
+    else:
+        msg.info(f"Loading {predictor_df}")
+        df = loader_fns[predictor_df]()
 
-    # Get unique predictor_dfs
-    unique_predictor_dfs = list({d["predictor_df"] for d in predictor_dict_list})
+    msg.good(f"Loaded {predictor_df}.")
 
-    i = 0
-
-    for pred_d in predictor_dict_list:
-        if pred_d["predictor_df"] not in dfs:
-            i += 1
-            prefix = f"{i}/{len(unique_predictor_dfs)}"
-            msg.info(f"{prefix} Loading {pred_d['predictor_df']}")
-
-            if "values_to_load" in pred_d:
-                dfs[pred_d["predictor_df"]] = loader_fns[pred_d["predictor_df"]](
-                    values_to_load=pred_d["values_to_load"],
-                )
-            else:
-                dfs[pred_d["predictor_df"]] = loader_fns[pred_d["predictor_df"]]()
-
-            msg.info(f"Loaded {pred_d['predictor_df']}")
-
-    return dfs
+    return df

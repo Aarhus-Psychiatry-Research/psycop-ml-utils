@@ -203,8 +203,8 @@ class FlattenedDataset:
                 predictor_dfs = self.loaders_catalogue.get_all()
             else:
                 predictor_dfs = {
-                    **predictor_dfs,
                     **self.loaders_catalogue.get_all(),
+                    **predictor_dfs,
                 }
 
             try:
