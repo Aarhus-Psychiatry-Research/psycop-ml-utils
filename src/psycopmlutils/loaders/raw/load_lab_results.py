@@ -290,7 +290,7 @@ class LoadLabResults:
         blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
 
         return LoadLabResults.blood_sample(
-            blood_sample_ids=blood_sample_ids,
+            blood_sample_id=blood_sample_ids,
             n=n,
             values_to_load=values_to_load,
         )
@@ -312,7 +312,7 @@ class LoadLabResults:
         blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
         return LoadLabResults.blood_sample(
-            blood_sample_ids=blood_sample_ids,
+            blood_sample_id=blood_sample_ids,
             n=n,
             values_to_load=values_to_load,
         )
@@ -350,7 +350,7 @@ class LoadLabResults:
     @data_loaders.register("ldl")
     def ldl(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.blood_sample(
-            blood_sample_ids=["NPU01568", "AAB00101"],
+            blood_sample_id=["NPU01568", "AAB00101"],
             n=n,
             values_to_load=values_to_load,
         )
@@ -361,7 +361,7 @@ class LoadLabResults:
         values_to_load: str = "all",
     ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
-            blood_sample_ids=["NPU10171", "AAB00102"],
+            blood_sample_id=["NPU10171", "AAB00102"],
             n=n,
             values_to_load=values_to_load,
         )
@@ -418,14 +418,14 @@ class LoadLabResults:
         values_to_load: str = "all",
     ) -> pd.DataFrame:
         return LoadLabResults.blood_sample(
-            blood_sample_ids=["NPU18016", "ASS00355", "ASS00354"],
+            blood_sample_id=["NPU18016", "ASS00355", "ASS00354"],
             n=n,
         )
 
     @data_loaders.register("egfr")
     def egfr(n: Optional[int] = None, values_to_load: str = "all") -> pd.DataFrame:
         return LoadLabResults.blood_sample(
-            blood_sample_ids=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
+            blood_sample_id=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
             n=n,
             values_to_load=values_to_load,
         )

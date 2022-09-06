@@ -35,13 +35,17 @@ def check_feature_combinations_return_correct_dfs(
     # Find all dicts that are unique on keys predictor_df and allowed_nan_value_prop
     unique_subset_dicts = []
 
-    dicts_with_subset_keys = [
-        {
-            k: bigdict[k]
-            for k in ("predictor_df", "allowed_nan_value_prop", "values_to_load")
-        }
-        for bigdict in predictor_dict_list
-    ]
+    required_keys = ["predictor_df", "allowed_nan_value_prop"]
+
+    dicts_with_subset_keys = []
+
+    for big_d in predictor_dict_list:
+        small_d = {k: big_d[k] for k in required_keys}
+
+        if "values_to_load" in big_d:
+            small_d["values_to_load"] = big_d["values_to_load"]
+
+        dicts_with_subset_keys.append(small_d)
 
     for predictor_dict in dicts_with_subset_keys:
         if predictor_dict not in unique_subset_dicts:
