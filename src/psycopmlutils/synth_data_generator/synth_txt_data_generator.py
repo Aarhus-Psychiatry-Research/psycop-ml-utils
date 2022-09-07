@@ -1,10 +1,8 @@
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional
 
 import numpy as np
 import pandas as pd
-from scipy import stats
-
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 
@@ -20,9 +18,9 @@ def generate_synth_data(
     Args:
         predictors (Dict): A dict representing each column. Key is col_name (str), values are column_type (str), output_type (float|int), min (int), max(int).
         n_samples (int): Number of samples (rows) to generate.
-        text_prompt (str, optional): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
-        na_prob (float, optional): Probability of changing a value in a predictor column to NA.
-        na_ignore_cols (List[str], optional): Columns to ignore when creating NAs
+        text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
+        na_prob (float): Probability of changing a value in a predictor column to NA.
+        na_ignore_cols (List[str]): Columns to ignore when creating NAs
 
     Returns:
         pd.DataFrame: The synthetic dataset
@@ -59,7 +57,7 @@ def generate_data_columns(
         predictors (Iterable[Dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         n_samples (int): Number of rows to generate.
         df (pd.DataFrame): Dataframe to append to
-        text_prompt (str, optional): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
+        text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
 
     Raises:
         ValueError: If column_type isn't either uniform_int, text datetime_uniform.
