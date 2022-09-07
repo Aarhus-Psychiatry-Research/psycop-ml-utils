@@ -20,6 +20,10 @@ from psycopmlutils.loaders.raw.pre_load_dfs import pre_load_unique_dfs
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
+from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
+
+import random
+
 if __name__ == "__main__":
     msg = Printer(timestamp=True)
     # set path to save features to
@@ -53,7 +57,7 @@ if __name__ == "__main__":
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
-    # random.shuffle(PREDICTOR_LIST)
+    random.shuffle(PREDICTOR_LIST)
 
     # check_feature_combinations_return_correct_dfs(
     #     predictor_dict_list=PREDICTOR_LIST,
@@ -62,6 +66,9 @@ if __name__ == "__main__":
     # )
 
     pre_loaded_dfs = pre_load_unique_dfs(predictor_dict_list=PREDICTOR_LIST)
+
+    for k, df in pre_loaded_dfs.items():
+        check_raw_df(df=df)
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 

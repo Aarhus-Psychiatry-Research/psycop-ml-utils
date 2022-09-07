@@ -159,6 +159,8 @@ class FlattenedDataset:
         """
         processed_arg_dicts = []
 
+        dicts_found_in_predictor_dfs = []
+
         # Replace strings with objects as relevant
         for arg_dict in predictors:
 
@@ -203,7 +205,9 @@ class FlattenedDataset:
             try:
                 if predictor_dfs is not None:
                     if arg_dict["values_df"] in predictor_dfs:
-                        msg.info(f"Found {arg_dict['values_df']} in predictor_dfs")
+                        if arg_dict["values_df"] not in dicts_found_in_predictor_dfs:
+                            dicts_found_in_predictor_dfs.append(arg_dict["values_df"])
+                            msg.info(f"Found {arg_dict['values_df']} in predictor_dfs")
 
                         arg_dict["values_df"] = predictor_dfs[
                             arg_dict["values_df"]

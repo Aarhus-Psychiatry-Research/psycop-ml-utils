@@ -21,24 +21,21 @@ def pre_load_unique_dfs(
     Returns:
         Dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
     """
-    msg = Printer(timestamp=True)
-    msg.info("Pre-loading unique dataframes")
 
     # Get unique predictor dfs
     unique_predictor_dfs = {
         predictor_dict["predictor_df"] for predictor_dict in predictor_dict_list
     }
 
+    msg = Printer(timestamp=True)
+
+    msg.info(f"Pre-loading {len(unique_predictor_dfs)} dataframes")
+
     n_workers = min(len(unique_predictor_dfs), 16)
 
     p = Pool(n_workers)
 
-    pre_loaded_dfs = list(
-        tqdm.tqdm(
-            p.imap(load_df, unique_predictor_dfs),
-            total=len(unique_predictor_dfs),
-        ),
-    )
+    pre_loaded_dfs = p.map(load_df, unique_predictor_dfs)
 
     # Combined pre_loaded dfs into one dictionary
     pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
@@ -56,14 +53,16 @@ def load_df(predictor_df: str) -> pd.DataFrame:
     """
     msg = Printer(timestamp=True)
 
+    msg.info(f"Loading {predictor_df}")
+
     loader_fns = data_loaders.get_all()
+
+    raise KeyError("Please step into subprocess, thx")
 
     if predictor_df not in loader_fns:
         msg.fail(f"Could not find loader for {predictor_df}.")
     else:
-        msg.info(f"Loading {predictor_df}")
         df = loader_fns[predictor_df]()
 
-    msg.good(f"Loaded {predictor_df}.")
-
+    msg.info(f"Loaded {predictor_df} with {len(df)} rows")
     return {predictor_df: df}
