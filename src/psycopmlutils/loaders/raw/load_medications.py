@@ -244,7 +244,7 @@ class LoadMedications:
             n=n,
         )
 
-    # Data_loader for medications primarly used outside Psychiatry
+    # data loaders for medications primarily used outside psychiatry
     @data_loaders.register("alimentary tract and metabolism medications")
     def alimentary_medications(n: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
