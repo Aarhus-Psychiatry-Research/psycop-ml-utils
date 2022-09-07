@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 import catalogue
 import pandas as pd
@@ -15,11 +15,11 @@ FEATURIZERS_PATH = SHARED_RESOURCES_PATH / "featurizers"
 
 def generate_feature_colname(
     prefix: str,
-    out_col_name: str,
+    out_col_name: Union[str, List[str]],
     interval_days: int,
     resolve_multiple: str,
     fallback: str,
-) -> str:
+) -> Union[str, List[str]]:
     """Generates standardized column name from feature collapse information.
 
     Args:
@@ -32,7 +32,13 @@ def generate_feature_colname(
     Returns:
         str: _description_
     """
-    return f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+    if isinstance(out_col_name, str):
+        return f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+    elif isinstance(out_col_name, list):
+        return [
+            f"{prefix}_{col}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+            for col in out_col_name
+        ]
 
 
 def df_contains_duplicates(df=pd.DataFrame, col_subset=List[str]):
