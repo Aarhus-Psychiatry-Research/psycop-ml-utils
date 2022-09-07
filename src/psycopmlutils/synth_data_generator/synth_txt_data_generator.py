@@ -1,3 +1,9 @@
+"""Script for creating synthetic text data for testing purposes.
+
+Produces a .csv file with the following columns: citizen_id, timestamp,
+text.
+"""
+
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
@@ -60,12 +66,12 @@ def generate_data_columns(
         text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
 
     Raises:
-        ValueError: If column_type isn't either uniform_int, text datetime_uniform.
+        ValueError: If column_type isn't either uniform_int, text, or datetime_uniform.
 
     Returns:
         pd.DataFrame: The generated dataframe.
-    
-    
+
+
     Example:
         >>> column_specifications = {
         >>>   "citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_000},
