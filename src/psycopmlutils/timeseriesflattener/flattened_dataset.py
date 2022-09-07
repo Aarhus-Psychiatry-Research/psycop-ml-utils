@@ -210,6 +210,8 @@ class FlattenedDataset:
                         ].copy()
                     else:
                         arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
+                elif predictor_dfs is None:
+                    arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
             except Exception:
                 # Error handling in _validate_processed_arg_dicts
                 # to handle in bulk
@@ -264,26 +266,23 @@ class FlattenedDataset:
         self.df = self.df.copy()
 
     def _validate_processed_arg_dicts(self, arg_dicts: list):
-        warn = False
+        warnings = []
 
         for d in arg_dicts:
             if not isinstance(d["values_df"], (DataFrame, Callable)):
-                msg.warn(
+                warnings.append(
                     f"values_df resolves to neither a Callable nor a DataFrame in {d}",
                 )
-                warn = True
 
             if not (d["direction"] == "ahead" or d["direction"] == "behind"):
-                msg.warn(f"direction is neither ahead or behind in {d}")
-                warn = True
+                warnings.append(f"direction is neither ahead or behind in {d}")
 
             if not isinstance(d["interval_days"], (int, float)):
-                msg.warn(f"interval_days is neither an int nor a float in {d}")
-                warn = True
+                warnings.append(f"interval_days is neither an int nor a float in {d}")
 
-        if warn:
+        if len(warnings) != 0:
             raise ValueError(
-                "Errors in argument dictionaries, didn't generate any features.",
+                f"Didn't generate any features because: {warnings}",
             )
 
     def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
