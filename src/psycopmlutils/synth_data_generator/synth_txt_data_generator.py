@@ -64,6 +64,20 @@ def generate_data_columns(
 
     Returns:
         pd.DataFrame: The generated dataframe.
+    
+    
+    Example:
+        >>> column_specifications = {
+        >>>   "citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_000},
+        >>>   "timestamp": {"column_type": "datetime_uniform", "min": 0, "max": 5 * 365},
+        >>>   "text": {"column_type": "text"},
+        >>> }
+        >>>
+        >>> df = generate_synth_data(
+        >>>     predictors=column_specifications,
+        >>>     n_samples=100,
+        >>>     text_prompt="The patient",
+        >>> )
     """
 
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
