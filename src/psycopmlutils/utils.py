@@ -29,7 +29,7 @@ def generate_feature_colname(
         fallback (str): Values used for fallback.
 
     Returns:
-        str: _description_
+        str: A full column name
     """
     return f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
 
