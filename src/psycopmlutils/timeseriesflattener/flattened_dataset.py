@@ -705,7 +705,7 @@ class FlattenedDataset:
             inplace=True,
         )
 
-        # msg.good(f"Returning flattened dataframe with {full_col_str}")
+        msg.good(f"Returning flattened dataframe with {full_col_str}")
 
         cols_to_return = [pred_time_uuid_col_name, full_col_str]
 

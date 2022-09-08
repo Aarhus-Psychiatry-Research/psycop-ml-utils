@@ -16,33 +16,20 @@ def get_diagnosis_feature_spec(
     Returns:
         _type_: _description_
     """
+
+    # As list comprehension:
     return [
         {
-            "predictor_df": "essential_hypertension",
+            "predictor_df": df,
             "lookbehind_days": lookbehind_days,
             "resolve_multiple": resolve_multiple,
             "fallback": fallback,
             "allowed_nan_value_prop": 0.0,
-        },
-        {
-            "predictor_df": "hyperlipidemia",
-            "lookbehind_days": lookbehind_days,
-            "resolve_multiple": resolve_multiple,
-            "fallback": fallback,
-            "allowed_nan_value_prop": 0.0,
-        },
-        {
-            "predictor_df": "polycystic_ovarian_syndrome",
-            "lookbehind_days": lookbehind_days,
-            "resolve_multiple": resolve_multiple,
-            "fallback": fallback,
-            "allowed_nan_value_prop": 0.0,
-        },
-        {
-            "predictor_df": "sleep_apnea",
-            "lookbehind_days": lookbehind_days,
-            "resolve_multiple": resolve_multiple,
-            "fallback": fallback,
-            "allowed_nan_value_prop": 0.0,
-        },
+        }
+        for df in [
+            "essential_hypertension",
+            "hyperlipidemia",
+            "polycystic_ovarian_syndrome",
+            "sleep_apnea",
+        ]
     ]

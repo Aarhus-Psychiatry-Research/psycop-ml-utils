@@ -5,6 +5,7 @@ import pandas as pd
 
 def multiply_inequalities_in_df(
     df: pd.DataFrame,
+    round_to_decimals: int = 4,
     ineq2mult: Dict[str, float] = {
         "<": 0.67,
         "<=": 0.8,
@@ -43,7 +44,7 @@ def multiply_inequalities_in_df(
             .str.extract(r"(\d+\.\d+|\d+)", expand=False)
             .astype(float)
             .mul(ineq2mult[in_eq])
-            .round(2)
+            .round(round_to_decimals)
         )
 
     # Convert col_to_multiply dtype to float
