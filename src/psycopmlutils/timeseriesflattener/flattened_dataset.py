@@ -223,7 +223,8 @@ class FlattenedDataset:
                 "new_col_name",
                 "new_col_name_prefix",
             ]
-
+            if "loader_kwargs" in arg_dict:
+                required_keys.append("loader_kwargs")
             processed_arg_dicts.append(
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys),
             )
@@ -565,6 +566,7 @@ class FlattenedDataset:
         pred_time_uuid_col_name: str,
         new_col_name: Union[str, List],
         new_col_name_prefix: Optional[str] = None,
+        loader_kwargs: Optional[dict] = None,
     ) -> DataFrame:
 
         """Create a dataframe with flattened values (either predictor or
@@ -593,6 +595,7 @@ class FlattenedDataset:
             new_col_name (Union[str, List]): Name of new column in returned
                 dataframe.
             new_col_name_prefix (str, optional): Prefix to use for new column name.
+            loader_kwargs (dict, optional): Keyword arguments to pass to the loader
 
 
         Returns:
@@ -608,11 +611,15 @@ class FlattenedDataset:
             interval_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            loader_kwargs=loader_kwargs,
         )
 
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
-            values_df = values_df()
+            if loader_kwargs:
+                values_df = values_df(**loader_kwargs)
+            else:
+                values_df = values_df()
 
         if not isinstance(values_df, DataFrame):
             raise ValueError("values_df is not a dataframe")
@@ -659,7 +666,6 @@ class FlattenedDataset:
             df=df,
             timestamp_col_name=timestamp_col_name,
             pred_time_uuid_colname=pred_time_uuid_col_name,
-            id_col_name=id_col_name,
         )
 
         # If resolve_multiple generates empty values,
@@ -716,7 +722,6 @@ class FlattenedDataset:
         df: DataFrame,
         timestamp_col_name: str,
         pred_time_uuid_colname: str,
-        id_col_name: str,
     ) -> DataFrame:
         """Apply the resolve_multiple function to prediction_times where there
         are multiple values within the interval_days lookahead.
@@ -726,7 +731,6 @@ class FlattenedDataset:
             df (DataFrame): Source dataframe with all prediction time x val combinations.
             timestamp_col_name (str): Name of timestamp column in df.
             pred_time_uuid_colname (str): Name of uuid column in df.
-            id_col_name (str): Name of id column in df.
 
         Returns:
             DataFrame: DataFrame with one row pr. prediction time.

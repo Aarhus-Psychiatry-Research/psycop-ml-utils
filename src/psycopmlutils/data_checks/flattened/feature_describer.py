@@ -87,6 +87,7 @@ def generate_feature_description_df(
             interval_days=d["lookbehind_days"],
             resolve_multiple=d["resolve_multiple"],
             fallback=d["fallback"],
+            loader_kwargs=d.get("loader_kwargs", None),
         )
 
         rows.append(generate_feature_description_row(df[column_name], d))
