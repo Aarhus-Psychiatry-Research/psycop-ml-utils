@@ -54,7 +54,7 @@ def generate_data_columns(
     predictors: Iterable[Dict],
     n_samples: int,
     df: pd.DataFrame,
-    text_prompt: str ,
+    text_prompt: str,
 ) -> pd.DataFrame:
     """Generate a dataframe with columns from the predictors iterable.
 
