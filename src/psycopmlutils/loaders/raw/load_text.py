@@ -188,7 +188,7 @@ class LoadText:
 
     @data_loaders.register("load_arbirary_notes")
     def load_arbitrary_notes(
-        note_names: Union[str, list[str]],
+        note_names: Union[str, List[str]],
         featurizer: str,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
