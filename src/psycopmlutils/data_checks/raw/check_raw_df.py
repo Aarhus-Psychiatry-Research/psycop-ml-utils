@@ -11,6 +11,7 @@ def check_raw_df(
     subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
     allowed_nan_value_prop: float = 0.0,
     expected_val_dtypes: List[str] = ["float64", "int64"],
+    raise_error: bool = True,
 ) -> List[str]:
     """Check that the raw df conforms to the required format and doesn't
     contain duplicates or missing values.
@@ -21,9 +22,13 @@ def check_raw_df(
         subset_duplicates_columns (List[str]): List of columns to subset on when checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
         allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
         expected_val_dtypes (List[str]): Expected dtype of value column. Defaults to "float64".
+        raise_error (bool): Whether to raise an error if the df fails the checks. Defaults to True.
 
     Returns:
         List[str]: List of errors.
+
+    Raises:
+        ValueError: If the df fails the checks and raise_error is True.
     """
     source_failures = []
 
@@ -69,5 +74,9 @@ def check_raw_df(
         duplicates = df[duplicates_idx]
     else:
         duplicates = None
+
+    # Raise error if any failures
+    if raise_error and len(source_failures) > 0:
+        raise ValueError(source_failures)
 
     return source_failures, duplicates
