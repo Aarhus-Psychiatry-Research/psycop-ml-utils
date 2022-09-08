@@ -73,5 +73,5 @@ if __name__ == "__main__":
         vectorizer = create_tfidf_vectorizer(max_features=10)
         vectorizer.fit(text)
 
-        with open(save_dir / "tfidf_100.pkl", "wb") as f:
+        with open(save_dir / "tfidf_10.pkl", "wb") as f:
             pkl.dump(vectorizer, f)
