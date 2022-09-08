@@ -8,19 +8,20 @@ import wandb
 from wasabi import Printer
 
 import psycopmlutils.loaders.raw  # noqa
-from application.t2d.features_blood_samples import create_lab_feature_combinations
-from application.t2d.features_diagnoses import create_diag_feature_combinations
-from application.t2d.features_medications import create_medication_feature_combinations
+from application.t2d.features_blood_samples import get_lab_feature_spec
+from application.t2d.features_diagnoses import get_diagnosis_feature_spec
+from application.t2d.features_medications import get_medication_feature_spec
 from psycopmlutils.data_checks.flattened.data_integrity import (
     check_feature_set_integrity_from_dir,
 )
 from psycopmlutils.data_checks.flattened.feature_describer import (
     create_feature_description_from_dir,
 )
-from psycopmlutils.data_checks.raw.check_predictor_lists import (
-    check_feature_combinations_return_correct_dfs,
+from psycopmlutils.loaders.raw.pre_load_dfs import pre_load_unique_dfs
+from psycopmlutils.timeseriesflattener import (
+    FlattenedDataset,
+    create_feature_combinations,
 )
-from psycopmlutils.timeseriesflattener import FlattenedDataset
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 if __name__ == "__main__":
@@ -32,40 +33,47 @@ if __name__ == "__main__":
         SAVE_PATH.mkdir()
 
     RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
-    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
+    LOOKBEHIND_DAYS = [365, 1825, 9999]
 
-    LAB_PREDICTORS = create_lab_feature_combinations(
+    LAB_PREDICTORS = get_lab_feature_spec(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        VALUES_TO_LOAD="numerical_and_coerce",
     )
 
-    DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
+    DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
         resolve_multiple=RESOLVE_MULTIPLE,
         lookbehind_days=LOOKBEHIND_DAYS,
         fallback=0,
     )
 
-    MEDICATION_PREDICTORS = create_medication_feature_combinations(
+    MEDICATION_PREDICTORS = get_medication_feature_spec(
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
         RESOLVE_MULTIPLE=["count"],
         fallback=0,
     )
 
-    PREDICTOR_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
+    PREDICTOR_SPEC_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    PREDICTOR_COMBINATIONS = create_feature_combinations(PREDICTOR_SPEC_LIST)
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
-    random.shuffle(PREDICTOR_LIST)
+    random.shuffle(PREDICTOR_SPEC_LIST)
+    random.shuffle(PREDICTOR_COMBINATIONS)
 
-    check_feature_combinations_return_correct_dfs(
-        predictor_dict_list=PREDICTOR_LIST,
-        n=1_000,
-        allowed_nan_value_prop=0.0,
+    # check_feature_combinations_return_correct_dfs(
+    #     predictor_dict_list=UNIQUE_PREDICTOR_LIST,
+    #     n=1_000,
+    #     allowed_nan_value_prop=0.0,
+    # )
+
+    pre_loaded_dfs = pre_load_unique_dfs(
+        unique_predictor_dict_list=PREDICTOR_SPEC_LIST,
     )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
-    msg.info(f"Generating {len(PREDICTOR_LIST)} features")
+    msg.info(f"Generating {len(PREDICTOR_COMBINATIONS)} features")
 
     msg.info("Loading prediction times")
     prediction_times = (
@@ -78,7 +86,7 @@ if __name__ == "__main__":
 
     # Outcome
     msg.info("Adding outcome")
-    for i in [0.5, 1, 2, 3, 4, 5]:
+    for i in [1, 3, 5]:
         lookahead_days = int(i * 365)
         msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
         flattened_df.add_temporal_outcome(
@@ -107,15 +115,17 @@ if __name__ == "__main__":
     start_time = time.time()
 
     msg.info("Adding temporal predictors")
+
     flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_LIST,
+        predictors=PREDICTOR_COMBINATIONS,
+        predictor_dfs=pre_loaded_dfs,
     )
 
     end_time = time.time()
 
     # Finish
     msg.good(
-        f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
+        f"Finished adding {len(PREDICTOR_COMBINATIONS)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
     )
 
     msg.info(
@@ -136,11 +146,11 @@ if __name__ == "__main__":
     # Create directory to store all files related to this run
     sub_dir = (
         SAVE_PATH
-        / f"{current_user}_{len(PREDICTOR_LIST)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
+        / f"{current_user}_{len(PREDICTOR_COMBINATIONS)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
     )
     sub_dir.mkdir()
 
-    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_LIST)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
+    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_COMBINATIONS)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create splits
     for dataset_name in splits:
@@ -174,7 +184,7 @@ if __name__ == "__main__":
     feature_settings = {
         "file_prefix": file_prefix,
         "save_path": sub_dir / file_prefix,
-        "predictor_list": PREDICTOR_LIST,
+        "predictor_list": PREDICTOR_COMBINATIONS,
     }
 
     run = wandb.init(project="psycop-feature-files", config=feature_settings)
@@ -187,6 +197,6 @@ if __name__ == "__main__":
 
     create_feature_description_from_dir(
         path=sub_dir,
-        predictor_dicts=PREDICTOR_LIST,
+        predictor_dicts=PREDICTOR_COMBINATIONS,
         splits=["train"],
     )

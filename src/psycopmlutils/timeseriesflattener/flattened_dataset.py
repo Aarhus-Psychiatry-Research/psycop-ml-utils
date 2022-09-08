@@ -168,6 +168,8 @@ class FlattenedDataset:
         """
         processed_arg_dicts = []
 
+        dicts_found_in_predictor_dfs = []
+
         # Replace strings with objects as relevant
         for arg_dict in predictors:
 
@@ -207,17 +209,22 @@ class FlattenedDataset:
             if "new_col_name" not in arg_dict.keys():
                 arg_dict["new_col_name"] = arg_dict["values_df"]
 
-            # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registry
-            if predictor_dfs is None:
-                predictor_dfs = self.loaders_catalogue.get_all()
-            else:
-                predictor_dfs = {
-                    **predictor_dfs,
-                    **self.loaders_catalogue.get_all(),
-                }
-
+            # Resolve values_df to either a dataframe from predictor_dfs_dict or a callable from the registr
+            loader_fns = self.loaders_catalogue.get_all()
             try:
-                arg_dict["values_df"] = predictor_dfs[arg_dict["values_df"]]
+                if predictor_dfs is not None:
+                    if arg_dict["values_df"] in predictor_dfs:
+                        if arg_dict["values_df"] not in dicts_found_in_predictor_dfs:
+                            dicts_found_in_predictor_dfs.append(arg_dict["values_df"])
+                            msg.info(f"Found {arg_dict['values_df']} in predictor_dfs")
+
+                        arg_dict["values_df"] = predictor_dfs[
+                            arg_dict["values_df"]
+                        ].copy()
+                    else:
+                        arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
+                elif predictor_dfs is None:
+                    arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
             except Exception:
                 # Error handling in _validate_processed_arg_dicts
                 # to handle in bulk
@@ -232,6 +239,9 @@ class FlattenedDataset:
                 "new_col_name",
                 "new_col_name_prefix",
             ]
+
+            if "values_to_load" in arg_dict:
+                required_keys.append("values_to_load")
 
             processed_arg_dicts.append(
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys),
@@ -269,26 +279,23 @@ class FlattenedDataset:
         self.df = self.df.copy()
 
     def _validate_processed_arg_dicts(self, arg_dicts: list):
-        warn = False
+        warnings = []
 
         for d in arg_dicts:
             if not isinstance(d["values_df"], (DataFrame, Callable)):
-                msg.warn(
+                warnings.append(
                     f"values_df resolves to neither a Callable nor a DataFrame in {d}",
                 )
-                warn = True
 
             if not (d["direction"] == "ahead" or d["direction"] == "behind"):
-                msg.warn(f"direction is neither ahead or behind in {d}")
-                warn = True
+                warnings.append(f"direction is neither ahead or behind in {d}")
 
             if not isinstance(d["interval_days"], (int, float)):
-                msg.warn(f"interval_days is neither an int nor a float in {d}")
-                warn = True
+                warnings.append(f"interval_days is neither an int nor a float in {d}")
 
-        if warn:
+        if len(warnings) != 0:
             raise ValueError(
-                "Errors in argument dictionaries, didn't generate any features.",
+                f"Didn't generate any features because: {warnings}",
             )
 
     def _get_features(self, kwargs_dict: Dict) -> DataFrame:
@@ -324,7 +331,13 @@ class FlattenedDataset:
             msg.info(f"Cache hit and loaded for {full_col_str}")
         else:
             df = self.flatten_temporal_values_to_df(
-                prediction_times_with_uuid_df=self.df,
+                prediction_times_with_uuid_df=self.df[
+                    [
+                        self.pred_time_uuid_col_name,
+                        self.id_col_name,
+                        self.timestamp_col_name,
+                    ]
+                ],
                 id_col_name=self.id_col_name,
                 timestamp_col_name=self.timestamp_col_name,
                 pred_time_uuid_col_name=self.pred_time_uuid_col_name,
@@ -645,7 +658,13 @@ class FlattenedDataset:
             new_col_name_prefix = self.outcome_col_name_prefix
 
         df = FlattenedDataset.flatten_temporal_values_to_df(
-            prediction_times_with_uuid_df=self.df,
+            prediction_times_with_uuid_df=self.df[
+                [
+                    self.id_col_name,
+                    self.timestamp_col_name,
+                    self.pred_time_uuid_col_name,
+                ]
+            ],
             values_df=values_df,
             direction=direction,
             interval_days=interval_days,
@@ -679,6 +698,7 @@ class FlattenedDataset:
         pred_time_uuid_col_name: str,
         new_col_name: str,
         new_col_name_prefix: Optional[str] = None,
+        values_to_load: Optional[str] = None,
     ) -> DataFrame:
 
         """Create a dataframe with flattened values (either predictor or
@@ -708,10 +728,15 @@ class FlattenedDataset:
                 dataframe.
             new_col_name_prefix (str, optional): Prefix to use for new column name.
                 Defaults to None.
+            values_to_load (str, optional): Which values to load from lab results.
+                Takes either "numerical", "numerical_and_coerce", "cancelled" or "all".
+                Defaults to None.
 
-        Returns:
-            DataFrame
+                Returns:
+                    DataFrame
         """
+        msg = Printer(timestamp=True)
+
         # Rename column
         if new_col_name is None:
             raise ValueError("No name for new colum")
@@ -722,11 +747,16 @@ class FlattenedDataset:
             interval_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
+            values_to_load=values_to_load,
         )
 
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
-            values_df = values_df()
+            if values_to_load:
+                msg.info(f"Loading values for {full_col_str}")
+                values_df = values_df(values_to_load=values_to_load)
+            else:
+                values_df = values_df()
 
         if not isinstance(values_df, DataFrame):
             raise ValueError("values_df is not a dataframe")
@@ -776,7 +806,12 @@ class FlattenedDataset:
         # If resolve_multiple generates empty values,
         # e.g. when there is only one prediction_time within look_ahead window for slope calculation,
         # replace with NaN
-        df["value"].replace({np.NaN: fallback}, inplace=True)
+
+        try:
+            df["value"].replace({np.NaN: fallback}, inplace=True)
+        except KeyError:
+            print(full_col_str)
+            print(df.columns)
 
         df.rename(
             {"value": full_col_str},
