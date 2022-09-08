@@ -53,15 +53,13 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    UNIQUE_PREDICTOR_LIST = (
-        LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
-    )
-
-    PREDICTOR_LIST = create_feature_combinations(UNIQUE_PREDICTOR_LIST)
+    PREDICTOR_SPEC_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    PREDICTOR_COMBINATIONS = create_feature_combinations(PREDICTOR_SPEC_LIST)
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
-    random.shuffle(PREDICTOR_LIST)
+    random.shuffle(PREDICTOR_SPEC_LIST)
+    random.shuffle(PREDICTOR_COMBINATIONS)
 
     # check_feature_combinations_return_correct_dfs(
     #     predictor_dict_list=UNIQUE_PREDICTOR_LIST,
@@ -70,12 +68,12 @@ if __name__ == "__main__":
     # )
 
     pre_loaded_dfs = pre_load_unique_dfs(
-        unique_predictor_dict_list=UNIQUE_PREDICTOR_LIST,
+        unique_predictor_dict_list=PREDICTOR_SPEC_LIST,
     )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 
-    msg.info(f"Generating {len(PREDICTOR_LIST)} features")
+    msg.info(f"Generating {len(PREDICTOR_COMBINATIONS)} features")
 
     msg.info("Loading prediction times")
     prediction_times = (
@@ -119,7 +117,7 @@ if __name__ == "__main__":
     msg.info("Adding temporal predictors")
 
     flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_LIST,
+        predictors=PREDICTOR_COMBINATIONS,
         predictor_dfs=pre_loaded_dfs,
     )
 
@@ -127,7 +125,7 @@ if __name__ == "__main__":
 
     # Finish
     msg.good(
-        f"Finished adding {len(PREDICTOR_LIST)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
+        f"Finished adding {len(PREDICTOR_COMBINATIONS)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
     )
 
     msg.info(
@@ -148,11 +146,11 @@ if __name__ == "__main__":
     # Create directory to store all files related to this run
     sub_dir = (
         SAVE_PATH
-        / f"{current_user}_{len(PREDICTOR_LIST)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
+        / f"{current_user}_{len(PREDICTOR_COMBINATIONS)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
     )
     sub_dir.mkdir()
 
-    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_LIST)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
+    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_COMBINATIONS)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create splits
     for dataset_name in splits:
@@ -186,7 +184,7 @@ if __name__ == "__main__":
     feature_settings = {
         "file_prefix": file_prefix,
         "save_path": sub_dir / file_prefix,
-        "predictor_list": PREDICTOR_LIST,
+        "predictor_list": PREDICTOR_COMBINATIONS,
     }
 
     run = wandb.init(project="psycop-feature-files", config=feature_settings)
@@ -199,6 +197,6 @@ if __name__ == "__main__":
 
     create_feature_description_from_dir(
         path=sub_dir,
-        predictor_dicts=PREDICTOR_LIST,
+        predictor_dicts=PREDICTOR_COMBINATIONS,
         splits=["train"],
     )
