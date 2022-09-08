@@ -298,34 +298,58 @@ class LoadDiagnoses:
             n=n,
         )
 
-    @data_loaders.register("alcohol_and_tobacco_dependencies")
-    def alcohol_and_tobacco(n: Optional[int] = None) -> pd.DataFrame:
+    @data_loaders.register("alcohol_dependency")
+    def alcohol_dependency(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f10", "f17"],
+            icd_code="f10",
             wildcard_icd_code=True,
             n=n,
         )
 
-    @data_loaders.register("opioid_and_sedative_dependencies")
+    @data_loaders.register("opioid_dependency")
     def opioids_and_sedatives(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f11", "f13"],
+            icd_code="f11",
             wildcard_icd_code=True,
             n=n,
         )
 
-    @data_loaders.register("cannabinoid_and_hallucinogen_dependencies")
-    def cannabinoids_and_hallucinogens(n: Optional[int] = None) -> pd.DataFrame:
+    @data_loaders.register("cannabinoid_dependency")
+    def cannabinoid_dependency(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
-            icd_code=["f12", "f16"],
+            icd_code="f12",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("sedative_dependency")
+    def sedative_dependency(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f13",
             wildcard_icd_code=True,
             n=n,
         )
 
     @data_loaders.register("stimulant_dependencies")
-    def stimulants(n: Optional[int] = None) -> pd.DataFrame:
+    def stimulant_deo(n: Optional[int] = None) -> pd.DataFrame:
         return LoadDiagnoses.from_physical_visits(
             icd_code=["f14", "f15"],
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("hallucinogen_dependency")
+    def hallucinogen_dependency(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f16",
+            wildcard_icd_code=True,
+            n=n,
+        )
+
+    @data_loaders.register("tobacco_dependency")
+    def tobacco_dependency(n: Optional[int] = None) -> pd.DataFrame:
+        return LoadDiagnoses.from_physical_visits(
+            icd_code="f17",
             wildcard_icd_code=True,
             n=n,
         )
