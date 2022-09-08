@@ -80,8 +80,8 @@ def get_prop_of_each_unique_value_for_non_floats(series: pd.Series) -> pd.Series
 
 
 if __name__ == "__main__":
-    df = raw_loaders.load_lab_results.LoadLabResults.crp(
-        n=100_000,
+    df = raw_loaders.load_lab_results.LoadLabResults.ldl(
+        n=1_000,
         values_to_load="numerical_and_coerce",
     )
 

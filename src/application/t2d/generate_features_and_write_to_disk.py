@@ -1,3 +1,4 @@
+import random
 import time
 from pathlib import Path
 
@@ -17,12 +18,11 @@ from psycopmlutils.data_checks.flattened.feature_describer import (
     create_feature_description_from_dir,
 )
 from psycopmlutils.loaders.raw.pre_load_dfs import pre_load_unique_dfs
-from psycopmlutils.timeseriesflattener import FlattenedDataset
+from psycopmlutils.timeseriesflattener import (
+    FlattenedDataset,
+    create_feature_combinations,
+)
 from psycopmlutils.utils import FEATURE_SETS_PATH
-
-from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
-
-import random
 
 if __name__ == "__main__":
     msg = Printer(timestamp=True)
@@ -53,22 +53,25 @@ if __name__ == "__main__":
         fallback=0,
     )
 
-    PREDICTOR_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    UNIQUE_PREDICTOR_LIST = (
+        LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    )
+
+    PREDICTOR_LIST = create_feature_combinations(UNIQUE_PREDICTOR_LIST)
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
     random.shuffle(PREDICTOR_LIST)
 
     # check_feature_combinations_return_correct_dfs(
-    #     predictor_dict_list=PREDICTOR_LIST,
+    #     predictor_dict_list=UNIQUE_PREDICTOR_LIST,
     #     n=1_000,
     #     allowed_nan_value_prop=0.0,
     # )
 
-    pre_loaded_dfs = pre_load_unique_dfs(predictor_dict_list=PREDICTOR_LIST)
-
-    for k, df in pre_loaded_dfs.items():
-        check_raw_df(df=df)
+    pre_loaded_dfs = pre_load_unique_dfs(
+        unique_predictor_dict_list=UNIQUE_PREDICTOR_LIST,
+    )
 
     event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
 

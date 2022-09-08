@@ -538,7 +538,11 @@ class FlattenedDataset:
             new_col_name_prefix = self.outcome_col_name_prefix
 
         df = FlattenedDataset.flatten_temporal_values_to_df(
-            prediction_times_with_uuid_df=self.df,
+            prediction_times_with_uuid_df=self.df[
+                self.id_col_name,
+                self.timestamp_col_name,
+                self.pred_time_uuid_col_name,
+            ],
             values_df=values_df,
             direction=direction,
             interval_days=interval_days,
@@ -680,7 +684,12 @@ class FlattenedDataset:
         # If resolve_multiple generates empty values,
         # e.g. when there is only one prediction_time within look_ahead window for slope calculation,
         # replace with NaN
-        df["value"].replace({np.NaN: fallback}, inplace=True)
+
+        try:
+            df["value"].replace({np.NaN: fallback}, inplace=True)
+        except KeyError:
+            print(full_col_str)
+            print(df.columns)
 
         df.rename(
             {"value": full_col_str},
@@ -688,7 +697,7 @@ class FlattenedDataset:
             inplace=True,
         )
 
-        msg.good(f"Returning flattened dataframe with {full_col_str}")
+        # msg.good(f"Returning flattened dataframe with {full_col_str}")
 
         cols_to_return = [pred_time_uuid_col_name, full_col_str]
 
