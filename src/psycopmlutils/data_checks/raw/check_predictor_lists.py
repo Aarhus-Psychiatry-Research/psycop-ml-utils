@@ -42,8 +42,8 @@ def check_feature_combinations_return_correct_dfs(
     for big_d in predictor_dict_list:
         small_d = {k: big_d[k] for k in required_keys}
 
-        if "values_to_load" in big_d:
-            small_d["values_to_load"] = big_d["values_to_load"]
+        # Get optional keys
+        small_d["values_to_load"] = big_d.get("values_to_load", default=None)
 
         dicts_with_subset_keys.append(small_d)
 
@@ -61,13 +61,10 @@ def check_feature_combinations_return_correct_dfs(
         # Check that it returns a dataframe
 
         try:
-            if "values_to_load" in d:
-                df = loader_fns_dict[d["predictor_df"]](
-                    n=n,
-                    values_to_load=d["values_to_load"],
-                )
-            else:
-                df = loader_fns_dict[d["predictor_df"]](n=n)
+            df = loader_fns_dict[d["predictor_df"]](
+                n=n,
+                values_to_load=d["values_to_load"],
+            )
         except KeyError:
             msg.warn(
                 f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a well-formatted dataframe. Continuing.",

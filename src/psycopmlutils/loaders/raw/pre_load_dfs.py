@@ -60,13 +60,10 @@ def load_df_wrapper(predictor_dict: Dict[str, Union[str, float, int]]) -> pd.Dat
     Returns:
         pd.DataFrame: The loaded dataframe.
     """
-    if "values_to_load" in predictor_dict:
-        return load_df(
-            predictor_df=predictor_dict["predictor_df"],
-            values_to_load=predictor_dict["values_to_load"],
-        )
-    else:
-        return load_df(predictor_df=predictor_dict["predictor_df"])
+    return load_df(
+        predictor_df=predictor_dict["predictor_df"],
+        values_to_load=predictor_dict.get("values_to_load"),
+    )
 
 
 def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
@@ -88,7 +85,8 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
     if predictor_df not in loader_fns:
         msg.fail(f"Could not find loader for {predictor_df}.")
     else:
-        if values_to_load:
+        # We need this control_flow since some loader_fns don't take values_to_load
+        if values_to_load is not None:
             df = loader_fns[predictor_df](values_to_load=values_to_load)
         else:
             df = loader_fns[predictor_df]()
