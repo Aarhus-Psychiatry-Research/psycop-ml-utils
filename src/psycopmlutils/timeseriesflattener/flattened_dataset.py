@@ -301,9 +301,11 @@ class FlattenedDataset:
         """
         return self.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.df[
-                self.pred_time_uuid_col_name,
-                self.id_col_name,
-                self.timestamp_col_name,
+                [
+                    self.pred_time_uuid_col_name,
+                    self.id_col_name,
+                    self.timestamp_col_name,
+                ]
             ],
             id_col_name=self.id_col_name,
             timestamp_col_name=self.timestamp_col_name,
@@ -543,9 +545,11 @@ class FlattenedDataset:
 
         df = FlattenedDataset.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.df[
-                self.id_col_name,
-                self.timestamp_col_name,
-                self.pred_time_uuid_col_name,
+                [
+                    self.id_col_name,
+                    self.timestamp_col_name,
+                    self.pred_time_uuid_col_name,
+                ]
             ],
             values_df=values_df,
             direction=direction,

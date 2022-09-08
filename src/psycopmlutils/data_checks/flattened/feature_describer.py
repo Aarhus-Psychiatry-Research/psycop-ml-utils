@@ -81,15 +81,14 @@ def generate_feature_description_df(
     rows = []
 
     for d in predictor_dicts:
-        if "values_to_load" in d:
-            column_name = generate_feature_colname(
-                prefix="pred",
-                out_col_name=d["predictor_df"],
-                interval_days=d["lookbehind_days"],
-                resolve_multiple=d["resolve_multiple"],
-                fallback=d["fallback"],
-                values_to_load=d.get("values_to_load"),
-            )
+        column_name = generate_feature_colname(
+            prefix="pred",
+            out_col_name=d["predictor_df"],
+            interval_days=d["lookbehind_days"],
+            resolve_multiple=d["resolve_multiple"],
+            fallback=d["fallback"],
+            values_to_load=d.get("values_to_load"),
+        )
 
         rows.append(generate_feature_description_row(df[column_name], d))
 
