@@ -1,22 +1,12 @@
+from pathlib import Path
 from typing import List, Optional, Set, Union
 
+import dill as pkl
 import numpy as np
 import pandas as pd
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
-
-# from wasabi import msg
-
-
-# Load only 1 note type
-
-# Load specific note types
-
-# Load all
-
-# Featurize using tf-idf (pretrained from some path)
-# Featurize using doc embedding (from some HF path)
 
 
 class LoadText:
@@ -81,7 +71,7 @@ class LoadText:
         for year in [str(y) for y in np.arange(2011, 2021)]:
             df = LoadText.load_notes(note_names, year, view, n)
             if featurizer == "tfidf":
-                df = LoadText._tfidf_featurize(df)
+                df = LoadText._tfidf_featurize(df, **kwargs)
             elif featurizer == "huggingface":
                 df = LoadText._huggingface_featurize(df, **kwargs)
             dfs.append(df)
@@ -89,8 +79,8 @@ class LoadText:
         dfs = pd.concat(dfs)
 
         dfs = dfs.rename(
-            {"datotid_senest_aendret_i_sfien": "timestamp", "fritekst": "text"}, 
-            axis=1
+            {"datotid_senest_aendret_i_sfien": "timestamp", "fritekst": "text"},
+            axis=1,
         )
         return dfs
 
@@ -108,10 +98,20 @@ class LoadText:
         )
         return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
-    def _tfidf_featurize() -> pd.DataFrame:
-        # Load pretrained sklearn tfidf vectorizer
-        # transform text
-        pass
+    def _tfidf_featurize(df: pd.DataFrame, tfidf_path: Optional[Path]) -> pd.DataFrame:
+        # Load tfidf model
+        with open(tfidf_path, "rb") as f:
+            tfidf = pkl.load(f)
+
+        # get tfidf vocabulary
+        vocab = tfidf.get_feature_names()
+
+        text = df["text"].values
+        df = df.drop("text", axis=1)
+
+        text = tfidf.transform(text)
+        text = pd.DataFrame(text.toarray(), columns=vocab)
+        return pd.concat([df, text], axis=1)
 
     def _huggingface_featurize(model_id: str) -> pd.DataFrame:
         # Load paraphrase-multilingual-MiniLM-L12-v2
@@ -129,3 +129,15 @@ class LoadText:
             featurizer=featurizer,
             n=n,
         )
+
+
+if __name__ == "__main__":
+    p = Path("tests") / "test_data"
+
+    tfidf_path = p / "test_tfidf" / "tfidf_100.pkl"
+    df_p = p / "synth_txt_data.csv"
+
+    df = pd.read_csv(df_p)
+    df = df.dropna()
+
+    x = LoadText._tfidf_featurize(df, tfidf_path)
