@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 import pandas as pd
 from wasabi import Printer
 
+from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 from psycopmlutils.utils import data_loaders
 
 
@@ -27,12 +28,23 @@ def pre_load_unique_dfs(
     msg = Printer(timestamp=True)
 
     msg.info(f"Pre-loading {len(unique_dfs)} dataframes")
-
     n_workers = min(len(unique_dfs), 16)
-
     p = Pool(n_workers)
 
     pre_loaded_dfs = p.map(load_df_wrapper, unique_predictor_dict_list)
+
+    # Error check the laoded dfs
+    failures = []
+
+    for k, df in pre_loaded_dfs:
+        source_failures, duplicates = check_raw_df(df=df, raise_error=False)
+
+        failures.append({k: source_failures})
+
+    if len(failures) > 0:
+        raise ValueError(
+            f"Pre-loaded dataframes failed source checks. {source_failures}",
+        )
 
     # Combined pre_loaded dfs into one dictionary
     pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
