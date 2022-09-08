@@ -43,7 +43,7 @@ class LoadText:
     def load_and_featurize_notes(
         note_name: Union[str, List[str]],
         featurizer: str,
-        featurizer_kwargs: dict,
+        featurizer_kwargs: Optional[dict] = None,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Loads clinical notes from all years that match the specified note
@@ -54,7 +54,7 @@ class LoadText:
             note_name (Union[str, List[str]]): Which note types to load. See
                 `LoadText.get_valid_note_types()` for valid note types.
             featurizer (str): Which featurizer to use. Either 'tf-idf' or 'huggingface'.
-            featurizer_kwargs (dict): Kwargs passed to the featurizer.
+            featurizer_kwargs (Optional[dict]): Kwargs passed to the featurizer. Defaults to None.
                 For tf-idf, this is `tfidf_path` to the vectorizer. For huggingface,
                 this is `model_id` to the model.
             n (Optional[int], optional): How many rows to load. Defaults to None.
@@ -166,11 +166,16 @@ class LoadText:
         pass
 
     @data_loaders.register("all_notes")
-    def load_all_notes(featurizer: str, n: Optional[int] = None) -> pd.DataFrame:
+    def load_all_notes(
+        featurizer: str,
+        n: Optional[int] = None,
+        featurizer_kwargs: Optional[dict] = None,
+    ) -> pd.DataFrame:
         return LoadText.load_and_featurize_notes(
             LoadText.get_valid_note_types(),
             featurizer=featurizer,
             n=n,
+            featurizer_kwargs=featurizer_kwargs,
         )
 
     @data_loaders.register("aktuelt_psykisk")
@@ -207,15 +212,3 @@ class LoadText:
             )
         else:
             raise ValueError("Only tfidf featurizer supported for synth notes")
-
-
-if __name__ == "__main__":
-    p = Path("tests") / "test_data"
-
-    tfidf_path = p / "test_tfidf" / "tfidf_10.pkl"
-    df_p = p / "synth_txt_data.csv"
-
-    df = pd.read_csv(df_p)
-    df = df.dropna()
-
-    x = LoadText._tfidf_featurize(df, tfidf_path)
