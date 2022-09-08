@@ -19,15 +19,15 @@ repos:
       - id: docformatter
         args: [--in-place]
 
-  - repo: https://github.com/psf/black
-    rev: 22.6.0
-    hooks:
-      - id: black
-
   - repo: https://github.com/asottile/add-trailing-comma
     rev: v2.2.3
     hooks:
       - id: add-trailing-comma
+
+  - repo: https://github.com/psf/black
+    rev: 22.6.0
+    hooks:
+      - id: black
 
   - repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
