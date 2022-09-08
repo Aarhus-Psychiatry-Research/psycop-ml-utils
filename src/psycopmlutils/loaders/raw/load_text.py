@@ -105,7 +105,7 @@ class LoadText:
         return dfs
 
     def _load_notes(
-        note_names: Union[str, list[str]],
+        note_names: Union[str, List[str]],
         year: str,
         view: Optional[
             str
