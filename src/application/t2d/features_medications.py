@@ -1,7 +1,6 @@
-def create_medication_feature_combinations(
+def get_medication_feature_spec(
     LOOKBEHIND_DAYS=[365, 730, 1825, 9999],
     RESOLVE_MULTIPLE=["mean", "max", "min"],
-    fallback: any = 0,
 ):
     return [
         {

@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-def create_diag_feature_combinations(
+def get_diagnosis_feature_spec(
     lookbehind_days=[365, 730, 1825, 9999],
     resolve_multiple=["mean", "max", "min"],
     fallback: Optional[any] = 0,
