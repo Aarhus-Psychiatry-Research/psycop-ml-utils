@@ -62,6 +62,7 @@ if __name__ == "__main__":
     random.shuffle(PREDICTOR_SPEC_LIST)
     random.shuffle(PREDICTOR_COMBINATIONS)
 
+    # Many features will use the same dataframes, so we can load them once and reuse them.
     pre_loaded_dfs = pre_load_unique_dfs(
         unique_predictor_dict_list=PREDICTOR_SPEC_LIST,
     )

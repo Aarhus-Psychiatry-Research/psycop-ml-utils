@@ -98,7 +98,7 @@ def generate_feature_description_df(
     # Convert to dataframe
     feature_description_df = pd.DataFrame(rows)
 
-    # Sort feature_description_df by Predictor df
+    # Sort feature_description_df by Predictor df to make outputs easier to read
     feature_description_df = feature_description_df.sort_values(by="Predictor df")
 
     return feature_description_df

@@ -321,17 +321,13 @@ class FlattenedDataset:
 
         file_pattern = f"{full_col_str}_{self.n_uuids}_uuids"
 
-        cache_hit = None
-
         if hasattr(self, "feature_cache_dir"):
-            cache_hit = False
 
             if self._cache_is_hit(
                 file_pattern=file_pattern,
                 full_col_str=full_col_str,
                 kwargs_dict=kwargs_dict,
             ):
-                cache_hit = True
 
                 df = self._load_cached_df_and_expand_fallback(
                     dir=self.feature_cache_dir,
@@ -344,39 +340,35 @@ class FlattenedDataset:
         else:
             msg.info("No cache dir specified, not attempting load")
 
-        if not cache_hit:
-            df = self.flatten_temporal_values_to_df(
-                prediction_times_with_uuid_df=self.df[
-                    [
-                        self.pred_time_uuid_col_name,
-                        self.id_col_name,
-                        self.timestamp_col_name,
-                    ]
-                ],
-                id_col_name=self.id_col_name,
-                timestamp_col_name=self.timestamp_col_name,
-                pred_time_uuid_col_name=self.pred_time_uuid_col_name,
-                **kwargs_dict,
+        df = self.flatten_temporal_values_to_df(
+            prediction_times_with_uuid_df=self.df[
+                [
+                    self.pred_time_uuid_col_name,
+                    self.id_col_name,
+                    self.timestamp_col_name,
+                ]
+            ],
+            id_col_name=self.id_col_name,
+            timestamp_col_name=self.timestamp_col_name,
+            pred_time_uuid_col_name=self.pred_time_uuid_col_name,
+            **kwargs_dict,
+        )
+
+        # Write df to cache if exists
+        if hasattr(self, "feature_cache_dir"):
+            cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
+
+            # Drop rows containing fallback, since it's non-informative
+            cache_df = cache_df[cache_df[full_col_str] != kwargs_dict["fallback"]]
+
+            # Write df to cache
+            timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+            # Write df to cache
+            cache_df.to_csv(
+                self.feature_cache_dir / f"{file_pattern}_{timestamp}.csv",
+                index=False,
             )
-
-            # Write df to cache if exists
-            if hasattr(self, "feature_cache_dir"):
-                cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
-
-                # Drop rows containing fallback, since it's non-informative
-                cache_df = cache_df[cache_df[full_col_str] != kwargs_dict["fallback"]]
-
-                # Write df to cache
-                timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-                # Write df to cache
-                cache_df.to_csv(
-                    self.feature_cache_dir / f"{file_pattern}_{timestamp}.csv",
-                    index=False,
-                )
-
-            if cache_hit is False:
-                msg.info("No cache directory specified, not writing to cache")
 
             return df
 
@@ -456,8 +448,6 @@ class FlattenedDataset:
         Returns:
             bool: True if cache is hit, False otherwise
         """
-        msg = Printer(timestamp=True)
-
         # Check that file exists
         file_pattern_hits = list(self.feature_cache_dir.glob(f"*{file_pattern}*.csv"))
 
@@ -485,7 +475,7 @@ class FlattenedDataset:
             )
 
             generated_df = self.flatten_temporal_values_to_df(
-                prediction_times_with_uuid_df=self.df.head(1_000),
+                prediction_times_with_uuid_df=self.df.sample(n_to_generate),
                 id_col_name=self.id_col_name,
                 timestamp_col_name=self.timestamp_col_name,
                 pred_time_uuid_col_name=self.pred_time_uuid_col_name,
