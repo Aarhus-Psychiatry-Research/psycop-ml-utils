@@ -6,6 +6,21 @@ def get_lab_feature_spec(
     resolve_Multiple=["mean", "max", "min"],
     values_to_load="all",
 ):
+    dfs = [
+        "hba1c",
+        "alat",
+        "hdl",
+        "ldl",
+        "scheduled_glc",
+        "unscheduled_p_glc",
+        "triglycerides",
+        "fasting_ldl",
+        "alat",
+        "crp",
+        "egfr",
+        "albumine_creatinine_ratio",
+    ]
+
     return [
         {
             "predictor_df": df,
@@ -15,18 +30,5 @@ def get_lab_feature_spec(
             "allowed_nan_value_prop": 0.0,
             "values_to_load": values_to_load,
         }
-        for df in [
-            "hba1c",
-            "alat",
-            "hdl",
-            "ldl",
-            "scheduled_glc",
-            "unscheduled_p_glc",
-            "triglycerides",
-            "fasting_ldl",
-            "alat",
-            "crp",
-            "egfr",
-            "albumine_creatinine_ratio",
-        ]
+        for df in dfs
     ]

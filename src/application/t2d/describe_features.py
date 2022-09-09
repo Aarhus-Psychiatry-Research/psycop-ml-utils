@@ -22,7 +22,7 @@ if __name__ == "__main__":
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     LAB_PREDICTORS = get_lab_feature_spec(
-        resolve_Multiple=RESOLVE_MULTIPLE,
+        resolve_multiple=RESOLVE_MULTIPLE,
         lookbehind_days=LOOKBEHIND_DAYS,
     )
 
