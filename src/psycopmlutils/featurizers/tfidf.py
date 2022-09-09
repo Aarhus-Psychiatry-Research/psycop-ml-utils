@@ -34,8 +34,8 @@ def whitespace_tokenizer(text: str) -> List[str]:
 
 if __name__ == "__main__":
 
-    SYNTHETIC = True
-    OVERTACI = False
+    SYNTHETIC = False
+    OVERTACI = True
 
     msg = Printer(timestamp=True)
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         if not FEATURIZERS_PATH.exists():
             FEATURIZERS_PATH.mkdir()
 
-        text = LoadText.load_all_notes(featurizer=None, n=None)
+        text = LoadText.load_all_notes(featurizer=None, n=None, featurizer_kwargs=None)
         # Subset only train set
         train_ids = LoadIDs.load(split="train")
         train_ids = train_ids["dw_ek_borger"].unique()
@@ -73,5 +73,5 @@ if __name__ == "__main__":
         vectorizer = create_tfidf_vectorizer(max_features=10)
         vectorizer.fit(text)
 
-        with open(save_dir / "tfidf_100.pkl", "wb") as f:
+        with open(save_dir / "tfidf_10.pkl", "wb") as f:
             pkl.dump(vectorizer, f)

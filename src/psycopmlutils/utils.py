@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 import catalogue
 import pandas as pd
@@ -19,6 +19,7 @@ def generate_feature_colname(
     interval_days: int,
     resolve_multiple: str,
     fallback: str,
+    loader_kwargs: Optional[dict] = None,
 ) -> Union[str, List[str]]:
     """Generates standardized column name from feature collapse information.
 
@@ -28,17 +29,46 @@ def generate_feature_colname(
         interval_days (int): Fills out "_within_{interval_days}" in the col name.
         resolve_multiple (str): Name of the resolve_multiple strategy.
         fallback (str): Values used for fallback.
+        loader_kwargs (dict, optional): Loader kwargs. Defaults to None.
 
     Returns:
         str: _description_
     """
     if isinstance(out_col_name, str):
-        return f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+        col_name = f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+        if loader_kwargs:
+            col_name = f"{col_name}_{format_dict_for_printing(loader_kwargs)}"
     elif isinstance(out_col_name, list):
-        return [
+        col_name = [
             f"{prefix}_{col}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
             for col in out_col_name
         ]
+        if loader_kwargs:
+            col_name = [
+                f"{col}_{format_dict_for_printing(loader_kwargs)}" for col in col_name
+            ]
+    return col_name
+
+
+def format_dict_for_printing(d: dict) -> str:
+    """Format a dictionary for printing. Removes extra apostrophes, formats
+    colon to dashes, separates items with underscores and removes curly
+    brackets.
+
+    Args:
+        d (dict): Dictionary to format.
+
+    Returns:
+        str: Formatted dictionary.
+    """
+    return (
+        str(d)
+        .replace("'", "")
+        .replace(": ", "-")
+        .replace("{", "")
+        .replace("}", "")
+        .replace(", ", "_")
+    )
 
 
 def df_contains_duplicates(df=pd.DataFrame, col_subset=List[str]):

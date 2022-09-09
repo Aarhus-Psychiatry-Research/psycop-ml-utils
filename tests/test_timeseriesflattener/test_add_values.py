@@ -7,10 +7,12 @@ from utils_for_testing import (
     str_to_df,
 )
 
+from psycopmlutils.loaders.raw.load_text import LoadText  # noqa
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
 )
+from tests.test_data.test_tfidf.test_tfidf_vocab import TEST_TFIDF_VOCAB
 
 
 # Predictors
@@ -486,3 +488,40 @@ def test_add_temporal_incident_binary_outcome():
         "outc_dichotomous_t2d_within_2_days_max_fallback_0",
     ]:
         pd.testing.assert_series_equal(outcome_df[col], expected_df[col])
+
+
+def test_add_text_data():
+    prediction_times_str = """dw_ek_borger,timestamp,
+                            746430.0,1970-05-01 00:00:00
+                            765709.0,1971-05-14 22:04:00
+                            """
+
+    prediction_times_df = str_to_df(prediction_times_str)
+
+    flattened_dataset = FlattenedDataset(
+        prediction_times_df=prediction_times_df,
+        timestamp_col_name="timestamp",
+        id_col_name="dw_ek_borger",
+        n_workers=4,
+    )
+
+    PREDICTOR_LIST = create_feature_combinations(
+        [
+            {
+                "predictor_df": "synth_notes",
+                "lookbehind_days": [1, 365, 720],
+                "resolve_multiple": "min",
+                "fallback": np.nan,
+                "loader_kwargs": {"featurizer": "tfidf"},
+                "new_col_name": [TEST_TFIDF_VOCAB],
+            },
+        ],
+    )
+
+    flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
+        predictors=PREDICTOR_LIST,
+    )
+
+    outcome_df = flattened_dataset.df
+
+    assert outcome_df.shape == (2, 33)
