@@ -243,10 +243,8 @@ class FlattenedDataset:
                 "new_col_name",
                 "new_col_name_prefix",
             ]
-
-            if "values_to_load" in arg_dict:
-                required_keys.append("values_to_load")
-
+            if "loader_kwargs" in arg_dict:
+                required_keys.append("loader_kwargs")
             processed_arg_dicts.append(
                 select_and_assert_keys(dictionary=arg_dict, key_list=required_keys),
             )
@@ -621,7 +619,7 @@ class FlattenedDataset:
         resolve_multiple: Union[Callable, str],
         fallback: float,
         incident: Optional[bool] = False,
-        new_col_name: Optional[str] = "value",
+        new_col_name: Optional[Union[str, List]] = "value",
         dichotomous: Optional[bool] = False,
     ):
         """Add an outcome-column to the dataset.
@@ -632,7 +630,7 @@ class FlattenedDataset:
             resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
-            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
+            new_col_name (Optional[Union[str, List]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
         prediction_timestamp_col_name = f"{self.timestamp_col_name}_prediction"
@@ -716,7 +714,7 @@ class FlattenedDataset:
         interval_days: float,
         resolve_multiple: Union[Callable, str],
         fallback: float,
-        new_col_name: Optional[str] = None,
+        new_col_name: Optional[Union[str, List]] = None,
     ):
         """Add a column to the dataset (either predictor or outcome depending
         on the value of "direction").
@@ -727,7 +725,7 @@ class FlattenedDataset:
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
-            new_col_name (str): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            new_col_name (Optional[Union[str, List]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
         timestamp_col_type = type(values_df[self.timestamp_col_name][0]).__name__
 
@@ -780,9 +778,9 @@ class FlattenedDataset:
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
-        new_col_name: str,
+        new_col_name: Union[str, List],
         new_col_name_prefix: Optional[str] = None,
-        values_to_load: Optional[str] = None,
+        loader_kwargs: Optional[dict] = None,
     ) -> DataFrame:
 
         """Create a dataframe with flattened values (either predictor or
@@ -808,13 +806,11 @@ class FlattenedDataset:
                 static method.
             pred_time_uuid_col_name (str): Name of uuid column in
                 prediction_times_with_uuid_df. Required because this is a static method.
-            new_col_name (str): Name of new column in returned
+            new_col_name (Union[str, List]): Name of new column(s) in returned
                 dataframe.
             new_col_name_prefix (str, optional): Prefix to use for new column name.
-                Defaults to None.
-            values_to_load (str, optional): Which values to load from lab results.
-                Takes either "numerical", "numerical_and_coerce", "cancelled" or "all".
-                Defaults to None.
+            loader_kwargs (dict, optional): Keyword arguments to pass to the loader
+
 
         Returns:
             DataFrame
@@ -831,14 +827,13 @@ class FlattenedDataset:
             interval_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            values_to_load=values_to_load,
+            loader_kwargs=loader_kwargs,
         )
 
         # Resolve values_df if not already a dataframe.
         if isinstance(values_df, Callable):
-            if values_to_load:
-                msg.info(f"Loading values for {full_col_str}")
-                values_df = values_df(values_to_load=values_to_load)
+            if loader_kwargs:
+                values_df = values_df(**loader_kwargs)
             else:
                 values_df = values_df()
 
@@ -891,23 +886,25 @@ class FlattenedDataset:
         # e.g. when there is only one prediction_time within look_ahead window for slope calculation,
         # replace with NaN
 
-        try:
-            df["value"].replace({np.NaN: fallback}, inplace=True)
-        except KeyError:
-            print(full_col_str)
-            print(df.columns)
+        # if only 1 value, only replace that one
+        if isinstance(new_col_name, str):
+            df["value"] = df["value"].replace({np.NaN: fallback})
+            df = df.rename(columns={"value": full_col_str})
+            full_col_str = [full_col_str]  # to concat with other columns
 
-        df.rename(
-            {"value": full_col_str},
-            axis=1,
-            inplace=True,
-        )
+        # if multiple values, replace all with na and handle renaming
+        elif isinstance(new_col_name, list):
+            metadata_df = df.drop(new_col_name, axis=1)
+            df = df[new_col_name]
+            df = df.fillna(fallback)
+            df.columns = full_col_str
+            df = pd.concat([metadata_df, df], axis=1)
 
         msg.good(
             f"Returning {df.shape[0]} rows of flattened dataframe with {full_col_str}",
         )
 
-        cols_to_return = [pred_time_uuid_col_name, full_col_str]
+        cols_to_return = [pred_time_uuid_col_name] + full_col_str
 
         return df[cols_to_return]
 

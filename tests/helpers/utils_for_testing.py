@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -73,6 +73,7 @@ def assert_flattened_outcome_as_expected(
     resolve_multiple: Union[Callable, str],
     values_colname: str = "value",
     fallback: Any = np.NaN,
+    df_as_str: bool = True,
 ):
     """Run tests from string representations of dataframes.
 
@@ -87,7 +88,7 @@ def assert_flattened_outcome_as_expected(
             Takes a a function that takes a list as an argument and returns a float.
         values_colname (str): Column name for the new values. Defaults to "val".
         fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN.
-
+        df_as_str (bool, optional): Whether the input dfs are strings. Defaults to True.
     Example:
         >>> prediction_times_df_str = '''dw_ek_borger,timestamp,
         >>>                     1,2021-12-31 00:00:00
@@ -114,6 +115,7 @@ def assert_flattened_outcome_as_expected(
         expected_flattened_values=expected_flattened_values,
         values_colname=values_colname,
         fallback=fallback,
+        df_as_str=df_as_str,
     )
 
 
@@ -173,8 +175,9 @@ def assert_flattened_values_as_expected(
     interval_days: float,
     resolve_multiple: Union[Callable, str],
     expected_flattened_values: List,
-    values_colname: str = "value",
+    values_colname: Union[str, List] = "value",
     fallback: Any = np.NaN,
+    df_as_str: Optional[bool] = True,
 ):
     """Run tests from string representations of dataframes.
 
@@ -185,15 +188,26 @@ def assert_flattened_values_as_expected(
         interval_days (float): How far to look in direction
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
         expected_flattened_values (List): A list of the expected values in the value column of the flattened df
-        values_colname (str): Column name for the new values. Defaults to "val".
+        values_colname (Optional[Union[str, List]]): Column name for the new values. Defaults to "val".
         fallback (Any): What to fill if no outcome within lookahead days. Defaults to 0.
+        df_as_str (bool, optional): Whether the input dfs are strings. Defaults to True.
 
     Raises:
         ValueError: If direction is neither ahead nor behind.
     """
 
-    df_prediction_times = str_to_df(prediction_times_str)
-    df_event_times = str_to_df(event_times_str)
+    if df_as_str:
+        df_prediction_times = str_to_df(prediction_times_str)
+        df_event_times = str_to_df(event_times_str)
+    else:
+        df_prediction_times = convert_cols_with_matching_colnames_to_datetime(
+            prediction_times_str,
+            "timestamp",
+        )
+        df_event_times = convert_cols_with_matching_colnames_to_datetime(
+            event_times_str,
+            "timestamp",
+        )
 
     dataset = FlattenedDataset(
         prediction_times_df=df_prediction_times,
@@ -230,11 +244,15 @@ def assert_flattened_values_as_expected(
         fallback=fallback,
     )
 
+    if isinstance(flattened_values_colname, str):
+        flattened_values_colname = [flattened_values_colname]
+
     expected_flattened_values = pd.DataFrame(
-        {flattened_values_colname: expected_flattened_values},
+        expected_flattened_values,
+        columns=flattened_values_colname,
     )
 
-    pd.testing.assert_series_equal(
+    pd.testing.assert_frame_equal(
         left=dataset.df[flattened_values_colname].reset_index(drop=True),
         right=expected_flattened_values[flattened_values_colname].reset_index(
             drop=True,

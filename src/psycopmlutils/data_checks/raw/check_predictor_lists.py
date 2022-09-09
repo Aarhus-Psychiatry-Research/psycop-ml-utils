@@ -21,10 +21,13 @@ def check_feature_combinations_return_correct_dfs(
     """Test that all predictor_dfs in predictor_list return a valid df.
 
     Args:
-        predictor_dict_list (Dict[str, Union[str, float, int]]): List of dictionaries where the key predictor_df maps to an SQL database.
+        predictor_dict_list (List[Dict[str, Union[str, float, int]]]): List of dictionaries
+            where the key predictor_df maps to a catalogue registered data loader
+            or is a valid dataframe.
         n (int): Number of rows to test. Defaults to 1_000.
         required_columns (List[str]): List of required columns. Defaults to ["dw_ek_borger", "timestamp", "value"].
-        subset_duplicates_columns (List[str]): List of columns to subset on when checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
+        subset_duplicates_columns (List[str]): List of columns to subset on when
+            checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
         allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
         expected_val_dtypes (List[str]): Expected value dtype. Defaults to ["float64", "int64"].
     """
@@ -42,8 +45,8 @@ def check_feature_combinations_return_correct_dfs(
     for d in predictor_dict_list:
         new_d = {k: d[k] for k in required_keys}
 
-        # Get optional keys
-        new_d["values_to_load"] = d.get("values_to_load", default=None)
+        if "loader_kwargs" in d:
+            new_d["loader_kwargs"] = d["loader_kwargs"]
 
         dicts_with_subset_keys.append(new_d)
 
@@ -61,10 +64,10 @@ def check_feature_combinations_return_correct_dfs(
         # Check that it returns a dataframe
 
         try:
-            df = loader_fns_dict[d["predictor_df"]](
-                n=n,
-                values_to_load=d["values_to_load"],
-            )
+            if "loader_kwargs" in d:
+                df = loader_fns_dict[d["predictor_df"]](n=n, **d["loader_kwargs"])
+            else:
+                df = loader_fns_dict[d["predictor_df"]](n=n)
         except KeyError:
             msg.warn(
                 f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a well-formatted dataframe. Continuing.",
@@ -84,7 +87,7 @@ def check_feature_combinations_return_correct_dfs(
             required_columns=required_columns,
             subset_duplicates_columns=subset_duplicates_columns,
             allowed_nan_value_prop=allowed_nan_value_prop,
-            expected_val_dtypes=expected_val_dtypes,
+            expected_val_dtype=expected_val_dtypes,
         )
 
         # Return errors

@@ -3,7 +3,7 @@ import numpy as np
 
 def get_lab_feature_spec(
     lookbehind_days=[365, 730, 1825, 9999],
-    resolve_Multiple=["mean", "max", "min"],
+    resolve_multiple=["mean", "max", "min"],
     values_to_load="all",
 ):
     dfs = [
@@ -25,7 +25,7 @@ def get_lab_feature_spec(
         {
             "predictor_df": df,
             "lookbehind_days": lookbehind_days,
-            "resolve_multiple": resolve_Multiple,
+            "resolve_multiple": resolve_multiple,
             "fallback": np.nan,
             "allowed_nan_value_prop": 0.0,
             "values_to_load": values_to_load,
