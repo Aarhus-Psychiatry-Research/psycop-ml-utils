@@ -96,7 +96,7 @@ def check_feature_combinations_return_correct_dfs(
             msg.fail(f"{prefix} errors: {source_failures}")
         else:
             msg.good(
-                f"{prefix} Conforms to criteria. {df.shape[0]} rows checked after dropping duplicates.",
+                f"{prefix} passed data validation criteria.",
             )
 
     if not failure_dicts:

@@ -3,11 +3,9 @@ from pathlib import Path
 from psycopmlutils.data_checks.flattened.feature_describer import (
     create_feature_description_from_dir,
 )
-from src.application.t2d.features_blood_samples import create_lab_feature_combinations
-from src.application.t2d.features_diagnoses import create_diag_feature_combinations
-from src.application.t2d.features_medications import (
-    create_medication_feature_combinations,
-)
+from src.application.t2d.features_blood_samples import get_lab_feature_spec
+from src.application.t2d.features_diagnoses import get_diagnosis_feature_spec
+from src.application.t2d.features_medications import get_medication_feature_spec
 
 if __name__ == "__main__":
     feature_set_dir = Path(
@@ -23,18 +21,18 @@ if __name__ == "__main__":
     RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
-    LAB_PREDICTORS = create_lab_feature_combinations(
+    LAB_PREDICTORS = get_lab_feature_spec(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
     )
 
-    DIAGNOSIS_PREDICTORS = create_diag_feature_combinations(
+    DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
         RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
         fallback=0,
     )
 
-    MEDICATION_PREDICTORS = create_medication_feature_combinations(
+    MEDICATION_PREDICTORS = get_medication_feature_spec(
         LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
         RESOLVE_MULTIPLE=["count"],
         fallback=0,

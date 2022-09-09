@@ -8,11 +8,6 @@ repos:
         name: isort (python)
         args: ["--profile", "black", "--filter-files"]
 
-  - repo: https://github.com/asottile/add-trailing-comma
-    rev: v2.2.3
-    hooks:
-      - id: add-trailing-comma
-
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.37.3
     hooks:
@@ -24,6 +19,11 @@ repos:
       - id: docformatter
         args: [--in-place]
 
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: v2.2.3
+    hooks:
+      - id: add-trailing-comma
+
   - repo: https://github.com/psf/black
     rev: 22.6.0
     hooks:
@@ -34,3 +34,8 @@ repos:
     hooks:
       - id: flake8
         args: [--config, .flake8]
+        
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.12.0
+    hooks:
+      - id: gitleaks

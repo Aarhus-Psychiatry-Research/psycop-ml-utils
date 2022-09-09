@@ -1,4 +1,5 @@
-from utils_for_testing import check_any_item_in_list_has_str, str_to_df
+import pytest
+from utils_for_testing import str_to_df
 
 from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 
@@ -9,10 +10,8 @@ def test_raw_df_has_rows():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(
-        list=check_raw_df(df)[0],
-        str_="No rows returned",
-    )
+    with pytest.raises(ValueError, match="No rows returned"):
+        check_raw_df(df)
 
 
 def test_raw_df_has_required_cols():
@@ -21,10 +20,8 @@ def test_raw_df_has_required_cols():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(
-        list=check_raw_df(df)[0],
-        str_="not in columns",
-    )
+    with pytest.raises(ValueError, match="not in columns"):
+        check_raw_df(df)
 
 
 def test_raw_df_has_datetime_formatting():
@@ -34,10 +31,8 @@ def test_raw_df_has_datetime_formatting():
 
     df = str_to_df(df_str, convert_timestamp_to_datetime=False)
 
-    assert check_any_item_in_list_has_str(
-        list=check_raw_df(df)[0],
-        str_="invalid datetime",
-    )
+    with pytest.raises(ValueError, match="invalid datetime"):
+        check_raw_df(df)
 
 
 def test_raw_df_has_expected_val_dtype():
@@ -47,10 +42,8 @@ def test_raw_df_has_expected_val_dtype():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(
-        list=check_raw_df(df)[0],
-        str_="invalid dtype",
-    )
+    with pytest.raises(ValueError, match="value: dtype"):
+        check_raw_df(df)
 
 
 def test_raw_df_has_invalid_na_prop():
@@ -61,7 +54,8 @@ def test_raw_df_has_invalid_na_prop():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(list=check_raw_df(df)[0], str_="NaN")
+    with pytest.raises(ValueError, match="NaN"):
+        check_raw_df(df)
 
 
 def test_raw_df_has_duplicates():
@@ -72,4 +66,5 @@ def test_raw_df_has_duplicates():
 
     df = str_to_df(df_str)
 
-    assert check_any_item_in_list_has_str(list=check_raw_df(df)[0], str_="NaN")
+    with pytest.raises(ValueError, match="NaN"):
+        check_raw_df(df)
