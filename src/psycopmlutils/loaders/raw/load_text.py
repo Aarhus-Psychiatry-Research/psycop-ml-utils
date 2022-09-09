@@ -42,7 +42,7 @@ def _load_and_featurize_notes_per_year(
         df = LoadText._tfidf_featurize(df, **featurizer_kwargs)
     elif featurizer == "huggingface":
         df = LoadText._huggingface_featurize(df, **featurizer_kwargs)
-    return
+    return df
 
 
 class LoadText:
@@ -122,7 +122,7 @@ class LoadText:
         # convert note_types to sql query
         note_types = "('" + "', '".join(note_types) + "')"
 
-        view = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
+        view = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
 
         load_and_featurize = partial(
             _load_and_featurize_notes_per_year,
@@ -132,7 +132,7 @@ class LoadText:
             featurizer=featurizer,
             featurizer_kwargs=featurizer_kwargs,
         )
-        with Pool() as p:
+        with Pool(processes=10) as p:
             dfs = p.map(load_and_featurize, [str(y) for y in np.arange(2011, 2022)])
         dfs = pd.concat(dfs)
 
