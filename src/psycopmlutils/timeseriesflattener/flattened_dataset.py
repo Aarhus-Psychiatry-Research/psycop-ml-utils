@@ -257,7 +257,7 @@ class FlattenedDataset:
         pool = Pool(self.n_workers)
 
         flattened_predictor_dfs = pool.map(
-            self._get_features,
+            self._get_feature,
             processed_arg_dicts,
         )
 
@@ -302,7 +302,7 @@ class FlattenedDataset:
                 f"Didn't generate any features because: {warnings}",
             )
 
-    def _get_features(self, kwargs_dict: Dict) -> DataFrame:
+    def _get_feature(self, kwargs_dict: Dict) -> DataFrame:
         """Get features. Either load from cache, or generate if necessary.
 
         Args:
@@ -323,7 +323,7 @@ class FlattenedDataset:
 
         cache_hit = None
 
-        try:
+        if hasattr(self, "feature_cache_dir"):
             cache_hit = False
 
             if self._cache_is_hit(
@@ -338,7 +338,7 @@ class FlattenedDataset:
                 )
 
                 return df
-        except AttributeError:
+        else:
             msg.info("No cache dir specified, not attempting load")
 
         if not cache_hit:
@@ -428,13 +428,30 @@ class FlattenedDataset:
             file_pattern=file_pattern,
         )
 
-        generated_df = self.flatten_temporal_values_to_df(
-            prediction_times_with_uuid_df=self.df.head(1_000),
-            id_col_name=self.id_col_name,
-            timestamp_col_name=self.timestamp_col_name,
-            pred_time_uuid_col_name=self.pred_time_uuid_col_name,
-            **kwargs_dict,
-        )
+        generated_df = pd.DataFrame({full_col_str: []})
+
+        # Check that some values in generated_df differ from fallback
+        # Otherwise, comparison to cache is meaningless
+        n_to_generate = 1_000
+
+        while not any(
+            generated_df[full_col_str] != kwargs_dict["fallback"],
+        ):
+            self.msg.info(
+                f"{full_col_str}: Generated_df was all fallback values, regenerating",
+            )
+
+            generated_df = self.flatten_temporal_values_to_df(
+                prediction_times_with_uuid_df=self.df.head(1_000),
+                id_col_name=self.id_col_name,
+                timestamp_col_name=self.timestamp_col_name,
+                pred_time_uuid_col_name=self.pred_time_uuid_col_name,
+                **kwargs_dict,
+            )
+
+            n_to_generate = (
+                n_to_generate**1.5
+            )  # Increase n_to_generate by 1.5x each time to increase chance of non_fallback values
 
         cached_suffix = "_c"
         generated_suffix = "_g"
