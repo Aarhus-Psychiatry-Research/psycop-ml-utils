@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import List, Optional, Set, Union
 
 import dill as pkl
-import numpy as np
 import pandas as pd
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
@@ -134,7 +133,7 @@ class LoadText:
         )
 
         years = [i for i in range(2011, 2023)]
-        
+
         with Pool(processes=len(years)) as p:
             dfs = p.map(load_and_featurize, [str(y) for y in years])
         dfs = pd.concat(dfs)

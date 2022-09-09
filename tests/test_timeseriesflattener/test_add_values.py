@@ -525,7 +525,7 @@ def test_add_text_data():
     outcome_df = flattened_dataset.df
 
     assert outcome_df.shape == (2, 33)
-    
+
     # 20 nas = 2 ids * 10 predictors with lookbehind 1 day. First get sum of each column. Then get sum of the row.
     assert outcome_df.isna().sum().sum() == 20
 
