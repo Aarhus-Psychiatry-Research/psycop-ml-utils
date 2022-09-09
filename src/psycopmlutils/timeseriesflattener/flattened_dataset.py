@@ -422,7 +422,7 @@ class FlattenedDataset:
             resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
-            new_col_name (Optional[Union[str, List]]): Name to use for new columns(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
+            new_col_name (Optional[Union[str, List]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
         prediction_timestamp_col_name = f"{self.timestamp_col_name}_prediction"
