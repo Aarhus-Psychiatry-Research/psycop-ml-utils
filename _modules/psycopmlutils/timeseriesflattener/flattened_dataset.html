@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-5.0.2, furo 2022.06.21"/>
-        <title>psycopmlutils.timeseriesflattener.flattened_dataset - psycop-ml-utils 0.3.4 documentation</title>
+        <title>psycopmlutils.timeseriesflattener.flattened_dataset - psycop-ml-utils 0.4.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -129,7 +129,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index.html"><div class="brand">psycop-ml-utils 0.3.4 documentation</div></a>
+      <a href="../../../index.html"><div class="brand">psycop-ml-utils 0.4.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -212,9 +212,11 @@
         <article role="main">
           <h1>Source code for psycopmlutils.timeseriesflattener.flattened_dataset</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -242,6 +244,7 @@
         <span class="n">n_workers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
         <span class="n">predictor_col_name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pred&quot;</span><span class="p">,</span>
         <span class="n">outcome_col_name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;outc&quot;</span><span class="p">,</span>
+        <span class="n">feature_cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Class containing a time-series, flattened. A &#39;flattened&#39; version is</span>
 <span class="sd">        a tabular representation for each prediction time.</span>
@@ -274,6 +277,7 @@
 <span class="sd">            predictor_col_name_prefix (str, optional): Prefix for predictor col names. Defaults to &quot;pred_&quot;.</span>
 <span class="sd">            outcome_col_name_prefix (str, optional): Prefix for outcome col names. Defaults to &quot;outc_&quot;.</span>
 <span class="sd">            n_workers (int): Number of subprocesses to spawn for parallellisation. Defaults to 60.</span>
+<span class="sd">            feature_cache_dir (Path): Path to cache directory for feature dataframes. Defaults to None.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span> <span class="o">=</span> <span class="n">n_workers</span>
 
@@ -283,6 +287,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span> <span class="o">=</span> <span class="n">predictor_col_name_prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span> <span class="o">=</span> <span class="n">outcome_col_name_prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span> <span class="o">=</span> <span class="n">min_date</span>
+
+        <span class="k">if</span> <span class="n">feature_cache_dir</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span> <span class="o">=</span> <span class="n">feature_cache_dir</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_uuids</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prediction_times_df</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">Printer</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">prediction_times_df</span>
 
@@ -455,7 +468,7 @@
         <span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span><span class="p">)</span>
 
         <span class="n">flattened_predictor_dfs</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_flatten_temporal_values_to_df_wrapper</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_feature</span><span class="p">,</span>
             <span class="n">processed_arg_dicts</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -500,9 +513,8 @@
                 <span class="sa">f</span><span class="s2">&quot;Didn&#39;t generate any features because: </span><span class="si">{</span><span class="n">warnings</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_flatten_temporal_values_to_df_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Wrap flatten_temporal_values_to_df with kwargs for multithreading</span>
-<span class="sd">        pool.</span>
+    <span class="k">def</span> <span class="nf">_get_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get features. Either load from cache, or generate if necessary.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            kwargs_dict (Dict): Dictionary of kwargs</span>
@@ -510,7 +522,36 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame: DataFrame generates with create_flattened_df</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatten_temporal_values_to_df</span><span class="p">(</span>
+        <span class="n">full_col_str</span> <span class="o">=</span> <span class="n">generate_feature_colname</span><span class="p">(</span>
+            <span class="n">prefix</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;new_col_name_prefix&quot;</span><span class="p">],</span>
+            <span class="n">out_col_name</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;new_col_name&quot;</span><span class="p">],</span>
+            <span class="n">interval_days</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;interval_days&quot;</span><span class="p">],</span>
+            <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;resolve_multiple&quot;</span><span class="p">],</span>
+            <span class="n">fallback</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="n">file_pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_uuids</span><span class="si">}</span><span class="s2">_uuids&quot;</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;feature_cache_dir&quot;</span><span class="p">):</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_is_hit</span><span class="p">(</span>
+                <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
+                <span class="n">full_col_str</span><span class="o">=</span><span class="n">full_col_str</span><span class="p">,</span>
+                <span class="n">kwargs_dict</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">,</span>
+            <span class="p">):</span>
+
+                <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_cached_df_and_expand_fallback</span><span class="p">(</span>
+                    <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">,</span>
+                    <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
+                    <span class="n">full_col_str</span><span class="o">=</span><span class="n">full_col_str</span><span class="p">,</span>
+                    <span class="n">fallback</span><span class="o">=</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">df</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No cache dir specified, not attempting load&quot;</span><span class="p">)</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatten_temporal_values_to_df</span><span class="p">(</span>
             <span class="n">prediction_times_with_uuid_df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span>
                 <span class="p">[</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
@@ -523,6 +564,163 @@
             <span class="n">pred_time_uuid_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs_dict</span><span class="p">,</span>
         <span class="p">)</span>
+
+        <span class="c1"># Write df to cache if exists</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;feature_cache_dir&quot;</span><span class="p">):</span>
+            <span class="n">cache_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span> <span class="n">full_col_str</span><span class="p">]]</span>
+
+            <span class="c1"># Drop rows containing fallback, since it&#39;s non-informative</span>
+            <span class="n">cache_df</span> <span class="o">=</span> <span class="n">cache_df</span><span class="p">[</span><span class="n">cache_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">]]</span>
+
+            <span class="c1"># Write df to cache</span>
+            <span class="n">timestamp</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Write df to cache</span>
+            <span class="n">cache_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">timestamp</span><span class="si">}</span><span class="s2">.csv&quot;</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="k">def</span> <span class="nf">_load_cached_df_and_expand_fallback</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">file_pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">fallback</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">prediction_times_with_uuid_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">full_col_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Load most recent df matching pattern, and expand fallback column.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file_pattern (str): File pattern to search for</span>
+<span class="sd">            fallback (Any): Fallback value</span>
+<span class="sd">            prediction_times_with_uuid_df (pd.DataFrame): Prediction times with uuids</span>
+<span class="sd">            full_col_str (str): Full column name for values</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame: DataFrame with fallback column expanded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_most_recent_df_matching_pattern</span><span class="p">(</span>
+            <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">,</span>
+            <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Expand fallback column</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="n">prediction_times_with_uuid_df</span><span class="p">,</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
+            <span class="n">validate</span><span class="o">=</span><span class="s2">&quot;m:1&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fallback</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="k">def</span> <span class="nf">_load_most_recent_df_matching_pattern</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="nb">dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">file_pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Load most recent df matching pattern.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dir (Path): Directory to search</span>
+<span class="sd">            file_pattern (str): Pattern to match</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame: DataFrame matching pattern</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">*.csv&quot;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files matching pattern </span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2"> found&quot;</span><span class="p">)</span>
+
+        <span class="n">most_recent_file</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getctime</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">most_recent_file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_cache_is_hit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">kwargs_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+        <span class="n">file_pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">full_col_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check if cache is hit.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            kwargs_dict (Dict): Dictionary of kwargs</span>
+<span class="sd">            file_pattern (str): File pattern to match. Looks for *file_pattern* in cache dir.</span>
+<span class="sd">            e.g. &quot;*feature_name*_uuids*.csv&quot;</span>
+<span class="sd">            full_col_str (str): Full column string. e.g. &quot;feature_name_ahead_interval_days_resolve_multiple_fallback&quot;</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if cache is hit, False otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check that file exists</span>
+        <span class="n">file_pattern_hits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">*.csv&quot;</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_pattern_hits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache miss, </span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2"> didn&#39;t exist&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Check that file contents match expected</span>
+        <span class="n">cache_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_most_recent_df_matching_pattern</span><span class="p">(</span>
+            <span class="nb">dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">,</span>
+            <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">generated_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">full_col_str</span><span class="p">:</span> <span class="p">[]})</span>
+
+        <span class="c1"># Check that some values in generated_df differ from fallback</span>
+        <span class="c1"># Otherwise, comparison to cache is meaningless</span>
+        <span class="n">n_to_generate</span> <span class="o">=</span> <span class="mi">1_000</span>
+
+        <span class="k">while</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">generated_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">: Generated_df was all fallback values, regenerating&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">generated_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatten_temporal_values_to_df</span><span class="p">(</span>
+                <span class="n">prediction_times_with_uuid_df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_to_generate</span><span class="p">),</span>
+                <span class="n">id_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">,</span>
+                <span class="n">timestamp_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">,</span>
+                <span class="n">pred_time_uuid_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs_dict</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">n_to_generate</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">n_to_generate</span><span class="o">**</span><span class="mf">1.5</span>
+            <span class="p">)</span>  <span class="c1"># Increase n_to_generate by 1.5x each time to increase chance of non_fallback values</span>
+
+        <span class="n">cached_suffix</span> <span class="o">=</span> <span class="s2">&quot;_c&quot;</span>
+        <span class="n">generated_suffix</span> <span class="o">=</span> <span class="s2">&quot;_g&quot;</span>
+
+        <span class="c1"># Merge cache_df onto generated_df</span>
+        <span class="n">merged_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+            <span class="n">left</span><span class="o">=</span><span class="n">generated_df</span><span class="p">,</span>
+            <span class="n">right</span><span class="o">=</span><span class="n">cache_df</span><span class="p">,</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
+            <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="n">generated_suffix</span><span class="p">,</span> <span class="n">cached_suffix</span><span class="p">),</span>
+            <span class="n">validate</span><span class="o">=</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span>
+            <span class="n">indicator</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check that all rows in generated_df are in cache_df</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">merged_df</span><span class="p">[</span><span class="n">full_col_str</span> <span class="o">+</span> <span class="n">generated_suffix</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span>
+            <span class="n">merged_df</span><span class="p">[</span><span class="n">full_col_str</span> <span class="o">+</span> <span class="n">cached_suffix</span><span class="p">],</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache miss, computed values didn&#39;t match </span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># If all checks passed, return true</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">good</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache hit for </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="FlattenedDataset.add_age"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_age">[docs]</a>    <span class="k">def</span> <span class="nf">add_age</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -915,7 +1113,9 @@
             <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">full_col_str</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">metadata_df</span><span class="p">,</span> <span class="n">df</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-        <span class="n">msg</span><span class="o">.</span><span class="n">good</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning flattened dataframe with </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">good</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Returning </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> rows of flattened dataframe with </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
         <span class="n">cols_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_time_uuid_col_name</span><span class="p">]</span> <span class="o">+</span> <span class="n">full_col_str</span>
 
