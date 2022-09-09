@@ -132,7 +132,7 @@ class LoadText:
             featurizer_kwargs=featurizer_kwargs,
         )
 
-        years = [i for i in range(2011, 2023)]
+        years = [i for i in range(2011, 2022)]
 
         with Pool(processes=len(years)) as p:
             dfs = p.map(load_and_featurize, [str(y) for y in years])
