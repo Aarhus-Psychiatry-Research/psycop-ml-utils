@@ -8,4 +8,4 @@ def get_tfidf_vocab(n_features: int) -> List[str]:
         return f.read().splitlines()
 
 
-TFIDF_VOCAB = {n: get_tfidf_vocab(n) for n in ["100", "500", "1000"]}
+TFIDF_VOCAB = {n: get_tfidf_vocab(n) for n in [100, 500, 1000]}
