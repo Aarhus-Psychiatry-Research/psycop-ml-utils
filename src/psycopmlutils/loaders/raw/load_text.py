@@ -132,8 +132,11 @@ class LoadText:
             featurizer=featurizer,
             featurizer_kwargs=featurizer_kwargs,
         )
-        with Pool(processes=10) as p:
-            dfs = p.map(load_and_featurize, [str(y) for y in np.arange(2011, 2022)])
+
+        years = [i for i in range(2011, 2023)]
+        
+        with Pool(processes=len(years)) as p:
+            dfs = p.map(load_and_featurize, [str(y) for y in years])
         dfs = pd.concat(dfs)
 
         dfs = dfs.rename(
