@@ -41,6 +41,8 @@ def generate_feature_colname(
         f"{prefix}_{col}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
         for col in out_col_name
     ]
+
+    # Append {loader_kwargs} to colname if it exists
     if loader_kwargs:
         col_name = [
             f"{col}_{format_dict_for_printing(loader_kwargs)}" for col in col_name
