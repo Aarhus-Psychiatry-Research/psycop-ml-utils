@@ -16,6 +16,12 @@ def get_diagnosis_feature_spec(
     Returns:
         _type_: _description_
     """
+    dfs = [
+        "essential_hypertension",
+        "hyperlipidemia",
+        "polycystic_ovarian_syndrome",
+        "sleep_apnea",
+    ]
 
     # As list comprehension:
     return [
@@ -26,10 +32,5 @@ def get_diagnosis_feature_spec(
             "fallback": fallback,
             "allowed_nan_value_prop": 0.0,
         }
-        for df in [
-            "essential_hypertension",
-            "hyperlipidemia",
-            "polycystic_ovarian_syndrome",
-            "sleep_apnea",
-        ]
+        for df in dfs
     ]
