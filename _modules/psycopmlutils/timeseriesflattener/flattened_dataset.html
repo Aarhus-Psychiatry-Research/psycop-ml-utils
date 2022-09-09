@@ -443,10 +443,8 @@
                 <span class="s2">&quot;new_col_name&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;new_col_name_prefix&quot;</span><span class="p">,</span>
             <span class="p">]</span>
-
-            <span class="k">if</span> <span class="s2">&quot;values_to_load&quot;</span> <span class="ow">in</span> <span class="n">arg_dict</span><span class="p">:</span>
-                <span class="n">required_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;values_to_load&quot;</span><span class="p">)</span>
-
+            <span class="k">if</span> <span class="s2">&quot;loader_kwargs&quot;</span> <span class="ow">in</span> <span class="n">arg_dict</span><span class="p">:</span>
+                <span class="n">required_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;loader_kwargs&quot;</span><span class="p">)</span>
             <span class="n">processed_arg_dicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">select_and_assert_keys</span><span class="p">(</span><span class="n">dictionary</span><span class="o">=</span><span class="n">arg_dict</span><span class="p">,</span> <span class="n">key_list</span><span class="o">=</span><span class="n">required_keys</span><span class="p">),</span>
             <span class="p">)</span>
@@ -636,7 +634,7 @@
         <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">incident</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
         <span class="n">dichotomous</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add an outcome-column to the dataset.</span>
@@ -647,7 +645,7 @@
 <span class="sd">            resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</span>
 <span class="sd">            fallback (float): What to do if no value within the lookahead.</span>
 <span class="sd">            incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.</span>
-<span class="sd">            new_col_name (str): Name to use for new col. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;. Defaults to &quot;value&quot;.</span>
+<span class="sd">            new_col_name (Optional[Union[str, List]]): Name to use for new column(s). Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;. Defaults to &quot;value&quot;.</span>
 <span class="sd">            dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">prediction_timestamp_col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="si">}</span><span class="s2">_prediction&quot;</span>
@@ -731,7 +729,7 @@
         <span class="n">interval_days</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a column to the dataset (either predictor or outcome depending</span>
 <span class="sd">        on the value of &quot;direction&quot;).</span>
@@ -742,7 +740,7 @@
 <span class="sd">            interval_days (float): How far to look in direction.</span>
 <span class="sd">            resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</span>
 <span class="sd">            fallback (float): What to do if no value within the lookahead.</span>
-<span class="sd">            new_col_name (str): Name to use for new column. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;.</span>
+<span class="sd">            new_col_name (Optional[Union[str, List]]): Name to use for new column(s). Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">timestamp_col_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">values_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span>
 
@@ -795,9 +793,9 @@
         <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">pred_time_uuid_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span>
         <span class="n">new_col_name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">values_to_load</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">loader_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
 
         <span class="sd">&quot;&quot;&quot;Create a dataframe with flattened values (either predictor or</span>
@@ -823,13 +821,11 @@
 <span class="sd">                static method.</span>
 <span class="sd">            pred_time_uuid_col_name (str): Name of uuid column in</span>
 <span class="sd">                prediction_times_with_uuid_df. Required because this is a static method.</span>
-<span class="sd">            new_col_name (str): Name of new column in returned</span>
+<span class="sd">            new_col_name (Union[str, List]): Name of new column(s) in returned</span>
 <span class="sd">                dataframe.</span>
 <span class="sd">            new_col_name_prefix (str, optional): Prefix to use for new column name.</span>
-<span class="sd">                Defaults to None.</span>
-<span class="sd">            values_to_load (str, optional): Which values to load from lab results.</span>
-<span class="sd">                Takes either &quot;numerical&quot;, &quot;numerical_and_coerce&quot;, &quot;cancelled&quot; or &quot;all&quot;.</span>
-<span class="sd">                Defaults to None.</span>
+<span class="sd">            loader_kwargs (dict, optional): Keyword arguments to pass to the loader</span>
+
 
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame</span>
@@ -846,14 +842,13 @@
             <span class="n">interval_days</span><span class="o">=</span><span class="n">interval_days</span><span class="p">,</span>
             <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
             <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-            <span class="n">values_to_load</span><span class="o">=</span><span class="n">values_to_load</span><span class="p">,</span>
+            <span class="n">loader_kwargs</span><span class="o">=</span><span class="n">loader_kwargs</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Resolve values_df if not already a dataframe.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values_df</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">values_to_load</span><span class="p">:</span>
-                <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading values for </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">values_df</span> <span class="o">=</span> <span class="n">values_df</span><span class="p">(</span><span class="n">values_to_load</span><span class="o">=</span><span class="n">values_to_load</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">loader_kwargs</span><span class="p">:</span>
+                <span class="n">values_df</span> <span class="o">=</span> <span class="n">values_df</span><span class="p">(</span><span class="o">**</span><span class="n">loader_kwargs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">values_df</span> <span class="o">=</span> <span class="n">values_df</span><span class="p">()</span>
 
@@ -906,21 +901,23 @@
         <span class="c1"># e.g. when there is only one prediction_time within look_ahead window for slope calculation,</span>
         <span class="c1"># replace with NaN</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">df</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span> <span class="n">fallback</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">full_col_str</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="c1"># if only 1 value, only replace that one</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_col_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">df</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span> <span class="n">fallback</span><span class="p">})</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">full_col_str</span><span class="p">})</span>
+            <span class="n">full_col_str</span> <span class="o">=</span> <span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span>  <span class="c1"># to concat with other columns</span>
 
-        <span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">full_col_str</span><span class="p">},</span>
-            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-            <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="c1"># if multiple values, replace all with na and handle renaming</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_col_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">metadata_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">new_col_name</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">new_col_name</span><span class="p">]</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">fallback</span><span class="p">)</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">full_col_str</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">metadata_df</span><span class="p">,</span> <span class="n">df</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="n">msg</span><span class="o">.</span><span class="n">good</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning flattened dataframe with </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">cols_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span> <span class="n">full_col_str</span><span class="p">]</span>
+        <span class="n">cols_to_return</span> <span class="o">=</span> <span class="p">[</span><span class="n">pred_time_uuid_col_name</span><span class="p">]</span> <span class="o">+</span> <span class="n">full_col_str</span>
 
         <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">cols_to_return</span><span class="p">]</span></div>
 

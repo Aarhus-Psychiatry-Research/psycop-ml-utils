@@ -211,46 +211,23 @@
         </div>
         <article role="main">
           <h1>Source code for psycopmlutils.timeseriesflattener.create_feature_combinations</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
-
-
-<div class="viewcode-block" id="list_has_dict_with_list_as_value"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.create_feature_combinations.list_has_dict_with_list_as_value">[docs]</a><span class="k">def</span> <span class="nf">list_has_dict_with_list_as_value</span><span class="p">(</span>
-    <span class="n">list_of_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]],</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Checks if any dict in a list of dicts has a value that is a list.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        list_of_dicts (List[Dict[str, Union[str, list]]]): A list of dicts.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        bool</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="nb">dict</span> <span class="ow">in</span> <span class="n">list_of_dicts</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">dict_has_list_in_any_value</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span>
-
-    <span class="k">return</span> <span class="kc">False</span></div>
-
-
-<div class="viewcode-block" id="dict_has_list_in_any_value"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.create_feature_combinations.dict_has_list_in_any_value">[docs]</a><span class="k">def</span> <span class="nf">dict_has_list_in_any_value</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Checks if a dict has any values that are lists.&quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="kc">False</span></div>
+<span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
 
 <div class="viewcode-block" id="create_feature_combinations"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.create_feature_combinations.create_feature_combinations">[docs]</a><span class="k">def</span> <span class="nf">create_feature_combinations</span><span class="p">(</span>
-    <span class="n">arg_sets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]],</span>
+    <span class="n">arg_sets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]]],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]:</span>
-    <span class="sd">&quot;&quot;&quot;Create feature combinations from a dictionary of feature specifications.</span>
-<span class="sd">    See example for shape.</span>
+    <span class="sd">&quot;&quot;&quot;Create feature combinations from a dictionary or list of dictionaries of</span>
+<span class="sd">    feature specifications.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        arg_sets (List[Dict[str, Union[str, list]]]): A set of argument sets for .add_predictor. See example for shape.</span>
+<span class="sd">        arg_sets (Union[List[Dict[str, Union[str, List]]], Dict[str, Union[str, List]]]):</span>
+<span class="sd">            dict/list of dicts containing arguments for .add_predictor.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        List[Dict[str, Union[str, float, int]]]: List of all possible combinations of the arguments.</span>
+<span class="sd">        List[Dict[str, Union[str, float, int]]]: All possible combinations of</span>
+<span class="sd">            arguments.</span>
 
 <span class="sd">    Example:</span>
 <span class="sd">        &gt;&gt;&gt; input = [</span>
@@ -280,36 +257,33 @@
 <span class="sd">        &gt;&gt;&gt;     },</span>
 <span class="sd">        &gt;&gt;&gt; ]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">output_arg_sets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_sets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">arg_sets</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg_sets</span><span class="p">]</span>
+    <span class="n">feature_combinations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">arg_set</span> <span class="ow">in</span> <span class="n">arg_sets</span><span class="p">:</span>
+        <span class="n">feature_combinations</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">create_feature_combinations_from_dict</span><span class="p">(</span><span class="n">arg_set</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">feature_combinations</span></div>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">list_has_dict_with_list_as_value</span><span class="p">(</span><span class="n">arg_sets</span><span class="p">):</span>
-        <span class="c1"># If no arg_sets contain lists as values, no need for further processing</span>
-        <span class="k">return</span> <span class="n">arg_sets</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">arg_set</span> <span class="ow">in</span> <span class="n">arg_sets</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">dict_has_list_in_any_value</span><span class="p">(</span><span class="n">arg_set</span><span class="p">):</span>
-                <span class="c1"># If arg_set contains no lists, just append it to output_list</span>
-                <span class="n">output_arg_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg_set</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">arg_name</span><span class="p">,</span> <span class="n">arg_value</span> <span class="ow">in</span> <span class="n">arg_set</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">hit_arg_with_list_as_value</span> <span class="o">=</span> <span class="kc">False</span>
 
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                        <span class="n">hit_arg_with_list_as_value</span> <span class="o">=</span> <span class="kc">True</span>
+<div class="viewcode-block" id="create_feature_combinations_from_dict"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.create_feature_combinations.create_feature_combinations_from_dict">[docs]</a><span class="k">def</span> <span class="nf">create_feature_combinations_from_dict</span><span class="p">(</span>
+    <span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]:</span>
+    <span class="sd">&quot;&quot;&quot;Create feature combinations from a dictionary of feature specifications.</span>
+<span class="sd">    Only unpacks the top level of lists.</span>
 
-                        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">arg_value</span><span class="p">:</span>
-                            <span class="n">i_arg_set</span> <span class="o">=</span> <span class="n">arg_set</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                            <span class="n">i_arg_set</span><span class="p">[</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+<span class="sd">    Args:</span>
+<span class="sd">        d (Dict[str]): A dictionary of feature specifications.</span>
 
-                            <span class="n">output_arg_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i_arg_set</span><span class="p">)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        List[Dict[str]]: List of all possible combinations of the arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-                    <span class="k">if</span> <span class="n">hit_arg_with_list_as_value</span><span class="p">:</span>
-                        <span class="c1"># Break here to avoid adding duplicates.</span>
-                        <span class="c1"># If e.g. two args with list, [0,1] and [0,1], not breaking would result in</span>
-                        <span class="c1"># four new arg_sets: [0,0], [1,0], [0,0] and [1,1]</span>
-                        <span class="k">break</span>
-
-        <span class="k">return</span> <span class="n">create_feature_combinations</span><span class="p">(</span><span class="n">output_arg_sets</span><span class="p">)</span></div>
+    <span class="c1"># Make all elements iterable</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="c1"># Create all combinations of top level elements</span>
+    <span class="n">permutations_dicts</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">permutations_dicts</span></div>
 </pre></div>
         </article>
       </div>
