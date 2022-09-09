@@ -370,7 +370,7 @@ class FlattenedDataset:
                 index=False,
             )
 
-            return df
+        return df
 
     def _load_cached_df_and_expand_fallback(
         self,
