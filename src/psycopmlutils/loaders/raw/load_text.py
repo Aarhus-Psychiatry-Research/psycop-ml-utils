@@ -12,8 +12,8 @@ from psycopmlutils.utils import data_loaders
 
 
 def _load_and_featurize_notes_per_year(
-    note_types: Union[str, List[str]],
     year: str,
+    note_types: Union[str, List[str]],
     view: str,
     n: int,
     featurizer: str,
@@ -89,7 +89,8 @@ class LoadText:
         Args:
             note_type (Union[str, List[str]]): Which note types to load. See
                 `LoadText.get_all_valid_note_types()` for valid note types.
-            featurizer (str): Which featurizer to use. Either 'tf-idf' or 'huggingface'.
+            featurizer (str): Which featurizer to use. Either 'tf-idf' or 'huggingface' or
+                `None` to return the raw text.
             featurizer_kwargs (Optional[dict]): Kwargs passed to the featurizer. Defaults to None.
                 For tf-idf, this is `tfidf_path` to the vectorizer. For huggingface,
                 this is `model_id` to the model.
@@ -211,6 +212,20 @@ class LoadText:
         n: Optional[int] = None,
         featurizer_kwargs: Optional[dict] = None,
     ) -> pd.DataFrame:
+        """Returns all notes from all years. Featurizes the notes using the
+        specified featurizer ('tfidf', 'huggingface', or `None` for raw text).
+        `featurizer_kwargs` are passed to the featurizer (e.g. "tfidf_path" for
+        tfidf, and "model_id" for huggingface).
+
+        Args:
+            featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
+            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            featurizer_kwargs (Optional[dict], optional): Keyword arguments passed to
+                the featurizer. Defaults to None.
+
+        Returns:
+            pd.DataFrame: (Featurized) notes
+        """
         return LoadText.load_and_featurize_notes(
             note_types=LoadText.get_all_valid_note_types(),
             featurizer=featurizer,
@@ -219,11 +234,30 @@ class LoadText:
         )
 
     @data_loaders.register("aktuelt_psykisk")
-    def load_aktuel_psykisk(featurizer: str, n: Optional[int] = None) -> pd.DataFrame:
+    def load_aktuel_psykisk(
+        featurizer: str,
+        n: Optional[int] = None,
+        featurizer_kwargs: Optional[dict] = None,
+    ) -> pd.DataFrame:
+        """Returns 'Aktuelt psykisk' notes from all years. Featurizes the notes
+        using the specified featurizer ('tfidf', 'huggingface', or `None` for
+        raw text). `featurizer_kwargs` are passed to the featurizer (e.g.
+        "tfidf_path" for tfidf, and "model_id" for huggingface).
+
+        Args:
+            featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
+            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            featurizer_kwargs (Optional[dict], optional): Keyword arguments passed to
+                the featurizer. Defaults to None.
+
+        Returns:
+            pd.DataFrame: (Featurized) notes
+        """
         return LoadText.load_and_featurize_notes(
             note_types="Aktuelt psykisk",
             featurizer=featurizer,
             n=n,
+            featurizer_kwargs=featurizer_kwargs,
         )
 
     @data_loaders.register("load_note_types")
@@ -231,15 +265,44 @@ class LoadText:
         note_names: Union[str, List[str]],
         featurizer: str,
         n: Optional[int] = None,
+        featurizer_kwargs: Optional[dict] = None,
     ) -> pd.DataFrame:
+        """Returns one or multiple note types from all years. Featurizes the
+        notes using the specified featurizer ('tfidf', 'huggingface', or `None`
+        for raw text). `featurizer_kwargs` are passed to the featurizer (e.g.
+        "tfidf_path" for tfidf, and "model_id" for huggingface).
+
+        Args:
+            note_names (Union[str, List[str]]): Which note types to load. See
+                `LoadText.get_all_valid_note_types()` for a list of valid note types.
+            featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
+            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            featurizer_kwargs (Optional[dict], optional): Keyword arguments passed to
+                the featurizer. Defaults to None.
+
+        Returns:
+            pd.DataFrame: (Featurized) notes
+        """
         return LoadText.load_and_featurize_notes(
             note_names,
             featurizer=featurizer,
             n=n,
+            featurizer_kwargs=featurizer_kwargs,
         )
 
     @data_loaders.register("synth_notes")
     def load_synth_notes(featurizer: str) -> pd.DataFrame:
+        """Load (featurized) synthetic notes for testing.
+
+        Args:
+            featurizer (str): Which featurizer to use
+
+        Raises:
+            ValueError: If given invalid featurizer
+
+        Returns:
+            pd.DataFrame: (Featurized) synthetic notes
+        """
         p = Path("tests") / "test_data"
         df = pd.read_csv(p / "synth_txt_data.csv")
         df = df.dropna()
