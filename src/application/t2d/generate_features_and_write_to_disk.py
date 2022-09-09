@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import psutil
 import wandb
 from wasabi import Printer
 
@@ -27,18 +28,18 @@ from psycopmlutils.utils import FEATURE_SETS_PATH
 if __name__ == "__main__":
     msg = Printer(timestamp=True)
     # set path to save features to
-    SAVE_PATH = FEATURE_SETS_PATH / "t2d"
+    PROJ_PATH = FEATURE_SETS_PATH / "t2d"
 
-    if not SAVE_PATH.exists():
-        SAVE_PATH.mkdir()
+    if not PROJ_PATH.exists():
+        PROJ_PATH.mkdir()
 
     RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
     LOOKBEHIND_DAYS = [365, 1825, 9999]
 
     LAB_PREDICTORS = get_lab_feature_spec(
-        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
-        VALUES_TO_LOAD="numerical_and_coerce",
+        resolve_Multiple=RESOLVE_MULTIPLE,
+        lookbehind_days=LOOKBEHIND_DAYS,
+        values_to_load="numerical_and_coerce",
     )
 
     DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
@@ -48,24 +49,18 @@ if __name__ == "__main__":
     )
 
     MEDICATION_PREDICTORS = get_medication_feature_spec(
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
-        RESOLVE_MULTIPLE=["count"],
+        lookbehind_days=LOOKBEHIND_DAYS,
+        resolve_multiple=["count"],
         fallback=0,
     )
 
-    PREDICTOR_SPEC_LIST = LAB_PREDICTORS + MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS
+    PREDICTOR_SPEC_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
     PREDICTOR_COMBINATIONS = create_feature_combinations(PREDICTOR_SPEC_LIST)
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
     random.shuffle(PREDICTOR_SPEC_LIST)
     random.shuffle(PREDICTOR_COMBINATIONS)
-
-    # check_feature_combinations_return_correct_dfs(
-    #     predictor_dict_list=UNIQUE_PREDICTOR_LIST,
-    #     n=1_000,
-    #     allowed_nan_value_prop=0.0,
-    # )
 
     pre_loaded_dfs = pre_load_unique_dfs(
         unique_predictor_dict_list=PREDICTOR_SPEC_LIST,
@@ -81,7 +76,14 @@ if __name__ == "__main__":
     )
 
     msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(prediction_times_df=prediction_times, n_workers=60)
+    flattened_df = FlattenedDataset(
+        prediction_times_df=prediction_times,
+        n_workers=min(
+            len(PREDICTOR_COMBINATIONS),
+            psutil.cpu_count(logical=False) * 3,
+        ),  # * 3 since dataframe loading is IO intensive, cores are likely to wait for a lot of them.
+        feature_cache_dir=PROJ_PATH / "feature_cache",
+    )
     flattened_df.add_age(psycopmlutils.loaders.raw.LoadDemographic.birthdays())
 
     # Outcome
@@ -145,7 +147,7 @@ if __name__ == "__main__":
 
     # Create directory to store all files related to this run
     sub_dir = (
-        SAVE_PATH
+        PROJ_PATH
         / f"{current_user}_{len(PREDICTOR_COMBINATIONS)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
     )
     sub_dir.mkdir()
@@ -187,16 +189,16 @@ if __name__ == "__main__":
         "predictor_list": PREDICTOR_COMBINATIONS,
     }
 
-    run = wandb.init(project="psycop-feature-files", config=feature_settings)
-    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
-
-    wandb.finish()
-
     ## Create data integrity report
-    check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
-
     create_feature_description_from_dir(
         path=sub_dir,
         predictor_dicts=PREDICTOR_COMBINATIONS,
         splits=["train"],
     )
+
+    check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
+
+    run = wandb.init(project="psycop-feature-files", config=feature_settings)
+    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+
+    wandb.finish()

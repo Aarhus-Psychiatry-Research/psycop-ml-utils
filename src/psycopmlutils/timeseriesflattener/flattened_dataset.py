@@ -1,4 +1,3 @@
-import datetime
 import datetime as dt
 import os
 from datetime import timedelta
@@ -75,7 +74,12 @@ class FlattenedDataset:
         self.predictor_col_name_prefix = predictor_col_name_prefix
         self.outcome_col_name_prefix = outcome_col_name_prefix
         self.min_date = min_date
-        self.feature_cache_dir = feature_cache_dir
+
+        if feature_cache_dir:
+            self.feature_cache_dir = feature_cache_dir
+            if not self.feature_cache_dir.exists():
+                self.feature_cache_dir.mkdir()
+
         self.n_uuids = len(prediction_times_df)
 
         self.msg = Printer(timestamp=True)
@@ -317,19 +321,27 @@ class FlattenedDataset:
 
         file_pattern = f"{full_col_str}_{self.n_uuids}_uuids"
 
-        if self.feature_cache_dir is None:
-            msg.info("No feature cache directory specified, not checking for cache")
-        elif self._cache_is_hit(
-            self,
-            kwargs_dict=kwargs_dict,
-            file_pattern=file_pattern,
-        ):
-            df = self._load_most_recent_df_matching_pattern(
-                dir=self.feature_cache_dir,
+        cache_hit = None
+
+        if self.feature_cache_dir:
+            cache_hit = False
+
+            if self._cache_is_hit(
                 file_pattern=file_pattern,
-            )
-            msg.info(f"Cache hit and loaded for {full_col_str}")
+                full_col_str=full_col_str,
+                kwargs_dict=kwargs_dict,
+            ):
+                cache_hit = True
+                df = self._load_most_recent_df_matching_pattern(
+                    dir=self.feature_cache_dir,
+                    file_pattern=file_pattern,
+                )
+
+                return df
         else:
+            msg.info("No cache dir specified, not attempting load")
+
+        if not cache_hit:
             df = self.flatten_temporal_values_to_df(
                 prediction_times_with_uuid_df=self.df[
                     [
@@ -344,60 +356,75 @@ class FlattenedDataset:
                 **kwargs_dict,
             )
 
-            df = df[[self.pred_time_uuid_col_name, full_col_str]]
+            # Write df to cache if exists
+            if self.feature_cache_dir:
+                cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
 
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-            # Write df to cache
-            df.to_csv(
-                self.feature_cache_dir / f"{file_pattern}_{timestamp}.csv",
-                index=False,
-            )
+                # Write df to cache
+                cache_df.to_csv(
+                    self.feature_cache_dir / f"{file_pattern}_{timestamp}.csv",
+                    index=False,
+                )
+            if cache_hit is False:
+                msg.info("No cache directory specified, not writing to cache")
 
             return df
 
     def _load_most_recent_df_matching_pattern(
         self,
         dir: Path,
-        pattern: str,
+        file_pattern: str,
     ) -> DataFrame:
         """Load most recent df matching pattern.
 
         Args:
             dir (Path): Directory to search
-            pattern (str): Pattern to match
+            file_pattern (str): Pattern to match
 
         Returns:
             DataFrame: DataFrame matching pattern
         """
-        files = list(dir.glob(f"*{pattern}*.csv"))
+        files = list(dir.glob(f"*{file_pattern}*.csv"))
 
         if len(files) == 0:
-            raise FileNotFoundError(f"No files matching pattern {pattern} found")
+            raise FileNotFoundError(f"No files matching pattern {file_pattern} found")
 
         most_recent_file = max(files, key=os.path.getctime)
 
         return pd.read_csv(most_recent_file)
 
-    def _cache_is_hit(self, kwargs_dict: Dict, file_pattern: Path) -> bool:
+    def _cache_is_hit(
+        self,
+        kwargs_dict: Dict,
+        file_pattern: str,
+        full_col_str: str,
+    ) -> bool:
         """Check if cache is hit.
 
         Args:
             kwargs_dict (Dict): Dictionary of kwargs
-            file_pattern (Path): File pattern to match. Looks for *file_pattern* in cache dir.
+            file_pattern (str): File pattern to match. Looks for *file_pattern* in cache dir.
+            e.g. "*feature_name*_uuids*.csv"
+            full_col_str (str): Full column string. e.g. "feature_name_ahead_interval_days_resolve_multiple_fallback"
 
         Returns:
             bool: True if cache is hit, False otherwise
         """
+        msg = Printer(timestamp=True)
+
         # Check that file exists
-        if not file_pattern.exists():
+        file_pattern_hits = list(self.feature_cache_dir.glob(f"*{file_pattern}*.csv"))
+
+        if len(file_pattern_hits) == 0:
             self.msg.info(f"Cache miss, {file_pattern} didn't exist")
             return False
 
         # Check that file contents match expected
         cache_df = self._load_most_recent_df_matching_pattern(
             dir=self.feature_cache_dir,
-            pattern=file_pattern,
+            file_pattern=file_pattern,
         )
 
         generated_df = self.flatten_temporal_values_to_df(
@@ -408,23 +435,29 @@ class FlattenedDataset:
             **kwargs_dict,
         )
 
+        cached_suffix = "_c"
+        generated_suffix = "_g"
+
         # Merge cache_df onto generated_df
         merged_df = pd.merge(
             left=generated_df,
             right=cache_df,
             how="left",
             on=self.pred_time_uuid_col_name,
-            suffixes=("", ""),
+            suffixes=(generated_suffix, cached_suffix),
             validate="1:1",
             indicator=True,
         )
 
         # Check that all rows in generated_df are in cache_df
-        if not merged_df["_merge"].isin(["both"]).all():
+        if not merged_df[full_col_str + generated_suffix].equals(
+            merged_df[full_col_str + cached_suffix],
+        ):
             self.msg.info(f"Cache miss, computed values didn't match {file_pattern}")
             return False
 
         # If all checks passed, return true
+        msg.good(f"Cache hit for {full_col_str}")
         return True
 
     def add_age(
@@ -819,7 +852,9 @@ class FlattenedDataset:
             inplace=True,
         )
 
-        msg.good(f"Returning flattened dataframe with {full_col_str}")
+        msg.good(
+            f"Returning {df.shape[0]} rows of flattened dataframe with {full_col_str}",
+        )
 
         cols_to_return = [pred_time_uuid_col_name, full_col_str]
 

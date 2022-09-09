@@ -22,8 +22,8 @@ if __name__ == "__main__":
     LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
 
     LAB_PREDICTORS = get_lab_feature_spec(
-        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        resolve_Multiple=RESOLVE_MULTIPLE,
+        lookbehind_days=LOOKBEHIND_DAYS,
     )
 
     DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     )
 
     MEDICATION_PREDICTORS = get_medication_feature_spec(
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
-        RESOLVE_MULTIPLE=["count"],
+        lookbehind_days=LOOKBEHIND_DAYS,
+        resolve_multiple=["count"],
         fallback=0,
     )
 

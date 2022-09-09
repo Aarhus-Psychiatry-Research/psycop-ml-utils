@@ -1,17 +1,19 @@
 import numpy as np
 
 
-def create_lab_feature_combinations(
-    LOOKBEHIND_DAYS=[365, 730, 1825, 9999],
-    RESOLVE_MULTIPLE=["mean", "max", "min"],
+def get_lab_feature_spec(
+    lookbehind_days=[365, 730, 1825, 9999],
+    resolve_Multiple=["mean", "max", "min"],
+    values_to_load="all",
 ):
     return [
         {
             "predictor_df": df,
-            "lookbehind_days": LOOKBEHIND_DAYS,
-            "resolve_multiple": RESOLVE_MULTIPLE,
+            "lookbehind_days": lookbehind_days,
+            "resolve_multiple": resolve_Multiple,
             "fallback": np.nan,
             "allowed_nan_value_prop": 0.0,
+            "values_to_load": values_to_load,
         }
         for df in [
             "hba1c",

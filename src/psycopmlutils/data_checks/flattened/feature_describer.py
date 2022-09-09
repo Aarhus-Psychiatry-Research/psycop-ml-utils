@@ -39,6 +39,9 @@ def create_feature_description_from_dir(
     msg = Printer(timestamp=True)
     save_dir = path / "feature_descriptions"
 
+    if not save_dir.exists():
+        save_dir.mkdir()
+
     for split in splits:
         msg.info(f"{split}: Creating feature description")
 
@@ -50,17 +53,17 @@ def create_feature_description_from_dir(
             predictor_dicts=predictor_dicts,
         )
 
-        msg.info("{split}: Writing feature description to disk")
+        msg.info(f"{split}: Writing feature description to disk")
 
         feature_description_df.to_csv(
-            save_dir / "{split}_feature_description.csv",
+            save_dir / f"{split}_feature_description.csv",
             index=False,
         )
         # Writing html table as well
         save_df_to_pretty_html(
-            df=feature_description_df,
             path=save_dir / f"{split}_feature_description.html",
             title="Feature description",
+            df=feature_description_df,
         )
 
 
@@ -94,6 +97,9 @@ def generate_feature_description_df(
 
     # Convert to dataframe
     feature_description_df = pd.DataFrame(rows)
+
+    # Sort feature_description_df by Predictor df
+    feature_description_df = feature_description_df.sort_values(by="Predictor df")
 
     return feature_description_df
 

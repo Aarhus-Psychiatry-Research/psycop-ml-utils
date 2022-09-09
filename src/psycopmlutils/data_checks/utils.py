@@ -6,7 +6,7 @@ import pandas as pd
 
 def save_df_to_pretty_html(
     df: pd.DataFrame,
-    filename: Path,
+    path: Path,
     title: Optional[str] = None,
     subtitle: Optional[str] = None,
 ) -> None:
@@ -15,7 +15,7 @@ def save_df_to_pretty_html(
 
     Args:
         df (pd.DataFrame): Dataframe to write.
-        filename (Path): Path to save the HTML file to.
+        path (Path): Path to save the HTML file to.
         title (Optional[str], optional): Title for the table. Defaults to None.
         subtitle (Optional[str], optional): Subtitle for the table. Defaults to None.
     """
@@ -27,7 +27,7 @@ def save_df_to_pretty_html(
         ht += "<h3> %s </h3>\n" % subtitle
     ht += df.to_html(classes="wide", escape=False)
 
-    with open(filename, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write(HTML_TEMPLATE1 + ht + HTML_TEMPLATE2)
 
 

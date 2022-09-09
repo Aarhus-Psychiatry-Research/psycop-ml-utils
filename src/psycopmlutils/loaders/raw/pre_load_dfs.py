@@ -36,15 +36,19 @@ def pre_load_unique_dfs(
     # Error check the laoded dfs
     failures = []
 
-    for k, df in pre_loaded_dfs:
-        source_failures, duplicates = check_raw_df(df=df, raise_error=False)
+    for d in pre_loaded_dfs:
+        for k in d.keys():
+            source_failures, duplicates = check_raw_df(df=d[k], raise_error=False)
 
-        failures.append({k: source_failures})
+            if len(source_failures) > 0:
+                failures.append({k: source_failures})
 
     if len(failures) > 0:
         raise ValueError(
             f"Pre-loaded dataframes failed source checks. {source_failures}",
         )
+    else:
+        msg.info(f"Pre-loaded {len(unique_dfs)} dataframes, all conformed to criteria")
 
     # Combined pre_loaded dfs into one dictionary
     pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
