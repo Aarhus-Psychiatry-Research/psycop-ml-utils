@@ -60,7 +60,7 @@ if __name__ == "__main__":
         text = LoadText.load_all_notes(featurizer=None, n=None, featurizer_kwargs=None)
         # Subset only train set
         train_ids = LoadIDs.load(split="train")
-        train_ids = train_ids["dw_ek_borger"].tolist()
+        train_ids = set(train_ids["dw_ek_borger"])
         text = text[text["dw_ek_borger"].isin(train_ids)]
         text = text["text"].tolist()
 
