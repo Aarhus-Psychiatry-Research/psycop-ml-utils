@@ -1,7 +1,9 @@
 import datetime as dt
+import os
 from datetime import timedelta
 from multiprocessing import Pool
-from typing import Callable, Dict, List, Optional, Union
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -29,6 +31,7 @@ class FlattenedDataset:
         n_workers: Optional[int] = 60,
         predictor_col_name_prefix: Optional[str] = "pred",
         outcome_col_name_prefix: Optional[str] = "outc",
+        feature_cache_dir: Optional[Path] = None,
     ):
         """Class containing a time-series, flattened. A 'flattened' version is
         a tabular representation for each prediction time.
@@ -61,6 +64,7 @@ class FlattenedDataset:
             predictor_col_name_prefix (str, optional): Prefix for predictor col names. Defaults to "pred_".
             outcome_col_name_prefix (str, optional): Prefix for outcome col names. Defaults to "outc_".
             n_workers (int): Number of subprocesses to spawn for parallellisation. Defaults to 60.
+            feature_cache_dir (Path): Path to cache directory for feature dataframes. Defaults to None.
         """
         self.n_workers = n_workers
 
@@ -70,6 +74,15 @@ class FlattenedDataset:
         self.predictor_col_name_prefix = predictor_col_name_prefix
         self.outcome_col_name_prefix = outcome_col_name_prefix
         self.min_date = min_date
+
+        if feature_cache_dir:
+            self.feature_cache_dir = feature_cache_dir
+            if not self.feature_cache_dir.exists():
+                self.feature_cache_dir.mkdir()
+
+        self.n_uuids = len(prediction_times_df)
+
+        self.msg = Printer(timestamp=True)
 
         self.df = prediction_times_df
 
@@ -242,7 +255,7 @@ class FlattenedDataset:
         pool = Pool(self.n_workers)
 
         flattened_predictor_dfs = pool.map(
-            self._flatten_temporal_values_to_df_wrapper,
+            self._get_feature,
             processed_arg_dicts,
         )
 
@@ -287,9 +300,8 @@ class FlattenedDataset:
                 f"Didn't generate any features because: {warnings}",
             )
 
-    def _flatten_temporal_values_to_df_wrapper(self, kwargs_dict: Dict) -> DataFrame:
-        """Wrap flatten_temporal_values_to_df with kwargs for multithreading
-        pool.
+    def _get_feature(self, kwargs_dict: Dict) -> DataFrame:
+        """Get features. Either load from cache, or generate if necessary.
 
         Args:
             kwargs_dict (Dict): Dictionary of kwargs
@@ -297,7 +309,36 @@ class FlattenedDataset:
         Returns:
             DataFrame: DataFrame generates with create_flattened_df
         """
-        return self.flatten_temporal_values_to_df(
+        full_col_str = generate_feature_colname(
+            prefix=kwargs_dict["new_col_name_prefix"],
+            out_col_name=kwargs_dict["new_col_name"],
+            interval_days=kwargs_dict["interval_days"],
+            resolve_multiple=kwargs_dict["resolve_multiple"],
+            fallback=kwargs_dict["fallback"],
+        )
+
+        file_pattern = f"{full_col_str}_{self.n_uuids}_uuids"
+
+        if hasattr(self, "feature_cache_dir"):
+
+            if self._cache_is_hit(
+                file_pattern=file_pattern,
+                full_col_str=full_col_str,
+                kwargs_dict=kwargs_dict,
+            ):
+
+                df = self._load_cached_df_and_expand_fallback(
+                    dir=self.feature_cache_dir,
+                    file_pattern=file_pattern,
+                    full_col_str=full_col_str,
+                    fallback=kwargs_dict["fallback"],
+                )
+
+                return df
+        else:
+            msg.info("No cache dir specified, not attempting load")
+
+        df = self.flatten_temporal_values_to_df(
             prediction_times_with_uuid_df=self.df[
                 [
                     self.pred_time_uuid_col_name,
@@ -310,6 +351,163 @@ class FlattenedDataset:
             pred_time_uuid_col_name=self.pred_time_uuid_col_name,
             **kwargs_dict,
         )
+
+        # Write df to cache if exists
+        if hasattr(self, "feature_cache_dir"):
+            cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
+
+            # Drop rows containing fallback, since it's non-informative
+            cache_df = cache_df[cache_df[full_col_str] != kwargs_dict["fallback"]]
+
+            # Write df to cache
+            timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+            # Write df to cache
+            cache_df.to_csv(
+                self.feature_cache_dir / f"{file_pattern}_{timestamp}.csv",
+                index=False,
+            )
+
+        return df
+
+    def _load_cached_df_and_expand_fallback(
+        self,
+        file_pattern: str,
+        fallback: Any,
+        prediction_times_with_uuid_df: pd.DataFrame,
+        full_col_str: str,
+    ) -> pd.DataFrame:
+        """Load most recent df matching pattern, and expand fallback column.
+
+        Args:
+            file_pattern (str): File pattern to search for
+            fallback (Any): Fallback value
+            prediction_times_with_uuid_df (pd.DataFrame): Prediction times with uuids
+            full_col_str (str): Full column name for values
+
+        Returns:
+            DataFrame: DataFrame with fallback column expanded
+        """
+        df = self._load_most_recent_df_matching_pattern(
+            dir=self.feature_cache_dir,
+            file_pattern=file_pattern,
+        )
+
+        # Expand fallback column
+        df = pd.merge(
+            left=prediction_times_with_uuid_df,
+            right=df,
+            how="left",
+            on=self.pred_time_uuid_col_name,
+            validate="m:1",
+        )
+
+        df[full_col_str] = df[full_col_str].fillna(fallback)
+
+        return df
+
+    def _load_most_recent_df_matching_pattern(
+        self,
+        dir: Path,
+        file_pattern: str,
+    ) -> DataFrame:
+        """Load most recent df matching pattern.
+
+        Args:
+            dir (Path): Directory to search
+            file_pattern (str): Pattern to match
+
+        Returns:
+            DataFrame: DataFrame matching pattern
+        """
+        files = list(dir.glob(f"*{file_pattern}*.csv"))
+
+        if len(files) == 0:
+            raise FileNotFoundError(f"No files matching pattern {file_pattern} found")
+
+        most_recent_file = max(files, key=os.path.getctime)
+
+        return pd.read_csv(most_recent_file)
+
+    def _cache_is_hit(
+        self,
+        kwargs_dict: Dict,
+        file_pattern: str,
+        full_col_str: str,
+    ) -> bool:
+        """Check if cache is hit.
+
+        Args:
+            kwargs_dict (Dict): Dictionary of kwargs
+            file_pattern (str): File pattern to match. Looks for *file_pattern* in cache dir.
+            e.g. "*feature_name*_uuids*.csv"
+            full_col_str (str): Full column string. e.g. "feature_name_ahead_interval_days_resolve_multiple_fallback"
+
+        Returns:
+            bool: True if cache is hit, False otherwise
+        """
+        # Check that file exists
+        file_pattern_hits = list(self.feature_cache_dir.glob(f"*{file_pattern}*.csv"))
+
+        if len(file_pattern_hits) == 0:
+            self.msg.info(f"Cache miss, {file_pattern} didn't exist")
+            return False
+
+        # Check that file contents match expected
+        cache_df = self._load_most_recent_df_matching_pattern(
+            dir=self.feature_cache_dir,
+            file_pattern=file_pattern,
+        )
+
+        generated_df = pd.DataFrame({full_col_str: []})
+
+        # Check that some values in generated_df differ from fallback
+        # Otherwise, comparison to cache is meaningless
+        n_to_generate = 1_000
+
+        while not any(
+            generated_df[full_col_str] != kwargs_dict["fallback"],
+        ):
+            self.msg.info(
+                f"{full_col_str}: Generated_df was all fallback values, regenerating",
+            )
+
+            generated_df = self.flatten_temporal_values_to_df(
+                prediction_times_with_uuid_df=self.df.sample(n_to_generate),
+                id_col_name=self.id_col_name,
+                timestamp_col_name=self.timestamp_col_name,
+                pred_time_uuid_col_name=self.pred_time_uuid_col_name,
+                **kwargs_dict,
+            )
+
+            n_to_generate = (
+                n_to_generate**1.5
+            )  # Increase n_to_generate by 1.5x each time to increase chance of non_fallback values
+
+        cached_suffix = "_c"
+        generated_suffix = "_g"
+
+        # Merge cache_df onto generated_df
+        merged_df = pd.merge(
+            left=generated_df,
+            right=cache_df,
+            how="left",
+            on=self.pred_time_uuid_col_name,
+            suffixes=(generated_suffix, cached_suffix),
+            validate="1:1",
+            indicator=True,
+        )
+
+        # Check that all rows in generated_df are in cache_df
+        if not merged_df[full_col_str + generated_suffix].equals(
+            merged_df[full_col_str + cached_suffix],
+        ):
+            self.msg.info(f"Cache miss, computed values didn't match {file_pattern}")
+            return False
+
+        # If all checks passed, return true
+        msg.good(f"Cache hit for {full_col_str}")
+        return True
 
     def add_age(
         self,
@@ -702,7 +900,9 @@ class FlattenedDataset:
             df.columns = full_col_str
             df = pd.concat([metadata_df, df], axis=1)
 
-        msg.good(f"Returning flattened dataframe with {full_col_str}")
+        msg.good(
+            f"Returning {df.shape[0]} rows of flattened dataframe with {full_col_str}",
+        )
 
         cols_to_return = [pred_time_uuid_col_name] + full_col_str
 

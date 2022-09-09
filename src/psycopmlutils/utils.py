@@ -32,7 +32,7 @@ def generate_feature_colname(
         loader_kwargs (dict, optional): Loader kwargs. Defaults to None.
 
     Returns:
-        str: _description_
+        str: A full column name
     """
     if isinstance(out_col_name, str):
         out_col_name = [out_col_name]

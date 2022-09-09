@@ -7,3 +7,7 @@ exclude =
     .env,
     .git,
     __pycache__,
+
+# Darglint config
+strictness=short
+docstring_style=google
