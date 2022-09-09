@@ -798,33 +798,33 @@ class FlattenedDataset:
         """Create a dataframe with flattened values (either predictor or
         outcome depending on the value of "direction").
 
-                Args:
-                    prediction_times_with_uuid_df (DataFrame): Dataframe with id_col and
-                        timestamps for each prediction time.
-                    values_df (Union[Callable, DataFrame]): A dataframe or callable resolving to
-                        a dataframe containing id_col, timestamp and value cols.
-                    direction (str): Whether to look "ahead" or "behind" the prediction time.
-                    interval_days (float): How far to look in each direction.
-                    resolve_multiple (Union[Callable, str]): How to handle multiple values
-                        within interval_days. Takes either
-                        i) a function that takes a list as an argument and returns a float, or
-                        ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
-                    fallback (Union[float, str]): Which value to put if no value within the
-                        lookahead. "NaN" for Pandas NA.
-                    id_col_name (str): Name of id_column in prediction_times_with_uuid_df and
-                        values_df. Required because this is a static method.
-                    timestamp_col_name (str): Name of timestamp column in
-                        prediction_times_with_uuid_df and values_df. Required because this is a
-                        static method.
-                    pred_time_uuid_col_name (str): Name of uuid column in
-                        prediction_times_with_uuid_df. Required because this is a static method.
-                    new_col_name (str): Name of new column in returned
-                        dataframe.
-                    new_col_name_prefix (str, optional): Prefix to use for new column name.
-                        Defaults to None.
-                    values_to_load (str, optional): Which values to load from lab results.
-                        Takes either "numerical", "numerical_and_coerce", "cancelled" or "all".
-                        Defaults to None.
+        Args:
+            prediction_times_with_uuid_df (DataFrame): Dataframe with id_col and
+                timestamps for each prediction time.
+            values_df (Union[Callable, DataFrame]): A dataframe or callable resolving to
+                a dataframe containing id_col, timestamp and value cols.
+            direction (str): Whether to look "ahead" or "behind" the prediction time.
+            interval_days (float): How far to look in each direction.
+            resolve_multiple (Union[Callable, str]): How to handle multiple values
+                within interval_days. Takes either
+                i) a function that takes a list as an argument and returns a float, or
+                ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
+            fallback (Union[float, str]): Which value to put if no value within the
+                lookahead. "NaN" for Pandas NA.
+            id_col_name (str): Name of id_column in prediction_times_with_uuid_df and
+                values_df. Required because this is a static method.
+            timestamp_col_name (str): Name of timestamp column in
+                prediction_times_with_uuid_df and values_df. Required because this is a
+                static method.
+            pred_time_uuid_col_name (str): Name of uuid column in
+                prediction_times_with_uuid_df. Required because this is a static method.
+            new_col_name (str): Name of new column in returned
+                dataframe.
+            new_col_name_prefix (str, optional): Prefix to use for new column name.
+                Defaults to None.
+            values_to_load (str, optional): Which values to load from lab results.
+                Takes either "numerical", "numerical_and_coerce", "cancelled" or "all".
+                Defaults to None.
 
         Returns:
             DataFrame
