@@ -4,6 +4,7 @@ from typing import List, Optional, Set, Union
 import dill as pkl
 import numpy as np
 import pandas as pd
+from sentence_transformers import SentenceTransformer
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
@@ -113,14 +114,66 @@ class LoadText:
         text = pd.DataFrame(text.toarray(), columns=vocab)
         return pd.concat([df, text], axis=1)
 
-    def _huggingface_featurize(model_id: str) -> pd.DataFrame:
+    def _huggingface_featurize(df: pd.DataFrame, model_id: str) -> pd.DataFrame:
+        """Featurize text using a huggingface model and generate a dataframe
+        with the embeddings.
+
+        Args:
+            df (pd.DataFrame): Dataframe with text column
+            model_id (str): Huggingface model id (from the sentence-transformers library)
+
+        Returns:
+            pd.DataFrame: The generated dataframe.
+
+        Example:
+            >>> p = Path("tests") / "test_data"
+            >>> huggingface_model_id = ("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+            >>> df_p = p / "synth_txt_data.csv"
+
+            >>> df = pd.read_csv(df_p)
+            >>> df = df.dropna()
+
+            >>> x = LoadText._huggingface_featurize(df, huggingface_model_id)
+        """
+
         # Load paraphrase-multilingual-MiniLM-L12-v2
-        #  split tokens to list of list if longer than allowed sequence length
-        ## which is often 128 for sentence transformers
-        # encode tokens
-        ## average by list of list
+        model = SentenceTransformer(model_id)
+
+        # Load text
+        df = df[df["text"].notna()]
+        text = df["text"].values
+        df = df.drop("text", axis=1)
+
+        # Set allowed sequence length according to model specificaiton
+        x = int(
+            model.max_seq_length / 1.5,
+        )  # allowing space for more word piece tokens than words in original sequence
+        # Generate embeddings
+        embeddings = []
+        for t in text:
+            words = t.split(" ")
+            if len(words) <= x:
+                # Extract embeddings
+                embd = model.encode(t)
+                embeddings.append(embd)
+            # Split text into chunks before embedding if text longer than allowed sequence length
+            else:
+                words_in_chunks = [
+                    words[y - x : y] for y in range(x, len(words) + x, x)
+                ]
+                chunks = [
+                    " ".join(w) for w in words_in_chunks if len(w) == x
+                ]  # drop small remainder of shorter size
+
+                # Extract embeddings
+                embd = model.encode(chunks)
+
+                # Average embeddings
+                embeddings.append(np.mean(embd, axis=0))
+
         # return embeddings
-        pass
+        embeddings = pd.DataFrame(embeddings)
+        return pd.concat([df, embeddings], axis=1)
 
     @data_loaders.register("all_notes")
     def load_all_notes(featurizer: str, n: Optional[int] = None) -> pd.DataFrame:
@@ -134,7 +187,7 @@ class LoadText:
 if __name__ == "__main__":
     p = Path("tests") / "test_data"
 
-    tfidf_path = p / "test_tfidf" / "tfidf_100.pkl"
+    tfidf_path = p / "test_featurizers" / "tfidf_100.pkl"
     df_p = p / "synth_txt_data.csv"
 
     df = pd.read_csv(df_p)
