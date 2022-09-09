@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def create_lab_feature_combinations(
+def get_lab_feature_spec(
     LOOKBEHIND_DAYS=[365, 730, 1825, 9999],
     RESOLVE_MULTIPLE=["mean", "max", "min"],
 ):
