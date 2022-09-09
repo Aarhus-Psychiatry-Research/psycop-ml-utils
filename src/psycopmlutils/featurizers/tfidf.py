@@ -18,6 +18,19 @@ def create_tfidf_vectorizer(
     min_df: float = 0.01,
     max_features: int = 100,
 ) -> TfidfVectorizer:
+    """Creates a TF-IDF vectorizer with a whitespace tokenizer.
+
+    Args:
+        ngram_range (Tuple[int, int], optional): How many ngrams to make. Defaults to (1, 2).
+        max_df (float, optional): Removes words occuring in max_df proportion of documents.
+            Defaults to 0.95.
+        min_df (float, optional): Removes words occuring in less than min_df proportion
+            of documents. Defaults to 0.01.
+        max_features (int, optional): How many features to create. Defaults to 100.
+
+    Returns:
+        TfidfVectorizer: Sklearn TF-IDF vectorizer
+    """
     return TfidfVectorizer(
         ngram_range=ngram_range,
         tokenizer=lambda x: x.split(" "),
@@ -47,7 +60,7 @@ if __name__ == "__main__":
         text = LoadText.load_all_notes(featurizer=None, n=None, featurizer_kwargs=None)
         # Subset only train set
         train_ids = LoadIDs.load(split="train")
-        train_ids = train_ids["dw_ek_borger"].unique()
+        train_ids = train_ids["dw_ek_borger"].tolist()
         text = text[text["dw_ek_borger"].isin(train_ids)]
         text = text["text"].tolist()
 
@@ -58,6 +71,10 @@ if __name__ == "__main__":
 
             with open(FEATURIZERS_PATH / f"tfidf_{n_features}.pkl", "wb") as f:
                 pkl.dump(vectorizer, f)
+
+            vocab = ["tfidf-" + word for word in vectorizer.get_feature_names()]
+            with open(FEATURIZERS_PATH / f"tfidf_{n_features}_vocab.txt", "w") as f:
+                f.write("\n".join(vocab))
 
     # train TF-IDF on synthetic data
     if SYNTHETIC:

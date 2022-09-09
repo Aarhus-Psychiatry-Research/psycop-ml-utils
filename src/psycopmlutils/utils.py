@@ -35,18 +35,18 @@ def generate_feature_colname(
         str: _description_
     """
     if isinstance(out_col_name, str):
-        col_name = f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
-        if loader_kwargs:
-            col_name = f"{col_name}_{format_dict_for_printing(loader_kwargs)}"
-    elif isinstance(out_col_name, list):
+        out_col_name = [out_col_name]
+
+    col_name = [
+        f"{prefix}_{col}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+        for col in out_col_name
+    ]
+    if loader_kwargs:
         col_name = [
-            f"{prefix}_{col}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
-            for col in out_col_name
+            f"{col}_{format_dict_for_printing(loader_kwargs)}" for col in col_name
         ]
-        if loader_kwargs:
-            col_name = [
-                f"{col}_{format_dict_for_printing(loader_kwargs)}" for col in col_name
-            ]
+    if len(col_name) == 1:
+        col_name = col_name[0]
     return col_name
 
 
@@ -60,6 +60,11 @@ def format_dict_for_printing(d: dict) -> str:
 
     Returns:
         str: Formatted dictionary.
+
+    Example:
+        >>> d = {"a": 1, "b": 2}
+        >>> print(format_dict_for_printing(d))
+        >>> "a-1_b-2"
     """
     return (
         str(d)

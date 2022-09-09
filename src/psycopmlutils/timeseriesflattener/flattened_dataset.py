@@ -422,7 +422,7 @@ class FlattenedDataset:
             resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
-            new_col_name (Optional[Union[str, List]]): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
+            new_col_name (Optional[Union[str, List]]): Name to use for new columns(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
         prediction_timestamp_col_name = f"{self.timestamp_col_name}_prediction"
@@ -517,7 +517,7 @@ class FlattenedDataset:
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
-            new_col_name (Optional[Union[str, List]]): Name to use for new column. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            new_col_name (Optional[Union[str, List]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
         timestamp_col_type = type(values_df[self.timestamp_col_name][0]).__name__
 
@@ -592,7 +592,7 @@ class FlattenedDataset:
                 static method.
             pred_time_uuid_col_name (str): Name of uuid column in
                 prediction_times_with_uuid_df. Required because this is a static method.
-            new_col_name (Union[str, List]): Name of new column in returned
+            new_col_name (Union[str, List]): Name of new column(s) in returned
                 dataframe.
             new_col_name_prefix (str, optional): Prefix to use for new column name.
             loader_kwargs (dict, optional): Keyword arguments to pass to the loader
@@ -659,8 +659,6 @@ class FlattenedDataset:
 
         df["timestamp_val"].replace({fallback: pd.NaT}, inplace=True)
 
-        ## below function only return required newly calculated columns?
-
         df = FlattenedDataset.resolve_multiple_values_within_interval_days(
             resolve_multiple=resolve_multiple,
             df=df,
@@ -677,8 +675,9 @@ class FlattenedDataset:
             df["value"] = df["value"].replace({np.NaN: fallback})
             df = df.rename(columns={"value": full_col_str})
             full_col_str = [full_col_str]  # to concat with other columns
+
         # if multiple values, replace all with na and handle renaming
-        if isinstance(new_col_name, list):
+        elif isinstance(new_col_name, list):
             metadata_df = df.drop(new_col_name, axis=1)
             df = df[new_col_name]
             df = df.fillna(fallback)

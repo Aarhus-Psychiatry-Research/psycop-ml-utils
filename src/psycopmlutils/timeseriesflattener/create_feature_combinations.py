@@ -15,6 +15,34 @@ def create_feature_combinations(
     Returns:
         List[Dict[str, Union[str, float, int]]]: All possible combinations of
             arguments.
+
+    Example:
+        >>> input = [
+        >>>     {
+        >>>         "predictor_df": "prediction_times_df",
+        >>>         "source_values_col_name": "val",
+        >>>         "lookbehind_days": [1, 30],
+        >>>         "resolve_multiple": "max",
+        >>>         "fallback": 0,
+        >>>     }
+        >>> ]
+        >>> print(create_feature_combinations(arg_sets=input))
+        >>> [
+        >>>     {
+        >>>         "predictor_df": "prediction_times_df",
+        >>>         "lookbehind_days": 1,
+        >>>         "resolve_multiple": "max",
+        >>>         "fallback": 0,
+        >>>         "source_values_col_name": "val",
+        >>>     },
+        >>>     {
+        >>>         "predictor_df": "prediction_times_df",
+        >>>         "lookbehind_days": 30,
+        >>>         "resolve_multiple": "max",
+        >>>         "fallback": 0,
+        >>>         "source_values_col_name": "val",
+        >>>     },
+        >>> ]
     """
     if isinstance(arg_sets, dict):
         arg_sets = [arg_sets]

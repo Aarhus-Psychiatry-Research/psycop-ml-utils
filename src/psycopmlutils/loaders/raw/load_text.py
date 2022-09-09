@@ -10,7 +10,7 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadText:
-    def get_valid_note_types() -> Set[str]:
+    def get_all_valid_note_types() -> Set[str]:
         """Returns a set of valid note types. Notice that 'Konklusion' is
         replaced by 'Vurdering/konklusion' in 2020, so make sure to use both.
         'Ordination' was replaced by 'Ordination, Psykiatry' in 2022, but
@@ -41,18 +41,18 @@ class LoadText:
         }
 
     def load_and_featurize_notes(
-        note_name: Union[str, List[str]],
+        note_types: Union[str, List[str]],
         featurizer: str,
         featurizer_kwargs: Optional[dict] = None,
         n: Optional[int] = None,
     ) -> pd.DataFrame:
-        """Loads clinical notes from all years that match the specified note
-        types. Featurizes the notes using the specified featurizer (tf-idf or
+        """Loads all clinical notes that match the specified note from all
+        years. Featurizes the notes using the specified featurizer (tf-idf or
         huggingface model). Kwargs passed to.
 
         Args:
-            note_name (Union[str, List[str]]): Which note types to load. See
-                `LoadText.get_valid_note_types()` for valid note types.
+            note_type (Union[str, List[str]]): Which note types to load. See
+                `LoadText.get_all_valid_note_types()` for valid note types.
             featurizer (str): Which featurizer to use. Either 'tf-idf' or 'huggingface'.
             featurizer_kwargs (Optional[dict]): Kwargs passed to the featurizer. Defaults to None.
                 For tf-idf, this is `tfidf_path` to the vectorizer. For huggingface,
@@ -73,23 +73,28 @@ class LoadText:
                 f"featurizer must be one of {valid_featurizers}, got {featurizer}",
             )
 
-        if isinstance(note_name, str):
-            note_name = [note_name]
+        if isinstance(note_types, str):
+            note_types = [note_types]
         # check for invalid note types
-        if not set(note_name).issubset(LoadText.get_valid_note_types()):
+        if not set(note_types).issubset(LoadText.get_all_valid_note_types()):
             raise ValueError(
                 "Invalid note type. Valid note types are: "
-                + str(LoadText.get_valid_note_types()),
+                + str(LoadText.get_all_valid_note_types()),
             )
 
-        # convert note_names to sql query
-        note_names = "('" + "', '".join(note_name) + "')"
+        # convert note_types to sql query
+        note_types = "('" + "', '".join(note_types) + "')"
 
         view = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
 
         dfs = []
         for year in [str(y) for y in np.arange(2011, 2021)]:
-            df = LoadText._load_notes(note_names, year, view, n)
+            df = LoadText._load_notes_for_year(
+                note_types=note_types,
+                year=year,
+                view=view,
+                n=n,
+            )
             if featurizer == "tfidf":
                 df = LoadText._tfidf_featurize(df, **featurizer_kwargs)
             elif featurizer == "huggingface":
@@ -104,12 +109,10 @@ class LoadText:
         )
         return dfs
 
-    def _load_notes(
-        note_names: Union[str, List[str]],
+    def _load_notes_for_year(
+        note_types: Union[str, List[str]],
         year: str,
-        view: Optional[
-            str
-        ] = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
+        view: Optional[str] = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
         n: Optional[int] = None,
     ) -> pd.DataFrame:
         """Loads clinical notes from sql from a specified year and matching
@@ -128,18 +131,23 @@ class LoadText:
 
         sql = (
             "SELECT dw_ek_borger, datotid_senest_aendret_i_sfien, fritekst"
-            + f" FROM [fct].{view}_{year}_inkl_2021_feb2022]"
-            + f" WHERE overskrift IN {note_names}"
+            + f" FROM [fct].[{view}_{year}_inkl_2021_feb2022]"
+            + f" WHERE overskrift IN {note_types}"
         )
         return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
 
     @staticmethod
-    def _tfidf_featurize(df: pd.DataFrame, tfidf_path: Optional[Path]) -> pd.DataFrame:
+    def _tfidf_featurize(
+        df: pd.DataFrame,
+        tfidf_path: Optional[Path],
+        text_col: str = "text",
+    ) -> pd.DataFrame:
         """TF-IDF featurize text. Assumes `df` to have a column named `text`.
 
         Args:
             df (pd.DataFrame): Dataframe with text column
             tfidf_path (Optional[Path]): Path to a sklearn tf-idf vectorizer
+            text_col (str, optional): Name of text column. Defaults to "text".
 
         Returns:
             pd.DataFrame: Original dataframe with tf-idf features appended
@@ -149,8 +157,8 @@ class LoadText:
 
         vocab = ["tfidf-" + word for word in tfidf.get_feature_names()]
 
-        text = df["text"].values
-        df = df.drop("text", axis=1)
+        text = df[text_col].values
+        df = df.drop(text_col, axis=1)
 
         text = tfidf.transform(text)
         text = pd.DataFrame(text.toarray(), columns=vocab)
@@ -172,7 +180,7 @@ class LoadText:
         featurizer_kwargs: Optional[dict] = None,
     ) -> pd.DataFrame:
         return LoadText.load_and_featurize_notes(
-            LoadText.get_valid_note_types(),
+            note_types=LoadText.get_all_valid_note_types(),
             featurizer=featurizer,
             n=n,
             featurizer_kwargs=featurizer_kwargs,
@@ -181,12 +189,12 @@ class LoadText:
     @data_loaders.register("aktuelt_psykisk")
     def load_aktuel_psykisk(featurizer: str, n: Optional[int] = None) -> pd.DataFrame:
         return LoadText.load_and_featurize_notes(
-            "Aktuelt psykisk",
+            note_types="Aktuelt psykisk",
             featurizer=featurizer,
             n=n,
         )
 
-    @data_loaders.register("load_arbirary_notes")
+    @data_loaders.register("load_note_types")
     def load_arbitrary_notes(
         note_names: Union[str, List[str]],
         featurizer: str,

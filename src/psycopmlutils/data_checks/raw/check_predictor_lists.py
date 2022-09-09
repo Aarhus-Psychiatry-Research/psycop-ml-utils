@@ -42,13 +42,13 @@ def check_feature_combinations_return_correct_dfs(
 
     dicts_with_subset_keys = []
 
-    for big_d in predictor_dict_list:
-        small_d = {k: big_d[k] for k in required_keys}
+    for d in predictor_dict_list:
+        new_d = {k: d[k] for k in required_keys}
 
-        if "loader_kwargs" in big_d:
-            small_d["loader_kwargs"] = big_d["loader_kwargs"]
+        if "loader_kwargs" in d:
+            new_d["loader_kwargs"] = d["loader_kwargs"]
 
-        dicts_with_subset_keys.append(small_d)
+        dicts_with_subset_keys.append(new_d)
 
     for predictor_dict in dicts_with_subset_keys:
         if predictor_dict not in unique_subset_dicts:
