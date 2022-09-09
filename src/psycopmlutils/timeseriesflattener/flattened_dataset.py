@@ -323,7 +323,7 @@ class FlattenedDataset:
 
         cache_hit = None
 
-        if self.feature_cache_dir:
+        try:
             cache_hit = False
 
             if self._cache_is_hit(
@@ -338,7 +338,7 @@ class FlattenedDataset:
                 )
 
                 return df
-        else:
+        except AttributeError:
             msg.info("No cache dir specified, not attempting load")
 
         if not cache_hit:
@@ -357,7 +357,7 @@ class FlattenedDataset:
             )
 
             # Write df to cache if exists
-            if self.feature_cache_dir:
+            if hasattr(self, "feature_cache_dir"):
                 cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
 
                 timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -367,6 +367,7 @@ class FlattenedDataset:
                     self.feature_cache_dir / f"{file_pattern}_{timestamp}.csv",
                     index=False,
                 )
+
             if cache_hit is False:
                 msg.info("No cache directory specified, not writing to cache")
 
