@@ -18,6 +18,7 @@ def generate_feature_colname(
     interval_days: int,
     resolve_multiple: str,
     fallback: str,
+    values_to_load: str = None,
 ) -> str:
     """Generates standardized column name from feature collapse information.
 
@@ -27,11 +28,17 @@ def generate_feature_colname(
         interval_days (int): Fills out "_within_{interval_days}" in the col name.
         resolve_multiple (str): Name of the resolve_multiple strategy.
         fallback (str): Values used for fallback.
+        values_to_load (str): Values to load from lab results.
 
     Returns:
         str: _description_
     """
-    return f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+    col_name = f"{prefix}_{out_col_name}_within_{interval_days}_days_{resolve_multiple}_fallback_{fallback}"
+
+    if values_to_load:
+        col_name += f"_{values_to_load}"
+
+    return col_name
 
 
 def df_contains_duplicates(df=pd.DataFrame, col_subset=List[str]):
