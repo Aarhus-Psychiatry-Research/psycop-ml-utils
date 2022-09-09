@@ -3,7 +3,7 @@ import os
 from datetime import timedelta
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -332,9 +332,12 @@ class FlattenedDataset:
                 kwargs_dict=kwargs_dict,
             ):
                 cache_hit = True
-                df = self._load_most_recent_df_matching_pattern(
+
+                df = self._load_cached_df_and_expand_fallback(
                     dir=self.feature_cache_dir,
                     file_pattern=file_pattern,
+                    full_col_str=full_col_str,
+                    fallback=kwargs_dict["fallback"],
                 )
 
                 return df
@@ -360,6 +363,10 @@ class FlattenedDataset:
             if hasattr(self, "feature_cache_dir"):
                 cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
 
+                # Drop rows containing fallback, since it's non-informative
+                cache_df = cache_df[cache_df[full_col_str] != kwargs_dict["fallback"]]
+
+                # Write df to cache
                 timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
                 # Write df to cache
@@ -372,6 +379,42 @@ class FlattenedDataset:
                 msg.info("No cache directory specified, not writing to cache")
 
             return df
+
+    def _load_cached_df_and_expand_fallback(
+        self,
+        file_pattern: str,
+        fallback: Any,
+        prediction_times_with_uuid_df: pd.DataFrame,
+        full_col_str: str,
+    ) -> pd.DataFrame:
+        """Load most recent df matching pattern, and expand fallback column.
+
+        Args:
+            file_pattern (str): File pattern to search for
+            fallback (Any): Fallback value
+            prediction_times_with_uuid_df (pd.DataFrame): Prediction times with uuids
+            full_col_str (str): Full column name for values
+
+        Returns:
+            DataFrame: DataFrame with fallback column expanded
+        """
+        df = self._load_most_recent_df_matching_pattern(
+            dir=self.feature_cache_dir,
+            file_pattern=file_pattern,
+        )
+
+        # Expand fallback column
+        df = pd.merge(
+            left=prediction_times_with_uuid_df,
+            right=df,
+            how="left",
+            on=self.pred_time_uuid_col_name,
+            validate="m:1",
+        )
+
+        df[full_col_str] = df[full_col_str].fillna(fallback)
+
+        return df
 
     def _load_most_recent_df_matching_pattern(
         self,
