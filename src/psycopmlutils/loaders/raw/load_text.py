@@ -1,3 +1,5 @@
+from functools import partial
+from multiprocessing import Pool
 from pathlib import Path
 from typing import List, Optional, Set, Union
 
@@ -7,6 +9,40 @@ import pandas as pd
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
+
+
+def _load_and_featurize_notes_per_year(
+    note_types: Union[str, List[str]],
+    year: str,
+    view: str,
+    n: int,
+    featurizer: str,
+    featurizer_kwargs: dict,
+) -> pd.DataFrame:
+    """Loads clinical notes and features them.
+
+    Args:
+        note_types (Union[str, List[str]]): Which note types to load.
+        year (str): Which year to load
+        view (str): Which view to load
+        n (int): How many rows to load
+        featurizer (str): Which featurizer to use (tfidf or huggingface)
+        featurizer_kwargs (dict): kwargs for the featurizer
+
+    Returns:
+        pd.DataFrame: Dataframe of notes and features
+    """
+    df = LoadText._load_notes_for_year(
+        note_types=note_types,
+        year=year,
+        view=view,
+        n=n,
+    )
+    if featurizer == "tfidf":
+        df = LoadText._tfidf_featurize(df, **featurizer_kwargs)
+    elif featurizer == "huggingface":
+        df = LoadText._huggingface_featurize(df, **featurizer_kwargs)
+    return
 
 
 class LoadText:
@@ -87,20 +123,16 @@ class LoadText:
 
         view = "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
 
-        dfs = []
-        for year in [str(y) for y in np.arange(2011, 2021)]:
-            df = LoadText._load_notes_for_year(
-                note_types=note_types,
-                year=year,
-                view=view,
-                n=n,
-            )
-            if featurizer == "tfidf":
-                df = LoadText._tfidf_featurize(df, **featurizer_kwargs)
-            elif featurizer == "huggingface":
-                df = LoadText._huggingface_featurize(df, **featurizer_kwargs)
-            dfs.append(df)
-
+        load_and_featurize = partial(
+            _load_and_featurize_notes_per_year,
+            note_types=note_types,
+            view=view,
+            n=n,
+            featurizer=featurizer,
+            featurizer_kwargs=featurizer_kwargs,
+        )
+        with Pool() as p:
+            dfs = p.map(load_and_featurize, [str(y) for y in np.arange(2011, 2022)])
         dfs = pd.concat(dfs)
 
         dfs = dfs.rename(
