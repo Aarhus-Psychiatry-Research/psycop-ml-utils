@@ -1,3 +1,8 @@
+"""A set of misc.
+
+utilities. If this file grows, consider splitting it up.
+"""
+
 from pathlib import Path
 from typing import List, Optional, Union
 

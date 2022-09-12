@@ -1,3 +1,6 @@
+"""Takes a time-series and flattens it into a set of prediction times with
+describing values."""
+
 import datetime as dt
 import os
 from datetime import timedelta
@@ -7,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-from catalogue import Registry  # noqa
+from catalogue import Registry  # noqa # pylint: disable=unused-import
 from pandas import DataFrame
 from wasabi import Printer, msg
 
@@ -33,9 +36,9 @@ class FlattenedDataset:
         outcome_col_name_prefix: Optional[str] = "outc",
         feature_cache_dir: Optional[Path] = None,
     ):
-        """Class containing a time-series, flattened. A 'flattened' version is
-        a tabular representation for each prediction time.
+        """Class containing a time-series, flattened.
 
+        A 'flattened' version is a tabular representation for each prediction time.
         A prediction time is every timestamp where you want your model to issue a prediction.
 
         E.g if you have a prediction_times_df:
@@ -65,6 +68,10 @@ class FlattenedDataset:
             outcome_col_name_prefix (str, optional): Prefix for outcome col names. Defaults to "outc_".
             n_workers (int): Number of subprocesses to spawn for parallellisation. Defaults to 60.
             feature_cache_dir (Path): Path to cache directory for feature dataframes. Defaults to None.
+
+        Raises:
+            ValueError: If timestamp_col_name or id_col_name is not in prediction_times_df
+            ValueError: If timestamp_col_name is not and could not be converted to datetime
         """
         self.n_workers = n_workers
 
@@ -110,10 +117,10 @@ class FlattenedDataset:
                 self.df[self.timestamp_col_name] = pd.to_datetime(
                     self.df[self.timestamp_col_name],
                 )
-            except Exception:
+            except Exception as exc:
                 raise ValueError(
-                    f"prediction_times_df: {self.timestamp_col_name} is of type {timestamp_col_type}, and could not be converted to 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset.",
-                )
+                    f"prediction_times_df: {self.timestamp_col_name} is of type {timestamp_col_type}, and could not be converted to 'Timestamp' from Pandas. Will cause problems. Convert before initialising FlattenedDataset. More info: {exc}",
+                ) from exc
 
         # Drop prediction times before min_date
         if min_date is not None:
@@ -169,6 +176,9 @@ class FlattenedDataset:
             >>>     predictor_dfs=predictor_dfs,
             >>>     resolve_multiple_fn_dict=resolve_multiple_strategies,
             >>> )
+
+        Raises:
+            ValueError: If predictor_df is not in the data_loaders registry or predictor_dfs.
         """
         processed_arg_dicts = []
 
@@ -184,17 +194,12 @@ class FlattenedDataset:
                 # Try from resolve_multiple_fns
                 resolved_func = False
                 if resolve_multiple_fns is not None:
-                    try:
-                        resolved_func = resolve_multiple_fns.get(
-                            [arg_dict["resolve_multiple"]],
-                        )
-                    except Exception:
-                        pass
+                    resolved_func = resolve_multiple_fns.get(
+                        [arg_dict["resolve_multiple"]],
+                    )
 
-                try:
+                if not isinstance(resolved_func, Callable):
                     resolved_func = resolve_fns.get(arg_dict["resolve_multiple"])
-                except Exception:
-                    pass
 
                 if not isinstance(resolved_func, Callable):
                     raise ValueError(
@@ -229,7 +234,7 @@ class FlattenedDataset:
                         arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
                 elif predictor_dfs is None:
                     arg_dict["values_df"] = loader_fns[arg_dict["values_df"]]
-            except Exception:
+            except LookupError:
                 # Error handling in _validate_processed_arg_dicts
                 # to handle in bulk
                 pass
@@ -252,12 +257,11 @@ class FlattenedDataset:
         # Validate dicts before starting pool, saves time if errors!
         self._validate_processed_arg_dicts(processed_arg_dicts)
 
-        pool = Pool(self.n_workers)
-
-        flattened_predictor_dfs = pool.map(
-            self._get_feature,
-            processed_arg_dicts,
-        )
+        with Pool(self.n_workers) as p:
+            flattened_predictor_dfs = p.map(
+                self._get_feature,
+                processed_arg_dicts,
+            )
 
         flattened_predictor_dfs = [
             df.set_index(self.pred_time_uuid_col_name) for df in flattened_predictor_dfs
@@ -328,7 +332,6 @@ class FlattenedDataset:
             ):
 
                 df = self._load_cached_df_and_expand_fallback(
-                    dir=self.feature_cache_dir,
                     file_pattern=file_pattern,
                     full_col_str=full_col_str,
                     fallback=kwargs_dict["fallback"],
@@ -374,7 +377,6 @@ class FlattenedDataset:
         self,
         file_pattern: str,
         fallback: Any,
-        prediction_times_with_uuid_df: pd.DataFrame,
         full_col_str: str,
     ) -> pd.DataFrame:
         """Load most recent df matching pattern, and expand fallback column.
@@ -389,13 +391,13 @@ class FlattenedDataset:
             DataFrame: DataFrame with fallback column expanded
         """
         df = self._load_most_recent_df_matching_pattern(
-            dir=self.feature_cache_dir,
+            dir_path=self.feature_cache_dir,
             file_pattern=file_pattern,
         )
 
         # Expand fallback column
         df = pd.merge(
-            left=prediction_times_with_uuid_df,
+            left=self.df[self.pred_time_uuid_col_name],
             right=df,
             how="left",
             on=self.pred_time_uuid_col_name,
@@ -408,7 +410,7 @@ class FlattenedDataset:
 
     def _load_most_recent_df_matching_pattern(
         self,
-        dir: Path,
+        dir_path: Path,
         file_pattern: str,
     ) -> DataFrame:
         """Load most recent df matching pattern.
@@ -419,8 +421,11 @@ class FlattenedDataset:
 
         Returns:
             DataFrame: DataFrame matching pattern
+
+        Raises:
+            FileNotFoundError: If no file matching pattern is found
         """
-        files = list(dir.glob(f"*{file_pattern}*.csv"))
+        files = list(dir_path.glob(f"*{file_pattern}*.csv"))
 
         if len(files) == 0:
             raise FileNotFoundError(f"No files matching pattern {file_pattern} found")
@@ -455,7 +460,7 @@ class FlattenedDataset:
 
         # Check that file contents match expected
         cache_df = self._load_most_recent_df_matching_pattern(
-            dir=self.feature_cache_dir,
+            dir_path=self.feature_cache_dir,
             file_pattern=file_pattern,
         )
 
@@ -530,10 +535,10 @@ class FlattenedDataset:
                     id2date_of_birth[date_of_birth_col_name],
                     format="%Y-%m-%d",
                 )
-            except Exception:
+            except Exception as e:
                 raise ValueError(
                     f"Conversion of {date_of_birth_col_name} to datetime failed, doesn't match format %Y-%m-%d. Recommend converting to datetime before adding.",
-                )
+                ) from e
 
         self.add_static_info(
             info_df=id2date_of_birth,
@@ -570,6 +575,9 @@ class FlattenedDataset:
             prefix (str, optional): Prefix for column. Defaults to self.predictor_col_name_prefix.
             input_col_name (str, optional): Column names for the values you want to add. Defaults to "value".
             output_col_name (str, optional): Name of the output column. Defaults to None.
+
+        Raises:
+            ValueError: If input_col_name does not match a column in info_df.
         """
 
         value_col_name = [col for col in info_df.columns if col not in self.id_col_name]
@@ -815,7 +823,6 @@ class FlattenedDataset:
         Returns:
             DataFrame
         """
-        msg = Printer(timestamp=True)
 
         # Rename column
         if new_col_name is None:

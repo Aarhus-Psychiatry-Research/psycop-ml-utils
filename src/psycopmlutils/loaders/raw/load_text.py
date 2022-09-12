@@ -1,3 +1,7 @@
+"""Loader and feature extractor for text data."""
+
+# pylint: disable=E0211,E0213
+
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
@@ -10,41 +14,10 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
-def _load_and_featurize_notes_per_year(
-    year: str,
-    note_types: Union[str, List[str]],
-    view: str,
-    n: int,
-    featurizer: str,
-    featurizer_kwargs: dict,
-) -> pd.DataFrame:
-    """Loads clinical notes and features them.
-
-    Args:
-        note_types (Union[str, List[str]]): Which note types to load.
-        year (str): Which year to load
-        view (str): Which view to load
-        n (int): How many rows to load
-        featurizer (str): Which featurizer to use (tfidf or huggingface)
-        featurizer_kwargs (dict): kwargs for the featurizer
-
-    Returns:
-        pd.DataFrame: Dataframe of notes and features
-    """
-    df = LoadText._load_notes_for_year(
-        note_types=note_types,
-        year=year,
-        view=view,
-        n=n,
-    )
-    if featurizer == "tfidf":
-        df = LoadText._tfidf_featurize(df, **featurizer_kwargs)
-    elif featurizer == "huggingface":
-        df = LoadText._huggingface_featurize(df, **featurizer_kwargs)
-    return df
-
-
 class LoadText:
+    """Load text data from a database and featurise it using a tf-idf
+    vectorizer."""
+
     def get_all_valid_note_types() -> Set[str]:
         """Returns a set of valid note types. Notice that 'Konklusion' is
         replaced by 'Vurdering/konklusion' in 2020, so make sure to use both.
@@ -79,21 +52,21 @@ class LoadText:
         note_types: Union[str, List[str]],
         featurizer: str,
         featurizer_kwargs: Optional[dict] = None,
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
     ) -> pd.DataFrame:
         """Loads all clinical notes that match the specified note from all
         years. Featurizes the notes using the specified featurizer (tf-idf or
         huggingface model). Kwargs passed to.
 
         Args:
-            note_type (Union[str, List[str]]): Which note types to load. See
+            note_types (Union[str, List[str]]): Which note types to load. See
                 `LoadText.get_all_valid_note_types()` for valid note types.
             featurizer (str): Which featurizer to use. Either 'tf-idf' or 'huggingface' or
                 `None` to return the raw text.
             featurizer_kwargs (Optional[dict]): Kwargs passed to the featurizer. Defaults to None.
                 For tf-idf, this is `tfidf_path` to the vectorizer. For huggingface,
                 this is `model_id` to the model.
-            n (Optional[int], optional): How many rows to load. Defaults to None.
+            n_rows (Optional[int], optional): How many rows to load. Defaults to None.
 
         Raises:
             ValueError: If given invalid featurizer
@@ -110,7 +83,7 @@ class LoadText:
             )
 
         if isinstance(note_types, str):
-            note_types = [note_types]
+            note_types = list(note_types)  # pylint: disable=W0642
         # check for invalid note types
         if not set(note_types).issubset(LoadText.get_all_valid_note_types()):
             raise ValueError(
@@ -119,20 +92,20 @@ class LoadText:
             )
 
         # convert note_types to sql query
-        note_types = "('" + "', '".join(note_types) + "')"
+        note_types = "('" + "', '".join(note_types) + "')"  # pylint: disable=W0642
 
         view = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret"
 
         load_and_featurize = partial(
-            _load_and_featurize_notes_per_year,
+            LoadText._load_and_featurize_notes_per_year,
             note_types=note_types,
             view=view,
-            n=n,
+            n=n_rows,
             featurizer=featurizer,
             featurizer_kwargs=featurizer_kwargs,
         )
 
-        years = [i for i in range(2011, 2022)]
+        years = list(range(2011, 2022))
 
         with Pool(processes=len(years)) as p:
             dfs = p.map(load_and_featurize, [str(y) for y in years])
@@ -144,11 +117,45 @@ class LoadText:
         )
         return dfs
 
+    def _load_and_featurize_notes_per_year(
+        year: str,
+        note_types: Union[str, List[str]],
+        view: str,
+        n_rows: int,
+        featurizer: str,
+        featurizer_kwargs: dict,
+    ) -> pd.DataFrame:
+        """Loads clinical notes and features them.
+
+        Args:
+            note_types (Union[str, List[str]]): Which note types to load.
+            year (str): Which year to load
+            view (str): Which view to load
+            n_rows (int): How many rows to load
+            featurizer (str): Which featurizer to use (tfidf or huggingface)
+            featurizer_kwargs (dict): kwargs for the featurizer
+
+        Returns:
+            pd.DataFrame: Dataframe of notes and features
+        """
+
+        df = LoadText._load_notes_for_year(
+            note_types=note_types,
+            year=year,
+            view=view,
+            n_rows=n_rows,
+        )
+        if featurizer == "tfidf":
+            df = LoadText._tfidf_featurize(df, **featurizer_kwargs)
+        elif featurizer == "huggingface":
+            df = LoadText._huggingface_featurize(df, **featurizer_kwargs)
+        return df
+
     def _load_notes_for_year(
         note_types: Union[str, List[str]],
         year: str,
         view: Optional[str] = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
     ) -> pd.DataFrame:
         """Loads clinical notes from sql from a specified year and matching
         specified note types.
@@ -158,7 +165,7 @@ class LoadText:
             year (str): Which year to load
             view (str, optional): Which table to load.
                 Defaults to "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret".
-            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
 
         Returns:
             pd.DataFrame: Dataframe with clinical notes
@@ -169,7 +176,7 @@ class LoadText:
             + f" FROM [fct].[{view}_{year}_inkl_2021_feb2022]"
             + f" WHERE overskrift IN {note_types}"
         )
-        return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+        return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n_rows)
 
     @staticmethod
     def _tfidf_featurize(
@@ -206,12 +213,12 @@ class LoadText:
         # encode tokens
         ## average by list of list
         # return embeddings
-        pass
+        raise NotImplementedError
 
     @data_loaders.register("all_notes")
     def load_all_notes(
         featurizer: str,
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
         featurizer_kwargs: Optional[dict] = None,
     ) -> pd.DataFrame:
         """Returns all notes from all years. Featurizes the notes using the
@@ -221,7 +228,7 @@ class LoadText:
 
         Args:
             featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
-            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
             featurizer_kwargs (Optional[dict], optional): Keyword arguments passed to
                 the featurizer. Defaults to None.
 
@@ -231,14 +238,14 @@ class LoadText:
         return LoadText.load_and_featurize_notes(
             note_types=LoadText.get_all_valid_note_types(),
             featurizer=featurizer,
-            n=n,
+            n_rows=n_rows,
             featurizer_kwargs=featurizer_kwargs,
         )
 
     @data_loaders.register("aktuelt_psykisk")
     def load_aktuel_psykisk(
         featurizer: str,
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
         featurizer_kwargs: Optional[dict] = None,
     ) -> pd.DataFrame:
         """Returns 'Aktuelt psykisk' notes from all years. Featurizes the notes
@@ -248,7 +255,7 @@ class LoadText:
 
         Args:
             featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
-            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
             featurizer_kwargs (Optional[dict], optional): Keyword arguments passed to
                 the featurizer. Defaults to None.
 
@@ -258,7 +265,7 @@ class LoadText:
         return LoadText.load_and_featurize_notes(
             note_types="Aktuelt psykisk",
             featurizer=featurizer,
-            n=n,
+            n_rows=n_rows,
             featurizer_kwargs=featurizer_kwargs,
         )
 
@@ -266,7 +273,7 @@ class LoadText:
     def load_arbitrary_notes(
         note_names: Union[str, List[str]],
         featurizer: str,
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
         featurizer_kwargs: Optional[dict] = None,
     ) -> pd.DataFrame:
         """Returns one or multiple note types from all years. Featurizes the
@@ -278,7 +285,7 @@ class LoadText:
             note_names (Union[str, List[str]]): Which note types to load. See
                 `LoadText.get_all_valid_note_types()` for a list of valid note types.
             featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
-            n (Optional[int], optional): Number of rows to load. Defaults to None.
+            n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
             featurizer_kwargs (Optional[dict], optional): Keyword arguments passed to
                 the featurizer. Defaults to None.
 
@@ -288,7 +295,7 @@ class LoadText:
         return LoadText.load_and_featurize_notes(
             note_names,
             featurizer=featurizer,
-            n=n,
+            n_rows=n_rows,
             featurizer_kwargs=featurizer_kwargs,
         )
 
@@ -315,5 +322,5 @@ class LoadText:
                 df,
                 tfidf_path=p / "test_tfidf" / "tfidf_10.pkl",
             )
-        else:
-            raise ValueError("Only tfidf featurizer supported for synth notes")
+
+        raise ValueError("Only tfidf featurizer supported for synth notes")

@@ -25,7 +25,7 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
 
@@ -34,8 +34,18 @@ repos:
     hooks:
       - id: flake8
         args: [--config, .flake8]
-        
-  - repo: https://github.com/zricethezav/gitleaks
-    rev: v8.12.0
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.15.2
     hooks:
-      - id: gitleaks
+      - id: pylint
+        types: [python]
+        args:
+          [
+            "-rn", # Only display messages
+            "-sn", # Don't display the score
+            "--load-plugins=pylint.extensions.docparams", # Load an extension
+            "--good-names=df,p,f,d,e",
+            "--disable=too-many-lines,line-too-long,missing-raises-doc",
+            "--disable=R,import-error",
+          ]
