@@ -1,3 +1,5 @@
+"""Main example on how to generate features. Uses T2D-features. WIP, will be migrated to psycop-t2d when reaching maturity."""
+
 import random
 import time
 from pathlib import Path
@@ -67,14 +69,12 @@ if __name__ == "__main__":
         unique_predictor_dict_list=PREDICTOR_SPEC_LIST,
     )
 
-    event_times = psycopmlutils.loaders.raw.LoadOutcome.t2d()
+    event_times = psycopmlutils.loaders.raw.t2d()
 
     msg.info(f"Generating {len(PREDICTOR_COMBINATIONS)} features")
 
     msg.info("Loading prediction times")
-    prediction_times = (
-        psycopmlutils.loaders.raw.LoadVisits.physical_visits_to_psychiatry()
-    )
+    prediction_times = psycopmlutils.loaders.raw.physical_visits_to_psychiatry()
 
     msg.info("Initialising flattened dataset")
     flattened_df = FlattenedDataset(
@@ -85,16 +85,16 @@ if __name__ == "__main__":
         ),  # * 3 since dataframe loading is IO intensive, cores are likely to wait for a lot of them.
         feature_cache_dir=PROJ_PATH / "feature_cache",
     )
-    flattened_df.add_age(psycopmlutils.loaders.raw.LoadDemographic.birthdays())
+    flattened_df.add_age(psycopmlutils.loaders.raw.birthdays())
 
     # Outcome
     msg.info("Adding outcome")
     for i in [1, 3, 5]:
-        lookahead_days = int(i * 365)
-        msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
+        LOOKAHEAD_DAYS = int(i * 365)
+        msg.info(f"Adding outcome with {LOOKAHEAD_DAYS} days of lookahead")
         flattened_df.add_temporal_outcome(
             outcome_df=event_times,
-            lookahead_days=lookahead_days,
+            lookahead_days=LOOKAHEAD_DAYS,
             resolve_multiple="max",
             fallback=0,
             new_col_name="t2d",
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # Predictors
     msg.info("Adding static predictors")
-    flattened_df.add_static_info(psycopmlutils.loaders.raw.LoadDemographic.sex_female())
+    flattened_df.add_static_info(psycopmlutils.loaders.raw.sex_female())
 
     start_time = time.time()
 
@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
     # Create splits
     for dataset_name in splits:
-        df_split_ids = psycopmlutils.loaders.raw.LoadIDs.load(split=dataset_name)
+        df_split_ids = psycopmlutils.loaders.raw.load_ids(split=dataset_name)
 
         # Find IDs which are in split_ids, but not in flattened_df
         split_ids = df_split_ids["dw_ek_borger"].unique()

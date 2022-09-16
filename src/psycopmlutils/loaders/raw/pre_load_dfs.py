@@ -16,7 +16,7 @@ def pre_load_unique_dfs(
     """Pre-load unique dataframes to avoid duplicate loading.
 
     Args:
-        predictor_dict_list (List[Dict[str, Union[str, float, int]]]): List of dictionaries where the key predictor_df maps to an SQL database.
+        unique_predictor_dict_list (List[Dict[str, Union[str, float, int]]]): List of dictionaries where the key predictor_df maps to an SQL database.
 
     Returns:
         Dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
@@ -29,29 +29,32 @@ def pre_load_unique_dfs(
 
     msg.info(f"Pre-loading {len(unique_dfs)} dataframes")
     n_workers = min(len(unique_dfs), 16)
-    p = Pool(n_workers)
 
-    pre_loaded_dfs = p.map(load_df_wrapper, unique_predictor_dict_list)
+    with Pool(n_workers) as p:
+        pre_loaded_dfs = p.map(load_df_wrapper, unique_predictor_dict_list)
 
-    # Error check the laoded dfs
-    failures = []
+        # Error check the laoded dfs
+        failures = []
 
-    for d in pre_loaded_dfs:
-        for k in d.keys():
-            source_failures, duplicates = check_raw_df(df=d[k], raise_error=False)
+        for d in pre_loaded_dfs:
+            for k in d.keys():
+                (
+                    source_failures,
+                    duplicates,  # pylint: disable = unused-variable
+                ) = check_raw_df(df=d[k], raise_error=False)
 
-            if len(source_failures) > 0:
-                failures.append({k: source_failures})
+                if len(source_failures) > 0:
+                    failures.append({k: source_failures})
 
-    if len(failures) > 0:
-        raise ValueError(
-            f"Pre-loaded dataframes failed source checks. {source_failures}",
-        )
-    else:
+        if len(failures) > 0:
+            raise ValueError(
+                f"Pre-loaded dataframes failed source checks. {source_failures}",
+            )
         msg.info(f"Pre-loaded {len(unique_dfs)} dataframes, all conformed to criteria")
 
-    # Combined pre_loaded dfs into one dictionary
-    pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
+        # Combined pre_loaded dfs into one dictionary
+        pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
+
     return pre_loaded_dfs
 
 
@@ -75,7 +78,7 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
 
     Args:
         predictor_df (str): The name of the SQL database.
-        predictor_dict (Dict): A dict describing the predictor.
+        values_to_load (Dict): Which values to load for medications. Takes "all", "numerical" or "numerical_and_coerce". Defaults to None.
 
     Returns:
         pd.DataFrame: The loaded dataframe.

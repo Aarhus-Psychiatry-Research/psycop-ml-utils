@@ -1,4 +1,7 @@
-def get_medication_feature_spec(
+"""Loaders for T2D medication feature spec."""
+
+
+def get_medication_feature_spec(  # pylint: disable=dangerous-default-value
     lookbehind_days=[365, 730, 1825, 9999],
     resolve_multiple=["mean", "max", "min"],
     fallback=0,

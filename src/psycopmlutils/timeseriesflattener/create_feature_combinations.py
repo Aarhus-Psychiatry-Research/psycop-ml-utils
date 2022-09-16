@@ -1,3 +1,5 @@
+"""Functionality for taking a dictionary of feature combinations where values are lists, and then creating each possible permutation."""
+
 import itertools
 from typing import Dict, List, Union
 

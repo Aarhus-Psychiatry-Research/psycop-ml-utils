@@ -1,4 +1,6 @@
-from typing import Dict
+"""Some of our data series contain both numerical values and strings like '>=12'. This function takes a df and coerces all strings into numerical."""
+
+from typing import Dict, Optional
 
 import pandas as pd
 
@@ -6,18 +8,14 @@ import pandas as pd
 def multiply_inequalities_in_df(
     df: pd.DataFrame,
     round_to_decimals: int = 6,
-    ineq2mult: Dict[str, float] = {
-        "<": 0.67,
-        "<=": 0.8,
-        ">": 1.5,
-        ">=": 1.2,
-    },
+    ineq2mult: Optional[Dict[str, float]] = None,
     col_to_multiply: str = "value",
 ) -> pd.DataFrame:
     """Multiply inequalities in a dataframe by a factor.
 
     Args:
         df (pd.Dataframe): The dataframe to be modified.
+        round_to_decimals (int): How many decimals to round the value to.
         ineq2mult (Dict[str, float]): A dictionary with the inequalities as keys and the factors as values.
             Current values are arbitrary, but ensure that inequalities are somewhat separated from the continuous part of the distribution.
         col_to_multiply (str): The column to multiply.
@@ -25,6 +23,15 @@ def multiply_inequalities_in_df(
     Returns:
         pd.Dataframe: The modified dataframe.
     """
+    if (
+        ineq2mult is None
+    ):  # Avoid sharing a mutable keyword argument between function invocations
+        ineq2mult = {
+            "<": 0.67,
+            "<=": 0.8,
+            ">": 1.5,
+            ">=": 1.2,
+        }
 
     # Sort inequalities by length, so that we don't replace "<" in "<=".
     in_eqs = sorted(ineq2mult.keys(), key=len, reverse=True)

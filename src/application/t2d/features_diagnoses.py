@@ -1,8 +1,15 @@
+"""Feature specifications for T2D, diagnoses."""
+
 from typing import Optional
 
 
-def get_diagnosis_feature_spec(
-    lookbehind_days=[365, 730, 1825, 9999],
+def get_diagnosis_feature_spec(  # pylint: disable=dangerous-default-value
+    lookbehind_days=[
+        365,
+        730,
+        1825,
+        9999,
+    ],  # Not a problem here, since the function is only ever called once.
     resolve_multiple=["mean", "max", "min"],
     fallback: Optional[any] = 0,
 ):

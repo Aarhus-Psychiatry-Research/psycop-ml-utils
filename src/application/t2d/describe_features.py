@@ -1,3 +1,5 @@
+"""Example for how to describe features"""
+
 from pathlib import Path
 
 from psycopmlutils.data_checks.flattened.feature_describer import (
@@ -18,22 +20,22 @@ if __name__ == "__main__":
     )
     out_dir = feature_set_dir / "feature_description"
 
-    RESOLVE_MULTIPLE = ["latest", "max", "min", "mean"]
-    LOOKBEHIND_DAYS = [365, 730, 1825, 9999]
+    resolve_multiple = ["latest", "max", "min", "mean"]
+    lookbehind_days = [365, 730, 1825, 9999]
 
     LAB_PREDICTORS = get_lab_feature_spec(
-        resolve_multiple=RESOLVE_MULTIPLE,
-        lookbehind_days=LOOKBEHIND_DAYS,
+        resolve_multiple=resolve_multiple,
+        lookbehind_days=lookbehind_days,
     )
 
     DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
-        RESOLVE_MULTIPLE=RESOLVE_MULTIPLE,
-        LOOKBEHIND_DAYS=LOOKBEHIND_DAYS,
+        resolve_multiple=resolve_multiple,
+        lookbehind_days=lookbehind_days,
         fallback=0,
     )
 
     MEDICATION_PREDICTORS = get_medication_feature_spec(
-        lookbehind_days=LOOKBEHIND_DAYS,
+        lookbehind_days=lookbehind_days,
         resolve_multiple=["count"],
         fallback=0,
     )

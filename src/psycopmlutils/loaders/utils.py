@@ -1,10 +1,14 @@
+"""Example of how to get tfidf vocab"""
+
 from typing import List
 
 from psycopmlutils.utils import FEATURIZERS_PATH
 
 
 def get_tfidf_vocab(n_features: int) -> List[str]:
-    with open(FEATURIZERS_PATH / f"tfidf_{str(n_features)}.txt", "r") as f:
+    with open(  # pylint: disable=unspecified-encoding
+        FEATURIZERS_PATH / f"tfidf_{str(n_features)}.txt", "r"
+    ) as f:
         return f.read().splitlines()
 
 

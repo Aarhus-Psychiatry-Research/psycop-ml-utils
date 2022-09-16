@@ -133,7 +133,7 @@ class FlattenedDataset:
 
         self.loaders_catalogue = data_loaders
 
-    def add_temporal_predictors_from_list_of_argument_dictionaries(
+    def add_temporal_predictors_from_list_of_argument_dictionaries(  # pylint: disable=too-many-branches
         self,
         predictors: List[Dict[str, str]],
         predictor_dfs: Dict[str, DataFrame] = None,

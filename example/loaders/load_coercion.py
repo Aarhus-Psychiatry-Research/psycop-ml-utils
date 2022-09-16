@@ -1,8 +1,10 @@
-from psycopmlutils.loaders.raw.load_coercion import LoadCoercion
+"""Testing loading of coercion functions."""
+
+# pylint: disable=non-ascii-name
+
+from psycopmlutils.loaders.raw.load_coercion import *
 
 if __name__ == "__main__":
-    df = LoadCoercion.coercion_duration(n=100)
-    farlighed = LoadCoercion.farlighed(n=20)
-    bælte = LoadCoercion.bælte(n=100)
-
-    pass
+    df = coercion_duration(n=100)
+    farlighed = farlighed(n=20)
+    bælte = bælte(n=100)

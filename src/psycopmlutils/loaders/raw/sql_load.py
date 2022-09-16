@@ -1,3 +1,5 @@
+"""Utility functions for SQL loading"""
+
 import urllib
 import urllib.parse
 from typing import Generator, Optional, Union
@@ -25,7 +27,7 @@ def sql_load(
         chunksize (int, optional): Defaults to 1000.
         format_timestamp_cols_to_datetime (bool, optional): Whether to format all
             columns with "datotid" in their name as pandas datetime. Defaults to true.
-        n (int, optional): Defaults to None. If specified, only returns the first n rows.
+        n_rows (int, optional): Defaults to None. If specified, only returns the first n rows.
 
     Returns:
         Union[pd.DataFrame, Generator[pd.DataFrame]]: DataFrame or generator of DataFrames
@@ -38,15 +40,11 @@ def sql_load(
     """
     driver = "SQL Server"
     params = urllib.parse.quote(
-        "DRIVER={};SERVER={};DATABASE={};Trusted_Connection=yes".format(
-            driver,
-            server,
-            database,
-        ),
+        f"DRIVER={driver};SERVER={server};DATABASE={database};Trusted_Connection=yes"
     )
 
-    if n:
-        query = query.replace("SELECT", f"SELECT TOP {n} ")
+    if n_rows:
+        query = query.replace("SELECT", f"SELECT TOP {n_rows} ")
 
     engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
 

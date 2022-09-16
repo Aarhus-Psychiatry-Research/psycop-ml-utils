@@ -4,7 +4,7 @@ from psycopmlutils.data_checks.raw.check_predictor_lists import (
 from psycopmlutils.loaders.raw.load_diagnoses import LoadDiagnoses
 
 if __name__ == "__main__":
-    df = LoadDiagnoses.sleep_apnea(n=100)
+    df = sleep_apnea(n=100)
 
     input_dict = [{"predictor_df": "sleep_apnea"}]
 
