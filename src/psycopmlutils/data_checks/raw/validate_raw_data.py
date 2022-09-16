@@ -9,7 +9,7 @@ from wasabi import Printer
 
 from psycopmlutils.data_checks.flattened.data_integrity import get_name_of_failed_checks
 from psycopmlutils.data_checks.flattened.feature_describer import create_unicode_hist
-from psycopmlutils.data_checks.utils import save_df_to_pretty_html
+from psycopmlutils.data_checks.utils import save_df_to_pretty_html_table
 from psycopmlutils.utils import RAW_DATA_VALIDATION_PATH
 
 
@@ -93,7 +93,7 @@ def validate_raw_data(
         axis=1,
     )
 
-    save_df_to_pretty_html(
+    save_df_to_pretty_html_table(
         data_description,
         savepath / "data_description.html",
         title=f"Data description - {feature_set_name}",

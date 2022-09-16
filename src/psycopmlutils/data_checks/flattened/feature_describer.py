@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from wasabi import Printer
 
-from psycopmlutils.data_checks.utils import save_df_to_pretty_html
+from psycopmlutils.data_checks.utils import save_df_to_pretty_html_table
 from psycopmlutils.loaders.flattened.local_feature_loaders import load_split_predictors
 from psycopmlutils.utils import generate_feature_colname
 
@@ -60,7 +60,7 @@ def create_feature_description_from_dir(
             index=False,
         )
         # Writing html table as well
-        save_df_to_pretty_html(
+        save_df_to_pretty_html_table(
             path=save_dir / f"{split}_feature_description.html",
             title="Feature description",
             df=feature_description_df,

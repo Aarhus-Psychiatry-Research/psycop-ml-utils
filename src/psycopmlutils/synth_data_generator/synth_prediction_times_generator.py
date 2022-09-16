@@ -1,3 +1,4 @@
+"""Generator for synth prediction data"""
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -13,7 +14,7 @@ def generate_synth_data(
     logistic_outcome_model: str,
     intercept: Optional[float] = 0,
     na_prob: Optional[float] = 0.1,
-    na_ignore_cols: List[str] = [],
+    na_ignore_cols: Optional[List[str]] = None,
     prob_outcome: Optional[float] = 0.08,
     noise_mean_sd: Optional[Tuple[float, float]] = (0, 1),
 ) -> pd.DataFrame:
@@ -43,10 +44,10 @@ def generate_synth_data(
     df = generate_data_columns(predictors, n_samples, df)
 
     # Linear model with columns
-    y_ = intercept
+    _y = intercept
     for var in logistic_outcome_model.split("+"):
         effect, col = var.split("*")
-        y_ = float(effect) * df[col] + y_
+        _y = float(effect) * df[col] + _y
 
     noise = np.random.normal(
         loc=noise_mean_sd[0],
@@ -54,10 +55,10 @@ def generate_synth_data(
         size=n_samples,
     )
     # Z-score normalise and add noise
-    y_ = stats.zscore(y_) + noise
+    _y = stats.zscore(_y) + noise
 
     # Sigmoid it to get probabilities with mean = 0.5
-    df[outcome_column_name] = 1 / (1 + np.exp(y_))
+    df[outcome_column_name] = 1 / (1 + np.exp(_y))
 
     df[outcome_column_name] = np.where(df[outcome_column_name] < prob_outcome, 1, 0)
 
@@ -165,7 +166,7 @@ if __name__ == "__main__":
         },
     }
 
-    df = generate_synth_data(
+    synth_df = generate_synth_data(
         predictors=column_specifications,
         outcome_column_name="outc_dichotomous_t2d_within_30_days_max_fallback_0",
         n_samples=10_000,
@@ -173,7 +174,7 @@ if __name__ == "__main__":
         prob_outcome=0.08,
     )
 
-    df.describe()
+    synth_df.describe()
 
     save_path = Path(__file__).parent.parent.parent.parent
-    df.to_csv(save_path / "tests" / "test_data" / "synth_prediction_data.csv")
+    synth_df.to_csv(save_path / "tests" / "test_data" / "synth_prediction_data.csv")

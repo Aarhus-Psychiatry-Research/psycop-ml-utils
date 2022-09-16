@@ -1,10 +1,12 @@
+"""Utilities for data checks"""
+
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 
 
-def save_df_to_pretty_html(
+def save_df_to_pretty_html_table(
     df: pd.DataFrame,
     path: Path,
     title: Optional[str] = None,
@@ -20,15 +22,16 @@ def save_df_to_pretty_html(
         subtitle (Optional[str], optional): Subtitle for the table. Defaults to None.
     """
 
-    ht = ""
+    html = ""
+
     if title:
-        ht += "<h2> %s </h2>\n" % title
+        html += f"<h2> {title} </h2>\n"
     if subtitle:
-        ht += "<h3> %s </h3>\n" % subtitle
-    ht += df.to_html(classes="wide", escape=False)
+        html += f"<h3> {subtitle} </h3>\n"
+    html += df.to_html(classes="wide", escape=False)
 
     with open(path, "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE1 + ht + HTML_TEMPLATE2)
+        f.write(HTML_TEMPLATE1 + html + HTML_TEMPLATE2)
 
 
 # Templates for saving dataframes as pretty html tables

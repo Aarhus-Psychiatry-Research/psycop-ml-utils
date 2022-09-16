@@ -25,13 +25,17 @@ from psycopmlutils.model_performance.utils import (
 
 
 class ModelPerformance:
+    """Evaluators of model performance."""
+
     def performance_metrics_from_df(
         df: pd.DataFrame,
         prediction_col_name: str,
         label_col_name: str,
         id_col_name: Optional[str] = None,
         metadata_col_names: Optional[List[str]] = None,
-        id2label: Optional[Dict[int, str]] = None,
+        id2label: Optional[  # pylint: disable=redefined-outer-name
+            Dict[int, str]
+        ] = None,
         to_wide: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Calculate performance metrics from a dataframe.
@@ -95,18 +99,20 @@ class ModelPerformance:
         return performance
 
     def performance_metrics_from_file(
-        path: Union[str, Path],
+        jsonl_path: Union[str, Path],
         prediction_col_name: str,
         label_col_name: str,
         id_col_name: Optional[str] = None,
         metadata_col_names: Optional[List[str]] = None,
-        id2label: Optional[Dict[int, str]] = None,
+        id2label: Optional[  # pylint: disable=redefined-outer-name
+            Dict[int, str]
+        ] = None,
         to_wide: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Load a .jsonl file and returns performance metrics.
 
         Args:
-            path (Union[str, Path]): Path to .jsonl file # noqa: DAR102
+            jsonl_path (Union[str, Path]): Path to .jsonl file # noqa: DAR102
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
@@ -122,12 +128,14 @@ class ModelPerformance:
         Returns:
             pd.DataFrame: Dataframe with performance metrics
         """
-        path = Path(path)
-        if path.suffix != ".jsonl":
+        if isinstance(jsonl_path, str):
+            jsonl_path = Path(jsonl_path)  # pylint: disable=self-cls-assignment
+
+        if jsonl_path.suffix != ".jsonl":
             raise ValueError(
-                f"Only .jsonl files are supported for import, not {path.suffix}",
+                f"Only .jsonl files are supported for import, not {jsonl_path.suffix}",
             )
-        df = pd.read_json(path, orient="records", lines=True)
+        df = pd.read_json(jsonl_path, orient="records", lines=True)
         return ModelPerformance.performance_metrics_from_df(
             df=df,
             prediction_col_name=prediction_col_name,
@@ -145,7 +153,9 @@ class ModelPerformance:
         label_col_name: str,
         id_col_name: Optional[str] = None,
         metadata_col_names: Optional[List[str]] = None,
-        id2label: Optional[Dict[int, str]] = None,
+        id2label: Optional[  # pylint: disable=redefined-outer-name
+            Dict[int, str]
+        ] = None,
         to_wide=False,
     ) -> pd.DataFrame:
         """Load and calculates performance metrics for all files matching a
@@ -167,10 +177,11 @@ class ModelPerformance:
         Returns:
             pd.Dataframe: Dataframe with performance metrics for each file
         """
-        folder = Path(folder)
+        folder = Path(folder)  # pylint: disable=self-cls-assignment
+
         dfs = [
             ModelPerformance.performance_metrics_from_file(
-                path=p,
+                jsonl_path=p,
                 prediction_col_name=prediction_col_name,
                 label_col_name=label_col_name,
                 id_col_name=id_col_name,
@@ -189,7 +200,7 @@ class ModelPerformance:
         label_col_name: str,
         id_col_name: str,
         to_wide: bool,
-        id2label: Dict[int, str] = None,
+        id2label: Dict[int, str] = None,  # pylint: disable=redefined-outer-name
     ) -> pd.DataFrame:
         """Calculate performance metrics from a dataframe. Optionally adds
         aggregated performance by id.
@@ -211,7 +222,7 @@ class ModelPerformance:
         level_prefix = "id" if aggregate_by_id else None
 
         if aggregate_by_id:
-            df = aggregate_predictions(
+            df = aggregate_predictions(  # pylint: disable=self-cls-assignment
                 df,
                 id_col_name,
                 prediction_col_name,
@@ -220,7 +231,7 @@ class ModelPerformance:
 
         # get predicted labels
         if df[prediction_col_name].dtype != "float":
-            argmax_indices = df[prediction_col_name].apply(lambda x: np.argmax(x))
+            argmax_indices = df[prediction_col_name].apply(np.argmax)
             if id2label:
                 predictions = idx_to_class(argmax_indices, id2label)
             else:
@@ -355,7 +366,7 @@ class ModelPerformance:
         precision_by_class = precision_score(labels, predicted, average=None)
         recall_by_class = recall_score(labels, predicted, average=None)
 
-        for i, group in enumerate(groups):
+        for i, group in enumerate(groups):  # pylint: disable=invalid-name
             performance[f"f1-{group}"] = f1_by_class[i]
             performance[f"precision-{group}"] = precision_by_class[i]
             performance[f"recall-{group}"] = recall_by_class[i]
@@ -387,7 +398,6 @@ class ModelPerformance:
 
 
 if __name__ == "__main__":
-
     multiclass_df = pd.DataFrame(
         {
             "id": [1, 1, 2, 2, 3, 3, 4, 4],
@@ -409,6 +419,7 @@ if __name__ == "__main__":
             "model_name": ["test"] * 8,
         },
     )
+
     id2label = {0: "ASD", 1: "DEPR", 2: "TD", 3: "SCHZ"}
 
     multiclass_res = ModelPerformance.performance_metrics_from_df(
@@ -440,5 +451,3 @@ if __name__ == "__main__":
         metadata_col_names=None,
         to_wide=True,
     )
-
-    binary_res

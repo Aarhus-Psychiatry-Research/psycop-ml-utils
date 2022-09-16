@@ -1,17 +1,13 @@
-from typing import Dict, List, TypeVar, Union
+"""Utils for model performance."""
+
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 from pandas import Series
 
-# To specify type hints for series
-SeriesListOfFloats = TypeVar("pandas.core.series.Series(List[float])")
-SeriesOfFloats = TypeVar("pandas.core.series.Series(float)")
-SeriesOfStr = TypeVar("pandas.core.series.Series(str)")
-SeriesOfInt = TypeVar("pandas.core.series.Series(int)")
 
-
-def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series:
+def scores_to_probs(scores: Series) -> Series:
     """Converts a series of lists of probabilities for each class or a list of
     floats for binary classification a list of floats of maximum length 2.
 
@@ -24,12 +20,12 @@ def scores_to_probs(scores: Union[SeriesListOfFloats, SeriesOfFloats]) -> Series
 
     if scores.dtype == "float":
         return scores
-    else:
-        return scores.apply(lambda x: x[1])
+
+    return scores.apply(lambda x: x[1])
 
 
 def labels_to_int(
-    labels: Union[SeriesOfStr, SeriesOfInt],
+    labels: Series,
     label2id: Dict[str, int],
 ) -> Series:
     """Converts label to int mapping. Only makes sense for binary models. If
@@ -45,8 +41,8 @@ def labels_to_int(
     """
     if labels.dtype == "int":
         return labels
-    else:
-        return labels.apply(lambda x: label2id[x])
+
+    return labels.apply(lambda x: label2id[x])
 
 
 def aggregate_predictions(
@@ -67,12 +63,12 @@ def aggregate_predictions(
         pd.DataFrame: Dataframe with aggregated predictions
     """
 
-    def mean_scores(x: pd.Series):
-        gathered = np.stack(x)
+    def mean_scores(scores: pd.Series):
+        gathered = np.stack(scores)
         return gathered.mean(axis=0)
 
-    def get_first_entry(x: pd.Series):
-        return x.unique()[0]
+    def get_first_entry(scores: pd.Series):
+        return scores.unique()[0]
 
     return df.groupby(id_col).agg(
         {predictions_col: mean_scores, label_col: get_first_entry},

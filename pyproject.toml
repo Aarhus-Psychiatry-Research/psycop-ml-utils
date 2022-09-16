@@ -50,6 +50,7 @@ docformatter = "1.4"
 darglint = "^1.8.1"
 SQLAlchemy = "^1.4.40"
 pyodbc = "^4.0.34"
+transformers = "^4.22.0"
 
 [tool.coverage.run]
 omit = [
@@ -90,5 +91,5 @@ known_third_party = ["wandb"]
 
 [tool.pylint]
 load-plugins = "pylint.extensions.docparams"
-good-names = "df,p,f,d,e,n,k"
-disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument,unused-wildcard-import,wildcard-import"
+good-names = "df,p,f,d,e,n,k,i"
+disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return"

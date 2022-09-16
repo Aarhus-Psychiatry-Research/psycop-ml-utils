@@ -16,7 +16,7 @@ def generate_synth_data(
     n_samples: int,
     text_prompt: str = "The quick brown fox jumps over the lazy dog",
     na_prob: Optional[float] = 0.1,
-    na_ignore_cols: List[str] = [],
+    na_ignore_cols: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Takes a dict and generates synth data from it.
 
@@ -102,7 +102,7 @@ def generate_data_columns(
             inputs = tokenizer.encode(sequence, return_tensors="pt")
 
             generated_texts = []
-            for row in range(n_samples):
+            for _ in range(n_samples):
                 max_tokens = np.random.randint(
                     low=0,
                     high=500,
@@ -157,11 +157,11 @@ if __name__ == "__main__":
         "text": {"column_type": "text"},
     }
 
-    df = generate_synth_data(
+    out_df = generate_synth_data(
         predictors=column_specifications,
         n_samples=100,
         text_prompt="The patient",
     )
 
     save_path = Path(__file__).parent.parent.parent.parent
-    df.to_csv(save_path / "tests" / "test_data" / "synth_txt_data.csv")
+    out_df.to_csv(save_path / "tests" / "test_data" / "synth_txt_data.csv")
