@@ -65,9 +65,11 @@ def check_feature_combinations_return_correct_dfs(
 
         try:
             if "loader_kwargs" in d:
-                df = loader_fns_dict[d["predictor_df"]](n=n, **d["loader_kwargs"])
+                df = loader_fns_dict[d["predictor_df"]](
+                    n_rows=n_rows, **d["loader_kwargs"]
+                )
             else:
-                df = loader_fns_dict[d["predictor_df"]](n=n)
+                df = loader_fns_dict[d["predictor_df"]](n_rows=n_rows)
         except KeyError:
             msg.warn(
                 f"{d['predictor_df']} does not appear to be a loader function in catalogue, assuming a well-formatted dataframe. Continuing.",

@@ -100,7 +100,7 @@ class LoadText:
             LoadText._load_and_featurize_notes_per_year,
             note_types=note_types,
             view=view,
-            n=n_rows,
+            n_rows=n_rows_rows,
             featurizer=featurizer,
             featurizer_kwargs=featurizer_kwargs,
         )
@@ -176,7 +176,9 @@ class LoadText:
             + f" FROM [fct].[{view}_{year}_inkl_2021_feb2022]"
             + f" WHERE overskrift IN {note_types}"
         )
-        return sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n_rows)
+        return sql_load(
+            sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows_rows
+        )
 
     @staticmethod
     def _tfidf_featurize(

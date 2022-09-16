@@ -1,3 +1,4 @@
+"""Loaders for medications"""
 from typing import List, Optional
 
 import pandas as pd
@@ -8,10 +9,12 @@ from psycopmlutils.utils import data_loaders
 
 
 class LoadMedications:
+    """Loader for medications"""
+
     def concat_medications(
         output_col_name: str,
         atc_code_prefixes: List[str],
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
     ) -> pd.DataFrame:
         """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
         column.
@@ -19,16 +22,14 @@ class LoadMedications:
         Args:
             output_col_name (str): Name for new column.  # noqa: DAR102
             atc_code_prefixes (List[str]): List of atc_codes.
-            n (int, optional): Number of atc_codes to aggregate. Defaults to None.
+            n_rows (int, optional): Number of atc_codes to aggregate. Defaults to None.
 
         Returns:
             pd.DataFrame
         """
         dfs = [
             LoadMedications.load(
-                blood_sample_id=f"{id}",
-                output_col_name=output_col_name,
-                n=n,
+                atc_code=f"{id}", output_col_name=output_col_name, n_rows=n_rows
             )
             for id in atc_code_prefixes
         ]
@@ -48,7 +49,7 @@ class LoadMedications:
         load_prescribed: Optional[bool] = False,
         load_administered: Optional[bool] = True,
         wildcard_icd_code: Optional[bool] = True,
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load medications. Aggregates prescribed/administered if both true.
         If wildcard_icd_code, match from atc_code*. Aggregates all that match.
@@ -67,7 +68,7 @@ class LoadMedications:
                 Defaults to True.
             wildcard_icd_code (bool, optional): Whether to match on atc_code* or
                 atc_code.
-            n (int, optional): Number of rows to return. Defaults to None.
+            n_rows (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: Cols: dw_ek_borger, timestamp, {atc_code_prefix}_value = 1
@@ -88,8 +89,9 @@ class LoadMedications:
                 view="FOR_Medicin_ordineret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
-                n=n,
+                n_rows=n_rows,
             )
+
             df = pd.concat([df, df_medication_prescribed])
 
         if load_administered:
@@ -99,7 +101,7 @@ class LoadMedications:
                 view="FOR_Medicin_administreret_inkl_2021_feb2022",
                 output_col_name=output_col_name,
                 wildcard_icd_code=wildcard_icd_code,
-                n=n,
+                n_rows=n_rows,
             )
             df = pd.concat([df, df_medication_administered])
 
@@ -124,7 +126,7 @@ class LoadMedications:
         view: str,
         output_col_name: Optional[str] = None,
         wildcard_icd_code: Optional[bool] = False,
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load the prescribed medications that match atc. If
         wildcard_icd_code, match from atc_code*. Aggregates all that match.
@@ -141,7 +143,7 @@ class LoadMedications:
                 None.
             wildcard_icd_code (bool, optional): Whether to match on atc_code* or
                 atc_code.
-            n (int, optional): Number of rows to return. Defaults to None.
+            n_rows (int, optional): Number of rows to return. Defaults to None.
 
         Returns:
             pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
@@ -159,7 +161,7 @@ class LoadMedications:
             + f" WHERE {source_timestamp_col_name} IS NOT NULL AND (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
         )
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
 
         if output_col_name is None:
             output_col_name = atc_code
@@ -175,202 +177,202 @@ class LoadMedications:
         )
 
     @data_loaders.register("antipsychotics")
-    def antipsychotics(n: Optional[int] = None) -> pd.DataFrame:
+    def antipsychotics(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N05A",
             load_prescribed=True,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("anxiolytics")
-    def anxiolytics(n: Optional[int] = None) -> pd.DataFrame:
+    def anxiolytics(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N05B",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("hypnotics and sedatives")
-    def hypnotics(n: Optional[int] = None) -> pd.DataFrame:
+    def hypnotics(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N05C",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("antidepressives")
-    def antidepressives(n: Optional[int] = None) -> pd.DataFrame:
+    def antidepressives(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N06A",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("hyperactive disorders medications")
-    def hyperactive_disorders_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def hyperactive_disorders_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N06B",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("dementia medications")
-    def dementia_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def dementia_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N06D",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("anti-epileptics")
-    def anti_epileptics(n: Optional[int] = None) -> pd.DataFrame:
+    def anti_epileptics(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="N03",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     # data loaders for medications primarily used outside psychiatry
     @data_loaders.register("alimentary tract and metabolism medications")
-    def alimentary_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def alimentary_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="A",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("blood and blood forming organs")
-    def blood_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def blood_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="B",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("cardiovascular system")
-    def cardiovascular_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def cardiovascular_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="C",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("dermatologicals")
-    def dermatological_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def dermatological_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="D",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("genito urinary system and sex hormones")
-    def genito_sex_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def genito_sex_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="G",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("systemic hormonal preparations")
-    def hormonal_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def hormonal_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="H",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("antiinfectives")
-    def antiinfectives(n: Optional[int] = None) -> pd.DataFrame:
+    def antiinfectives(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="J",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("antineoplastic")
-    def antineoplastic(n: Optional[int] = None) -> pd.DataFrame:
+    def antineoplastic(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="L",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("musculoskeletal")
-    def musculoskeletal_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def musculoskeletal_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="M",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("antiparasitic")
-    def antiparasitic(n: Optional[int] = None) -> pd.DataFrame:
+    def antiparasitic(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="P",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("respiratory medications")
-    def respiratory_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def respiratory_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="R",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("sensory organs medications")
-    def sensory_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def sensory_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="S",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )
 
     @data_loaders.register("various medications")
-    def various_medications(n: Optional[int] = None) -> pd.DataFrame:
+    def various_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         return LoadMedications.load(
             atc_code="V",
             load_prescribed=False,
             load_administered=True,
             wildcard_icd_code=True,
-            n=n,
+            n_rows=n_rows,
         )

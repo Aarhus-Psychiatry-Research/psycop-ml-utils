@@ -8,12 +8,12 @@ from psycopmlutils.utils import data_loaders
 
 class LoadDemographic:
     @data_loaders.register("birthdays")
-    def birthdays(n: Optional[int] = None) -> pd.DataFrame:
+    def birthdays(n_rows: Optional[int] = None) -> pd.DataFrame:
         view = "[FOR_kohorte_demografi_inkl_2021_feb2022]"
 
         sql = f"SELECT dw_ek_borger, foedselsdato FROM [fct].{view}"
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
 
         # Typically handled by sql_load, but because foedselsdato doesn't contain "datotid" in its name,
         # We must handle it manually here
@@ -25,12 +25,12 @@ class LoadDemographic:
         return df.reset_index(drop=True)
 
     @data_loaders.register("sex_female")
-    def sex_female(n: Optional[int] = None) -> pd.DataFrame:
+    def sex_female(n_rows: Optional[int] = None) -> pd.DataFrame:
         view = "[FOR_kohorte_demografi_inkl_2021_feb2022]"
 
         sql = f"SELECT dw_ek_borger, koennavn FROM [fct].{view}"
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
 
         df.loc[df["koennavn"] == "Mand", "koennavn"] = False
         df.loc[df["koennavn"] == "Kvinde", "koennavn"] = True

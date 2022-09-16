@@ -9,7 +9,7 @@ from psycopmlutils.utils import data_loaders
 
 class LoadOutcome:
     @data_loaders.register("t2d")
-    def t2d(n: Optional[int] = None) -> pd.DataFrame:
+    def t2d(n_rows: Optional[int] = None) -> pd.DataFrame:
         msg.info("Loading t2d event times")
 
         df = sql_load(
@@ -17,7 +17,7 @@ class LoadOutcome:
             database="USR_PS_FORSK",
             chunksize=None,
             format_timestamp_cols_to_datetime=True,
-            n=n,
+            n_rows=n_rows,
         )
         df["value"] = 1
 
@@ -28,12 +28,12 @@ class LoadOutcome:
         return df.reset_index(drop=True)
 
     @data_loaders.register("any_diabetes")
-    def any_diabetes(n: Optional[int] = None):
+    def any_diabetes(n_rows: Optional[int] = None):
         df = sql_load(
             "SELECT * FROM [fct].[psycop_t2d_first_diabetes_any] WHERE timestamp IS NOT NULL",
             database="USR_PS_FORSK",
             chunksize=None,
-            n=n,
+            n_rows=n_rows,
         )
 
         df = df[["dw_ek_borger", "datotid_first_diabetes_any"]]

@@ -10,7 +10,7 @@ class LoadVisits:
     def physical_visits_to_psychiatry(
         where_clause: Optional[str] = None,  # noqa: DAR102
         where_separator: Optional[str] = "AND",
-        n: Optional[int] = None,
+        n_rows: Optional[int] = None,
     ) -> pd.DataFrame:
         """Load physical visits.
 
@@ -60,7 +60,7 @@ class LoadVisits:
             if where_clause is not None:
                 sql += f" {where_separator} {where_clause}"
 
-            df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+            df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
             df.rename(columns={meta["datetime_col"]: "timestamp"}, inplace=True)
 
             dfs.append(df)

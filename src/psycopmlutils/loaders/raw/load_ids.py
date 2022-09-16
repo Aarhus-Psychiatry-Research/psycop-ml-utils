@@ -6,7 +6,7 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 
 
 class LoadIDs:
-    def load(split: str, n: Optional[int] = None) -> pd.DataFrame:
+    def load(split: str, n_rows: Optional[int] = None) -> pd.DataFrame:
         """Loads ids for a given split.
 
         Args:
@@ -20,6 +20,6 @@ class LoadIDs:
 
         sql = f"SELECT * FROM [fct].{view}"
 
-        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n=n)
+        df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
 
         return df.reset_index(drop=True)
