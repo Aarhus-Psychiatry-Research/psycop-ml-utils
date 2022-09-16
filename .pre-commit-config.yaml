@@ -42,10 +42,8 @@ repos:
         types: [python]
         args:
           [
+            "src", # Only lint src directory
             "-rn", # Only display messages
             "-sn", # Don't display the score
-            "--load-plugins=pylint.extensions.docparams", # Load an extension
-            "--good-names=df,p,f,d,e",
-            "--disable=too-many-lines,line-too-long,missing-raises-doc",
-            "--disable=R,import-error",
+            "--disable=R,import-error"
           ]

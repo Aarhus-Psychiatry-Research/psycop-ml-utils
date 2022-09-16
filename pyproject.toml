@@ -87,3 +87,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 known_third_party = ["wandb"]
+
+[tool.pylint]
+load-plugins = "pylint.extensions.docparams"
+good-names = "df,p,f,d,e,n"
+disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument"
