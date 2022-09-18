@@ -1,4 +1,4 @@
-"""Package resources"""
+"""Package resources."""
 
 import pkg_resources
 

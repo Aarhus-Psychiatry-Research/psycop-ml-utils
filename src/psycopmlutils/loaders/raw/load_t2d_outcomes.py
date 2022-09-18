@@ -1,4 +1,4 @@
-"""Loaders for T2D outcomes"""
+"""Loaders for T2D outcomes."""
 
 from typing import Optional
 

@@ -1,4 +1,4 @@
-"""Example for how to check feature set integrity"""
+"""Example for how to check feature set integrity."""
 
 from pathlib import Path
 

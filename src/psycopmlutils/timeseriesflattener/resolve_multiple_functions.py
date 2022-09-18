@@ -1,4 +1,5 @@
-"""Functions for resolving multiple values in a time-series into a single value."""
+"""Functions for resolving multiple values in a time-series into a single
+value."""
 import catalogue
 from pandas import DataFrame, Series
 from scipy import stats

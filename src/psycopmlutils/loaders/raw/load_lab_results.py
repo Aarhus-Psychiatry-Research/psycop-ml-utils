@@ -100,7 +100,7 @@ def load_non_numerical_values_and_coerce_inequalities(
 
     if isinstance(blood_sample_id, list):
         npu_codes = ", ".join(
-            [f"'{x}'" for x in blood_sample_id]  # pylint: disable=not-an-iterable
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
         npu_where = f"npukode in ({npu_codes})"
@@ -127,7 +127,9 @@ def load_non_numerical_values_and_coerce_inequalities(
 
 
 def load_numerical_values(
-    blood_sample_id: str, n_rows: Optional[int], view: str
+    blood_sample_id: str,
+    n_rows: Optional[int],
+    view: str,
 ) -> pd.DataFrame:
     """Load numerical values for a blood sample.
 
@@ -144,7 +146,7 @@ def load_numerical_values(
 
     if isinstance(blood_sample_id, list):
         npu_codes = ", ".join(
-            [f"'{x}'" for x in blood_sample_id]  # pylint: disable=not-an-iterable
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
         npu_where = f"npukode in ({npu_codes})"
@@ -168,7 +170,9 @@ def load_numerical_values(
 
 
 def load_cancelled(
-    blood_sample_id: str, n_rows: Optional[int], view: str
+    blood_sample_id: str,
+    n_rows: Optional[int],
+    view: str,
 ) -> pd.DataFrame:
     """Load cancelled samples for a blood sample.
 
@@ -184,7 +188,7 @@ def load_cancelled(
 
     if isinstance(blood_sample_id, list):
         npu_codes = ", ".join(
-            [f"'{x}'" for x in blood_sample_id]  # pylint: disable=not-an-iterable
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
         npu_where = f"npukode in ({npu_codes})"
@@ -212,7 +216,9 @@ def load_cancelled(
 
 
 def load_all_values(
-    blood_sample_id: str, n_rows: Optional[int], view: str
+    blood_sample_id: str,
+    n_rows: Optional[int],
+    view: str,
 ) -> pd.DataFrame:
     """Load all samples for a blood sample.
 
@@ -228,7 +234,7 @@ def load_all_values(
 
     if isinstance(blood_sample_id, list):
         npu_codes = ", ".join(
-            [f"'{x}'" for x in blood_sample_id]  # pylint: disable=not-an-iterable
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
         npu_where = f"npukode in ({npu_codes})"

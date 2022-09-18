@@ -1,3 +1,6 @@
+"""Generates a df with feature descriptions for the predictors in the source
+df."""
+
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -27,7 +30,7 @@ HIST_BINS = 8
 def create_feature_description_from_dir(
     path: Path,
     predictor_dicts: List[Dict[str, str]],
-    splits: Optional[List[str]] = ["train"],
+    splits: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """Write a csv with feature descriptions in the directory.
 
@@ -36,6 +39,9 @@ def create_feature_description_from_dir(
         predictor_dicts (List[Dict[str, str]]): List of dictionaries with predictor information.
         splits (List[str]): List of splits to include in the description. Defaults to ["train"].
     """
+    if splits is None:
+        splits = ["train"]
+
     msg = Printer(timestamp=True)
     save_dir = path / "feature_descriptions"
 

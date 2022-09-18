@@ -1,4 +1,4 @@
-"""Handle fast writing to SQL database"""
+"""Handle fast writing to SQL database."""
 
 import urllib
 import urllib.parse
@@ -33,7 +33,7 @@ def insert_with_progress(
     """
     with tqdm(total=len(df)) as pbar:
         for i, chunked_df in enumerate(  # pylint: disable=invalid-name
-            chunker(df, rows_per_chunk)
+            chunker(df, rows_per_chunk),
         ):
             replace = if_exists if i == 0 else "append"
 

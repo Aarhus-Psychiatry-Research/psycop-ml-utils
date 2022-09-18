@@ -1,3 +1,6 @@
+"""Utilites for testing."""
+
+from io import StringIO
 from typing import Any, Callable, List, Optional, Union
 
 import numpy as np
@@ -9,7 +12,7 @@ from psycopmlutils.utils import data_loaders, generate_feature_colname
 
 
 def str_to_df(
-    str,
+    string: str,
     convert_timestamp_to_datetime: bool = True,
     convert_np_nan_to_nan: bool = True,
     convert_str_to_float: bool = False,
@@ -17,7 +20,7 @@ def str_to_df(
     """Convert a string representation of a dataframe to a dataframe.
 
     Args:
-        str (str): A string representation of a dataframe.
+        string (str): A string representation of a dataframe.
         convert_timestamp_to_datetime (bool): Whether to convert the timestamp column to datetime. Defaults to True.
         convert_np_nan_to_nan (bool): Whether to convert np.nan to np.nan. Defaults to True.
         convert_str_to_float (bool): Whether to convert strings to floats. Defaults to False.
@@ -26,9 +29,7 @@ def str_to_df(
         DataFrame: A dataframe.
     """
 
-    from io import StringIO
-
-    df = pd.read_table(StringIO(str), sep=",", index_col=False)
+    df = pd.read_table(StringIO(string), sep=",", index_col=False)
 
     if convert_timestamp_to_datetime:
         df = convert_cols_with_matching_colnames_to_datetime(df, "timestamp")
@@ -271,14 +272,14 @@ def load_event_times():
     return str_to_df(event_times_str)
 
 
-def check_any_item_in_list_has_str(list: List, str_: str):
+def check_any_item_in_list_has_str(list_of_str: List, str_: str):
     """Check if any item in a list contains a string.
 
     Args:
-        list (List): A list of strings.
+        list_of_str (List): A list of strings.
         str_ (str): A string.
 
     Returns:
         bool: True if any item in the list contains the string.
     """
-    return any([str_ in item for item in list])
+    return any(str_ in item for item in list_of_str)

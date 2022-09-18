@@ -1,5 +1,7 @@
+"""Tests of check_raw_df."""
+
 import pytest
-from utils_for_testing import str_to_df
+from utils_for_testing import str_to_df  # noqa pylint: disable=import-error
 
 from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 

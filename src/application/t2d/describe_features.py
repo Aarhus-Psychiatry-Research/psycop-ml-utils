@@ -1,4 +1,4 @@
-"""Example for how to describe features"""
+"""Example for how to describe features."""
 
 from pathlib import Path
 

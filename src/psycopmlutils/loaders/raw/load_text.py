@@ -17,10 +17,10 @@ from psycopmlutils.utils import data_loaders
 
 
 def get_all_valid_note_types() -> Set[str]:
-    """Returns a set of valid note types. Notice that 'Konklusion' is
-    replaced by 'Vurdering/konklusion' in 2020, so make sure to use both.
-    'Ordination' was replaced by 'Ordination, Psykiatry' in 2022, but
-    'Ordination, Psykiatri' is not included in the table. Use with caution.
+    """Returns a set of valid note types. Notice that 'Konklusion' is replaced
+    by 'Vurdering/konklusion' in 2020, so make sure to use both. 'Ordination'
+    was replaced by 'Ordination, Psykiatry' in 2022, but 'Ordination,
+    Psykiatri' is not included in the table. Use with caution.
 
     Returns:
         Set[str]: Set of valid note types
@@ -53,9 +53,9 @@ def load_and_featurize_notes(
     featurizer_kwargs: Optional[dict] = None,
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Loads all clinical notes that match the specified note from all
-    years. Featurizes the notes using the specified featurizer (tf-idf or
-    huggingface model). Kwargs passed to.
+    """Loads all clinical notes that match the specified note from all years.
+    Featurizes the notes using the specified featurizer (tf-idf or huggingface
+    model). Kwargs passed to.
 
     Args:
         note_types (Union[str, List[str]]): Which note types to load. See
@@ -259,9 +259,9 @@ def load_aktuel_psykisk(
     featurizer_kwargs: Optional[dict] = None,
 ) -> pd.DataFrame:
     """Returns 'Aktuelt psykisk' notes from all years. Featurizes the notes
-    using the specified featurizer ('tfidf', 'huggingface', or `None` for
-    raw text). `featurizer_kwargs` are passed to the featurizer (e.g.
-    "tfidf_path" for tfidf, and "model_id" for huggingface).
+    using the specified featurizer ('tfidf', 'huggingface', or `None` for raw
+    text). `featurizer_kwargs` are passed to the featurizer (e.g. "tfidf_path"
+    for tfidf, and "model_id" for huggingface).
 
     Args:
         featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
@@ -287,10 +287,10 @@ def load_arbitrary_notes(
     n_rows: Optional[int] = None,
     featurizer_kwargs: Optional[dict] = None,
 ) -> pd.DataFrame:
-    """Returns one or multiple note types from all years. Featurizes the
-    notes using the specified featurizer ('tfidf', 'huggingface', or `None`
-    for raw text). `featurizer_kwargs` are passed to the featurizer (e.g.
-    "tfidf_path" for tfidf, and "model_id" for huggingface).
+    """Returns one or multiple note types from all years. Featurizes the notes
+    using the specified featurizer ('tfidf', 'huggingface', or `None` for raw
+    text). `featurizer_kwargs` are passed to the featurizer (e.g. "tfidf_path"
+    for tfidf, and "model_id" for huggingface).
 
     Args:
         note_names (Union[str, List[str]]): Which note types to load. See

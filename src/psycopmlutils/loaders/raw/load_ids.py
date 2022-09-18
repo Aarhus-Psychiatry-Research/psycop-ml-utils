@@ -1,4 +1,4 @@
-"""Loaders for patient IDs"""
+"""Loaders for patient IDs."""
 
 from typing import Optional
 

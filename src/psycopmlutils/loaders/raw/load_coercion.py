@@ -1,4 +1,4 @@
-"""Loaders for coercion"""
+"""Loaders for coercion."""
 
 # pylint: disable = non-ascii-name
 
@@ -16,8 +16,8 @@ def coercion_duration(
     reason_for_coercion: Optional[str] = None,
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Load coercion data. By default returns entire coercion data view
-    with duration in hours as the value column.
+    """Load coercion data. By default returns entire coercion data view with
+    duration in hours as the value column.
 
     Args:
         coercion_type (str): Type of coercion, e.g. 'tvangsindlæggelse', 'bæltefiksering'. Defaults to None. # noqa: DAR102
@@ -95,7 +95,6 @@ def _concatenate_coercion(
 
 @data_loaders.register("farlighed")
 def farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     coercion_types_list = [
         {
             "reason_for_coercion": "Farlighed",
@@ -113,7 +112,6 @@ def farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("urolig_tilstand")
 def urolig_tilstand(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         reason_for_coercion="Urolig tilstand",
         n_rows=n_rows,
@@ -122,7 +120,6 @@ def urolig_tilstand(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("anden_begrundelse")
 def anden_begrundelse(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         reason_for_coercion="Anden begrundelse",
         n_rows=n_rows,
@@ -131,7 +128,6 @@ def anden_begrundelse(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("af helbredsmæssige grunde")
 def af_helbredsmæssige_grunde(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         reason_for_coercion=" Af helbredsmæssige grunde",
         n_rows=n_rows,
@@ -140,7 +136,6 @@ def af_helbredsmæssige_grunde(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("nærliggende eller væsentlig fare for patienten eller andre")
 def nærliggende_fare(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         reason_for_coercion="Nærliggende eller væsentlig fare for patienten eller andre",
         n_rows=n_rows,
@@ -152,7 +147,6 @@ def nærliggende_fare(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("magtanvendelse")
 def magtanvendelse(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     coercion_types_list = [
         {
             "coercion_type": "Bælte",
@@ -185,7 +179,6 @@ def magtanvendelse(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("frihedsberøvelser")
 def frihedsberøvelser(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     coercion_types_list = [
         {
             "coercion_type": "Tvangsindlæggelse",
@@ -203,7 +196,6 @@ def frihedsberøvelser(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("tvangsbehandlinger")
 def tvangsbehandlinger(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     coercion_types_list = [
         {
             "coercion_type": "Af legemlig lidelse",
@@ -230,7 +222,6 @@ def tvangsbehandlinger(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("bælte")
 def bælte(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Bælte",
         n_rows=n_rows,
@@ -239,7 +230,6 @@ def bælte(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("remme")
 def remme(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Remme",
         n_rows=n_rows,
@@ -248,7 +238,6 @@ def remme(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("fastholden")
 def fastholden(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Fastholden",
         n_rows=n_rows,
@@ -257,7 +246,6 @@ def fastholden(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("beroligende medicin")
 def beroligende_medicin(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Beroligende medicin",
         n_rows=n_rows,
@@ -266,7 +254,6 @@ def beroligende_medicin(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("handsker")
 def handsker(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Handsker",
         n_rows=n_rows,
@@ -275,7 +262,6 @@ def handsker(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("tvangsindlæggelse")
 def tvangsindlæggelse(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Tvangsindlæggelse",
         n_rows=n_rows,
@@ -284,7 +270,6 @@ def tvangsindlæggelse(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("tvangstilbageholdelse ")
 def tvangstilbageholdelse(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Tvangstilbageholdelse",
         n_rows=n_rows,
@@ -293,7 +278,6 @@ def tvangstilbageholdelse(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("medicinering")
 def medicinering(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Medicinering",
         n_rows=n_rows,
@@ -302,7 +286,6 @@ def medicinering(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("ect")
 def ect(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="ECT",
         n_rows=n_rows,
@@ -311,7 +294,6 @@ def ect(n_rows: Optional[int] = None) -> pd.DataFrame:
 
 @data_loaders.register("ernæring")
 def ernæring(n_rows: Optional[int] = None) -> pd.DataFrame:
-
     return coercion_duration(
         coercion_type="Ernæring",
         n_rows=n_rows,

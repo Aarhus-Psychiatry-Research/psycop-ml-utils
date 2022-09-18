@@ -1,4 +1,8 @@
-"""Some of our data series contain both numerical values and strings like '>=12'. This function takes a df and coerces all strings into numerical."""
+"""Some of our data series contain both numerical values and strings like
+'>=12'.
+
+This function takes a df and coerces all strings into numerical.
+"""
 
 from typing import Dict, Optional
 

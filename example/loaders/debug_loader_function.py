@@ -25,7 +25,7 @@ def will_it_float(value: Any) -> bool:
     try:
         float(value)
         return True
-    except Exception:
+    except ValueError:
         return False
 
 
@@ -94,5 +94,3 @@ if __name__ == "__main__":
         subset_duplicates_columns=["dw_ek_borger", "timestamp", "value"],
     )
     print(errors)
-
-    pass

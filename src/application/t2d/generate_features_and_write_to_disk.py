@@ -1,4 +1,8 @@
-"""Main example on how to generate features. Uses T2D-features. WIP, will be migrated to psycop-t2d when reaching maturity."""
+"""Main example on how to generate features.
+
+Uses T2D-features. WIP, will be migrated to psycop-t2d when reaching
+maturity.
+"""
 
 import random
 import time

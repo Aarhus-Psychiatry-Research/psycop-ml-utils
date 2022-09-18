@@ -1,4 +1,4 @@
-"""Utilities for data checks"""
+"""Utilities for data checks."""
 
 from pathlib import Path
 from typing import Optional

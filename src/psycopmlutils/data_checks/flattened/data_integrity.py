@@ -28,7 +28,7 @@ from psycopmlutils.loaders.flattened import load_split_outcomes, load_split_pred
 
 def check_feature_set_integrity_from_dir(
     path: Path,
-    splits: Optional[List[str]] = ["train", "val", "test"],
+    splits: Optional[List[str]] = None,
     nrows: Optional[int] = None,
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a given
@@ -44,6 +44,9 @@ def check_feature_set_integrity_from_dir(
         nrows (Optional[int]): Whether to only load a subset of the data.
         Should only be used for debugging.
     """
+    if splits is None:
+        splits = ["train", "val", "test"]
+
     msg = Printer(timestamp=True)
     failed_checks = (
         {}
@@ -77,7 +80,7 @@ def check_feature_set_integrity_from_dir(
             include_id=True,
             nrows=nrows,
         )
-        ds = Dataset(
+        data_s = Dataset(
             df=train_predictors,
             index_name="dw_ek_borger",
             datetime_name="timestamp",
@@ -87,7 +90,7 @@ def check_feature_set_integrity_from_dir(
         integ_suite = pruned_data_integrity_checks(
             timeout=0,
         )  # timeout=0 removes timeout
-        suite_results = integ_suite.run(ds)
+        suite_results = integ_suite.run(data_s)
         suite_results.save_as_html(str(out_dir / "data_integrity.html"))
         failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
 
@@ -96,13 +99,13 @@ def check_feature_set_integrity_from_dir(
         label_checks = label_integrity_checks()
         for outcome_column in train_outcomes.columns:
             msg.info(f"Running data integrity for {outcome_column}")
-            ds = Dataset(
+            data_s = Dataset(
                 df=train_predictors,
                 index_name="dw_ek_borger",
                 datetime_name="timestamp",
                 label=train_outcomes[outcome_column],
             )
-            suite_results = label_checks.run(ds)
+            suite_results = label_checks.run(data_s)
             suite_results.save_as_html(
                 str(outcome_checks_dir / f"{outcome_column}_check.html"),
             )
@@ -129,12 +132,16 @@ def check_feature_set_integrity_from_dir(
             nrows=nrows,
         )
         outcomes = load_split_outcomes(path=path, split=split, nrows=nrows)
-        ds = Dataset(
+        data_s = Dataset(
             df=predictors,
             index_name="dw_ek_borger",
             datetime_name="timestamp",
         )
-        split_dict[split] = {"predictors": predictors, "outcomes": outcomes, "ds": ds}
+        split_dict[split] = {
+            "predictors": predictors,
+            "outcomes": outcomes,
+            "ds": data_s,
+        }
 
     suite_results = validation_suite.run(
         split_dict["train"]["ds"],

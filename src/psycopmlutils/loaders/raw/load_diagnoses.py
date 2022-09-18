@@ -1,4 +1,8 @@
-"""Loaders for diagnosis codes. Is growing quite a bit, loaders may have to be split out into separate files (e.g. psychiatric, cardiovascular, metabolic etc.) over time."""
+"""Loaders for diagnosis codes.
+
+Is growing quite a bit, loaders may have to be split out into separate
+files (e.g. psychiatric, cardiovascular, metabolic etc.) over time.
+"""
 
 from typing import List, Optional, Union
 
@@ -73,8 +77,8 @@ def from_physical_visits(
     wildcard_icd_code: Optional[bool] = False,
 ) -> pd.DataFrame:
     """Load diagnoses from all physical visits. If icd_code is a list, will
-    aggregate as one column (e.g. ["E780", "E785"] into a
-    ypercholesterolemia column).
+    aggregate as one column (e.g. ["E780", "E785"] into a ypercholesterolemia
+    column).
 
     Args:
         icd_code (str): Substring to match diagnoses for. Matches any diagnoses, whether a-diagnosis, b-diagnosis etc. # noqa: DAR102

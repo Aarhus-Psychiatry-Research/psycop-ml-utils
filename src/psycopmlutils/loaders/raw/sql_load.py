@@ -1,4 +1,4 @@
-"""Utility functions for SQL loading"""
+"""Utility functions for SQL loading."""
 
 import urllib
 import urllib.parse
@@ -40,7 +40,7 @@ def sql_load(
     """
     driver = "SQL Server"
     params = urllib.parse.quote(
-        f"DRIVER={driver};SERVER={server};DATABASE={database};Trusted_Connection=yes"
+        f"DRIVER={driver};SERVER={server};DATABASE={database};Trusted_Connection=yes",
     )
 
     if n_rows:

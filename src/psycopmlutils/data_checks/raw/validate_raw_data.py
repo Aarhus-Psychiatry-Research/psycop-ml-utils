@@ -1,3 +1,5 @@
+"""Functions for validating raw data – in the sense of data returned from a
+loader."""
 import time
 from typing import List, Optional
 
@@ -62,12 +64,14 @@ def validate_raw_data(
         )
 
     # Deepchecks
-    ds = Dataset(df=df, index_name=id_col_name, datetime_name=timestamp_col_name)
+    d_set = Dataset(df=df, index_name=id_col_name, datetime_name=timestamp_col_name)
     integ_suite = data_integrity(timeout=0)
+
     with msg.loading("Running data integrity checks..."):
-        suite_results = integ_suite.run(ds)
+        suite_results = integ_suite.run(d_set)
         suite_results.save_as_html(str(savepath / "data_integrity.html"))
         failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
+
     msg.good("Finished data integrity checks.")
 
     # Data description

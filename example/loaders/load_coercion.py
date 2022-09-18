@@ -2,9 +2,9 @@
 
 # pylint: disable=non-ascii-name
 
-from psycopmlutils.loaders.raw.load_coercion import *
+import psycopmlutils.loaders.raw.load_coercion as c
 
 if __name__ == "__main__":
-    df = coercion_duration(n=100)
-    farlighed = farlighed(n=20)
-    bælte = bælte(n=100)
+    df = c.load_corcioncoercion_duration(n=100)
+    farlighed = c.farlighed(n=20)
+    bælte = c.bælte(n=100)

@@ -2,7 +2,7 @@
 
 Also check that they return meaningful dictionaries.
 """
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from wasabi import Printer
 
@@ -10,13 +10,13 @@ from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 from psycopmlutils.utils import data_loaders
 
 
-def check_feature_combinations_return_correct_dfs(
-    predictor_dict_list: List[Dict[str, Union[str, float, int]]],
-    n: int = 1_000,
-    required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
-    subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
+def check_feature_combinations_return_correct_dfs(  # pylint: disable=too-many-branches
+    predictor_dict_list: Optional[List[Dict[str, Union[str, float, int]]]],
+    n_rows: int = 1_000,
+    required_columns: Optional[List[str]] = None,
+    subset_duplicates_columns: Optional[List[str]] = None,
     allowed_nan_value_prop: float = 0.01,
-    expected_val_dtypes: List[str] = ["float64", "int64"],
+    expected_val_dtypes: Optional[List[str]] = None,
 ):
     """Test that all predictor_dfs in predictor_list return a valid df.
 
@@ -24,13 +24,23 @@ def check_feature_combinations_return_correct_dfs(
         predictor_dict_list (List[Dict[str, Union[str, float, int]]]): List of dictionaries
             where the key predictor_df maps to a catalogue registered data loader
             or is a valid dataframe.
-        n (int): Number of rows to test. Defaults to 1_000.
+        n_rows (int): Number of rows to test. Defaults to 1_000.
         required_columns (List[str]): List of required columns. Defaults to ["dw_ek_borger", "timestamp", "value"].
         subset_duplicates_columns (List[str]): List of columns to subset on when
             checking for duplicates. Defaults to ["dw_ek_borger", "timestamp"].
         allowed_nan_value_prop (float): Allowed proportion of missing values. Defaults to 0.0.
         expected_val_dtypes (List[str]): Expected value dtype. Defaults to ["float64", "int64"].
     """
+
+    if required_columns is None:
+        required_columns = ["dw_ek_borger", "timestamp", "value"]
+
+    if subset_duplicates_columns is None:
+        subset_duplicates_columns = ["dw_ek_borger", "timestamp", "value"]
+
+    if expected_val_dtypes is None:
+        expected_val_dtypes = ["float64", "int64"]
+
     msg = Printer(timestamp=True)
 
     msg.info("Checking that feature combinations conform to correct formatting")
@@ -54,13 +64,13 @@ def check_feature_combinations_return_correct_dfs(
         if predictor_dict not in unique_subset_dicts:
             unique_subset_dicts.append(predictor_dict)
 
-    msg.info(f"Loading {n} rows from each predictor_df")
+    msg.info(f"Loading {n_rows} rows from each predictor_df")
 
     loader_fns_dict = data_loaders.get_all()
 
     failure_dicts = []
 
-    for i, d in enumerate(unique_subset_dicts):
+    for i, d in enumerate(unique_subset_dicts):  # pylint: disable=invalid-name
         # Check that it returns a dataframe
 
         try:
@@ -84,12 +94,12 @@ def check_feature_combinations_return_correct_dfs(
             else allowed_nan_value_prop
         )
 
-        source_failures, duplicates = check_raw_df(
+        source_failures, _ = check_raw_df(
             df=df,
             required_columns=required_columns,
             subset_duplicates_columns=subset_duplicates_columns,
             allowed_nan_value_prop=allowed_nan_value_prop,
-            expected_val_dtype=expected_val_dtypes,
+            expected_val_dtypes=expected_val_dtypes,
         )
 
         # Return errors

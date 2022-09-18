@@ -1,4 +1,4 @@
-"""Feature loaders for loading .csv from disk"""
+"""Feature loaders for loading .csv from disk."""
 
 from pathlib import Path
 from typing import Optional
