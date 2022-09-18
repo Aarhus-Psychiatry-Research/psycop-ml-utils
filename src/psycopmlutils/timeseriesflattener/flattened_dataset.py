@@ -25,7 +25,7 @@ from psycopmlutils.utils import (
 class FlattenedDataset:
     """Turn a set of time-series into tabular prediction-time data."""
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         prediction_times_df: DataFrame,
         id_col_name: Optional[str] = "dw_ek_borger",

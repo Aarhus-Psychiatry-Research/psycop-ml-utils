@@ -92,4 +92,4 @@ known_third_party = ["wandb"]
 [tool.pylint]
 load-plugins = "pylint.extensions.docparams"
 good-names = "df,p,f,d,e,n,k,i"
-disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return"
+disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments"

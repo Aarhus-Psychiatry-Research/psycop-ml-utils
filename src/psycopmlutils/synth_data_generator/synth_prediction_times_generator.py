@@ -1,10 +1,14 @@
 """Generator for synth prediction data"""
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 from scipy import stats
+
+from psycopmlutils.synth_data_generator.synth_col_generators import (
+    generate_data_columns,
+)
 
 
 def generate_synth_data(
@@ -71,73 +75,6 @@ def generate_synth_data(
         for col in df.columns:
             if col not in na_ignore_cols:
                 df[col] = df_[col]
-
-    return df
-
-
-def generate_data_columns(
-    predictors: Iterable[Dict],
-    n_samples: int,
-    df: pd.DataFrame,
-) -> pd.DataFrame:
-    """Generate a dataframe with columns from the predictors iterable.
-
-    Args:
-        predictors (Iterable[Dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
-        n_samples (int): Number of rows to generate.
-        df (pd.DataFrame): Dataframe to append to
-
-    Raises:
-        ValueError: If column_type isn't either uniform_float, uniform_int, normal or datetime_uniform.
-
-    Returns:
-        pd.DataFrame: The generated dataframe.
-    """
-    for col_name, col_props in predictors.items():
-        # np.nan objects turn into "nan" strings in the real life dataframe.
-        # imitate this in the synthetic data as well.
-        if "nan" in col_name:
-            df = df.rename({col_name: col_name.replace("np.nan", "nan")}, axis=1)
-            col_name = col_name.replace("np.nan", "nan")
-
-        column_type = col_props["column_type"]
-
-        if column_type == "uniform_float":
-            df[col_name] = np.random.uniform(
-                low=col_props["min"],
-                high=col_props["max"],
-                size=n_samples,
-            )
-        elif column_type == "uniform_int":
-            df[col_name] = np.random.randint(
-                low=col_props["min"],
-                high=col_props["max"],
-                size=n_samples,
-            )
-        elif column_type == "normal":
-            df[col_name] = np.random.normal(
-                loc=col_props["mean"],
-                scale=col_props["sd"],
-                size=n_samples,
-            )
-        elif column_type == "datetime_uniform":
-            df[col_name] = pd.to_datetime(
-                np.random.uniform(
-                    low=col_props["min"],
-                    high=col_props["max"],
-                    size=n_samples,
-                ),
-                unit="D",
-            ).round("min")
-        else:
-            raise ValueError(f"Unknown distribution: {column_type}")
-
-        # If column has min and/or max, floor and ceil appropriately
-        if df[col_name].dtype not in ["datetime64[ns]"]:
-            if "min" in col_props:
-                df[col_name] = df[col_name].clip(lower=col_props["min"])
-            if "max" in col_props:
-                df[col_name] = df[col_name].clip(upper=col_props["max"])
 
     return df
 
