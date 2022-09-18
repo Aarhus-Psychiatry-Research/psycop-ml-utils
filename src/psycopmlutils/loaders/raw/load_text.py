@@ -185,7 +185,6 @@ def _load_notes_for_year(
     )
 
 
-@staticmethod
 def _tfidf_featurize(
     df: pd.DataFrame,
     tfidf_path: Optional[Path],

@@ -26,7 +26,7 @@ from wasabi import Printer
 from psycopmlutils.loaders.flattened import load_split_outcomes, load_split_predictors
 
 
-def check_feature_set_integrity_from_dir(
+def check_feature_set_integrity_from_dir(  # pylint: disable=too-many-statements
     path: Path,
     splits: Optional[List[str]] = None,
     nrows: Optional[int] = None,

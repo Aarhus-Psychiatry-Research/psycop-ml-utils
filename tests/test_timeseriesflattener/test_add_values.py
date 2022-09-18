@@ -9,6 +9,9 @@ from utils_for_testing import (  # pylint: disable=import-error
     str_to_df,
 )
 
+from psycopmlutils.loaders.raw.load_text import (  # noqa pylint: disable=unused-import
+    load_synth_notes,
+)
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
