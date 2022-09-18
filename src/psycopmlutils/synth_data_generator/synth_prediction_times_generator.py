@@ -1,14 +1,15 @@
-"""Generator for synth prediction data"""
+"""Generator for synth prediction data."""
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 from psycopmlutils.synth_data_generator.synth_col_generators import (
+    create_outcome_values,
     generate_data_columns,
 )
+from psycopmlutils.synth_data_generator.utils import replace_vals_with_na
 
 
 def generate_synth_data(
@@ -45,43 +46,29 @@ def generate_synth_data(
     df = pd.DataFrame(columns=list(predictors.keys()))
 
     # Generate data
-    df = generate_data_columns(predictors, n_samples, df)
-
-    # Linear model with columns
-    _y = intercept
-    for var in logistic_outcome_model.split("+"):
-        effect, col = var.split("*")
-        _y = float(effect) * df[col] + _y
-
-    noise = np.random.normal(
-        loc=noise_mean_sd[0],
-        scale=noise_mean_sd[1],
-        size=n_samples,
-    )
-    # Z-score normalise and add noise
-    _y = stats.zscore(_y) + noise
+    df = generate_data_columns(predictors=predictors, n_samples=n_samples, df=df)
 
     # Sigmoid it to get probabilities with mean = 0.5
-    df[outcome_column_name] = 1 / (1 + np.exp(_y))
+    df[outcome_column_name] = create_outcome_values(
+        n_samples=n_samples,
+        logistic_outcome_model=logistic_outcome_model,
+        intercept=intercept,
+        noise_mean_sd=noise_mean_sd,
+        df=df,
+    )
 
     df[outcome_column_name] = np.where(df[outcome_column_name] < prob_outcome, 1, 0)
 
     # randomly replace predictors with NAs
     if na_prob:
-        mask = np.random.choice([True, False], size=df.shape, p=[na_prob, 1 - na_prob])
-        df_ = df.mask(mask)
-
-        # For all columns in df.columns if column is not in na_ignore_cols
-        for col in df.columns:
-            if col not in na_ignore_cols:
-                df[col] = df_[col]
+        df = replace_vals_with_na(na_prob=na_prob, na_ignore_cols=na_ignore_cols, df=df)
 
     return df
 
 
 if __name__ == "__main__":
     column_specifications = {
-        "citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_000},
+        "citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_001},
         "timestamp": {"column_type": "datetime_uniform", "min": 0, "max": 5 * 365},
         "timestamp_outcome": {
             "column_type": "datetime_uniform",

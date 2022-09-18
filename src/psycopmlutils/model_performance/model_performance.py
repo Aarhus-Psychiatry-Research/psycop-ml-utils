@@ -193,7 +193,7 @@ class ModelPerformance:
         ]
         return pd.concat(dfs)
 
-    def _evaluate_single_model(
+    def _evaluate_single_model(  # pylint: disable=too-many-locals
         df: pd.DataFrame,
         aggregate_by_id: bool,
         prediction_col_name: str,

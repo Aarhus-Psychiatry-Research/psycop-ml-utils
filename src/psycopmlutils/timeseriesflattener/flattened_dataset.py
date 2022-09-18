@@ -22,7 +22,7 @@ from psycopmlutils.utils import (
 )
 
 
-class FlattenedDataset:
+class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
     """Turn a set of time-series into tabular prediction-time data."""
 
     def __init__(  # pylint: disable=too-many-arguments
@@ -776,7 +776,7 @@ class FlattenedDataset:
         )
 
     @staticmethod
-    def flatten_temporal_values_to_df(
+    def flatten_temporal_values_to_df(  # pylint: disable=too-many-locals
         prediction_times_with_uuid_df: DataFrame,
         values_df: Union[Callable, DataFrame],
         direction: str,

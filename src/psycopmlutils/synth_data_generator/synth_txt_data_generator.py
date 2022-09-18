@@ -6,12 +6,12 @@ text.
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 
 from psycopmlutils.synth_data_generator.synth_col_generators import (
     generate_data_columns,
 )
+from psycopmlutils.synth_data_generator.utils import replace_vals_with_na
 
 
 def generate_synth_txt_data(
@@ -39,18 +39,15 @@ def generate_synth_txt_data(
 
     # Generate data
     df = generate_data_columns(
-        predictors=predictors, n_samples=n_samples, df=df, text_prompt=text_prompt
+        predictors=predictors,
+        n_samples=n_samples,
+        df=df,
+        text_prompt=text_prompt,
     )
 
     # randomly replace predictors with NAs
     if na_prob:
-        mask = np.random.choice([True, False], size=df.shape, p=[na_prob, 1 - na_prob])
-        df_ = df.mask(mask)
-
-        # For all columns in df.columns if column is not in na_ignore_cols
-        for col in df.columns:
-            if col not in na_ignore_cols:
-                df[col] = df_[col]
+        df = replace_vals_with_na(df=df, na_prob=na_prob, na_ignore_cols=na_ignore_cols)
 
     return df
 

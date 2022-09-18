@@ -1,17 +1,58 @@
-"""Column generators for synthetic data"""
+"""Column generators for synthetic data."""
 
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
+
+def create_outcome_values(
+    df: pd.DataFrame,
+    n_samples: int,
+    logistic_outcome_model: str,
+    intercept: Optional[float] = 0,
+    noise_mean_sd: Optional[Tuple[float, float]] = (0, 1),
+):
+    """Create outcome values for a column.
+
+    Args:
+        df (pd.DataFrame): The dataframe to base the outcome values on. Should contain all the columns used in the logistic_outcome_model.
+        n_samples (int): Number of samples (rows) to generate.
+        logistic_outcome_model (str): The statistical model used to generate outcome values, e.g. specified as'1*col_name+1*col_name2'.
+        intercept (float, optional): The intercept of the logistic outcome model. Defaults to 0.
+        noise_mean_sd (Tuple[float, float], optional): Mean and sd of the noise.
+            Increase SD to obtain more uncertain models.
+
+    Returns:
+        pd.Series: The outcome values.
+    """
+    # Linear model with columns
+    _y = intercept
+
+    for var in logistic_outcome_model.split("+"):
+        effect, col = var.split("*")
+        _y = float(effect) * df[col] + _y
+
+    noise = np.random.normal(
+        loc=noise_mean_sd[0],
+        scale=noise_mean_sd[1],
+        size=n_samples,
+    )
+
+    # Z-score normalise and add noise
+    _y = stats.zscore(_y) + noise
+
+    out = 1 / (1 + np.exp(_y))
+    return out
 
 
 def generate_data_columns(
     predictors: Iterable[Dict],
     n_samples: int,
     df: pd.DataFrame,
-    text_prompt: Optional[str],
+    text_prompt: Optional[str] = None,
 ) -> pd.DataFrame:
     """Generate a dataframe with columns from the predictors iterable.
 
@@ -96,7 +137,10 @@ def generate_col_from_specs(
 
     if column_type == "text":
         generated_texts = generate_text_data(
-            n_samples=n_samples, sequence=sequence, tokenizer=tokenizer, model=model
+            n_samples=n_samples,
+            sequence=sequence,
+            tokenizer=tokenizer,
+            model=model,
         )
 
         return generated_texts
@@ -138,8 +182,7 @@ def generate_text_data(
     tokenizer: Optional[Any] = None,
     model: Optional[Any] = None,
 ) -> List[str]:
-    """
-    Generate text data.
+    """Generate text data.
 
     Args:
         n_samples (int): Number of rows to generate.

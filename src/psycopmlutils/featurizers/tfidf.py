@@ -7,8 +7,8 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from wasabi import Printer
 
-from psycopmlutils.loaders.raw.load_ids import *
-from psycopmlutils.loaders.raw.load_text import *
+from psycopmlutils.loaders.raw.load_ids import load_ids
+from psycopmlutils.loaders.raw.load_text import load_all_notes
 from psycopmlutils.utils import FEATURIZERS_PATH
 
 
@@ -58,11 +58,12 @@ if __name__ == "__main__":
         if not FEATURIZERS_PATH.exists():
             FEATURIZERS_PATH.mkdir()
 
-        text = load_all_notes(
+        text = load_all_notes(  # pylint: disable=undefined-variable
             featurizer=None,
             n_rows=None,
             featurizer_kwargs=None,
         )
+
         # Subset only train set
         train_ids = load_ids(split="train")
         train_ids = train_ids["dw_ek_borger"].unique()
