@@ -42,8 +42,8 @@ repos:
         types: [python]
         args:
           [
-            "src", # Only lint src directory
+            ".", # Only lint src directory
             "-rn", # Only display messages
             "-sn", # Don't display the score
-            "--disable=R,import-error"
+            "--disable=R"
           ]
