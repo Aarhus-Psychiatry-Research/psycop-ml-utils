@@ -14,7 +14,7 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
     """Load a dataframe from a SQL database.
 
     Args:
-        predictor_df (str): The name of the SQL database.
+        predictor_df (str): The name of the loader function which calls the SQL database.
         values_to_load (dict): Which values to load for medications. Takes "all", "numerical" or "numerical_and_coerce". Defaults to None.
 
     Returns:
@@ -54,6 +54,32 @@ def load_df_wrapper(predictor_dict: dict[str, Union[str, float, int]]) -> pd.Dat
     )
 
 
+def error_check_dfs(pre_loaded_dfs: list[dict[str, pd.DataFrame]]) -> None:
+    """Error check the pre-loaded dataframes.
+
+    Args:
+        pre_loaded_dfs (list): list of pre-loaded dataframes.
+    """
+    # Error check the laoded dfs
+    failures = []
+
+    msg = Printer(timestamp=True)
+
+    for d in pre_loaded_dfs:
+        for k in d.keys():
+            source_failures, _ = check_raw_df(df=d[k], raise_error=False)
+
+            if len(source_failures) > 0:
+                failures.append({k: source_failures})
+
+    if len(failures) > 0:
+        raise ValueError(
+            f"Pre-loaded dataframes failed source checks. {source_failures}",
+        )
+
+    msg.info(f"Pre-loaded {len(pre_loaded_dfs)} dataframes, all conformed to criteria")
+
+
 def pre_load_unique_dfs(
     unique_predictor_dict_list: list[dict[str, Union[str, float, int]]],
 ) -> dict[str, pd.DataFrame]:
@@ -77,24 +103,7 @@ def pre_load_unique_dfs(
     with Pool(n_workers) as p:
         pre_loaded_dfs = p.map(load_df_wrapper, unique_predictor_dict_list)
 
-        # Error check the laoded dfs
-        failures = []
-
-        for d in pre_loaded_dfs:
-            for k in d.keys():
-                (
-                    source_failures,
-                    duplicates,  # pylint: disable = unused-variable
-                ) = check_raw_df(df=d[k], raise_error=False)
-
-                if len(source_failures) > 0:
-                    failures.append({k: source_failures})
-
-        if len(failures) > 0:
-            raise ValueError(
-                f"Pre-loaded dataframes failed source checks. {source_failures}",
-            )
-        msg.info(f"Pre-loaded {len(unique_dfs)} dataframes, all conformed to criteria")
+        error_check_dfs(pre_loaded_dfs=pre_loaded_dfs)
 
         # Combined pre_loaded dfs into one dictionary
         pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}

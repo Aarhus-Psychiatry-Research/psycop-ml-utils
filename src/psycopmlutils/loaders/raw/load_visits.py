@@ -6,10 +6,12 @@ import pandas as pd
 from wasabi import msg
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
+from psycopmlutils.utils import data_loaders
 
 
+@data_loaders.register("physical_visits_to_psychiatry")
 def physical_visits_to_psychiatry(
-    where_clause: Optional[str] = None,  # noqa: DAR102
+    where_clause: Optional[str] = None,
     where_separator: Optional[str] = "AND",
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:

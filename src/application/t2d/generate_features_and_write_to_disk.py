@@ -7,6 +7,7 @@ maturity.
 import random
 import time
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -31,133 +32,89 @@ from psycopmlutils.timeseriesflattener import (
 )
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
-if __name__ == "__main__":
-    msg = Printer(timestamp=True)
-    # set path to save features to
-    PROJ_PATH = FEATURE_SETS_PATH / "t2d"
 
-    if not PROJ_PATH.exists():
-        PROJ_PATH.mkdir()
+def log_to_wandb(predictor_combinations, save_dir, file_prefix):
+    """Log poetry lock file and file prefix to WandB for reproducibility."""
 
-    RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
-    LOOKBEHIND_DAYS = [365, 1825, 9999]
+    feature_settings = {
+        "file_prefix": file_prefix,
+        "save_path": save_dir / file_prefix,
+        "predictor_list": predictor_combinations,
+    }
 
-    LAB_PREDICTORS = get_lab_feature_spec(
-        resolve_multiple=RESOLVE_MULTIPLE,
-        lookbehind_days=LOOKBEHIND_DAYS,
-        values_to_load="numerical_and_coerce",
+    run = wandb.init(project="psycop-feature-files", config=feature_settings)
+    run.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+
+    run.finish()
+
+
+def save_description_to_disk(predictor_combinations: list, flattened_csv_dir: Path):
+    """Describe output.
+
+    Args:
+        predictor_combinations (list): List of predictor specs.
+        flattened_csv_dir (Path): Path to flattened csv dir.
+    """
+
+    # Create data integrity report
+    create_feature_description_from_dir(
+        path=flattened_csv_dir,
+        predictor_dicts=predictor_combinations,
+        splits=["train"],
     )
 
-    DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
-        resolve_multiple=RESOLVE_MULTIPLE,
-        lookbehind_days=LOOKBEHIND_DAYS,
-        fallback=0,
+    check_feature_set_integrity_from_dir(
+        feature_set_csv_dir=flattened_csv_dir,
+        split_names=["train", "val", "test"],
     )
 
-    MEDICATION_PREDICTORS = get_medication_feature_spec(
-        lookbehind_days=LOOKBEHIND_DAYS,
-        resolve_multiple=["count"],
-        fallback=0,
-    )
 
-    PREDICTOR_SPEC_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
-    PREDICTOR_COMBINATIONS = create_feature_combinations(PREDICTOR_SPEC_LIST)
+def create_save_dir(
+    proj_path: Path,
+    feature_set_id: str,
+) -> Path:
+    """Create save directory.
 
-    # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
-    # at the end of the list.
-    random.shuffle(PREDICTOR_SPEC_LIST)
-    random.shuffle(PREDICTOR_COMBINATIONS)
+    Args:
+        proj_path (Path): Path to project.
+        feature_set_id (str): Feature set id.
 
-    # Many features will use the same dataframes, so we can load them once and reuse them.
-    pre_loaded_dfs = pre_load_unique_dfs(
-        unique_predictor_dict_list=PREDICTOR_SPEC_LIST,
-    )
-
-    event_times = psycopmlutils.loaders.raw.t2d()
-
-    msg.info(f"Generating {len(PREDICTOR_COMBINATIONS)} features")
-
-    msg.info("Loading prediction times")
-    prediction_times = psycopmlutils.loaders.raw.physical_visits_to_psychiatry()
-
-    msg.info("Initialising flattened dataset")
-    flattened_df = FlattenedDataset(
-        prediction_times_df=prediction_times,
-        n_workers=min(
-            len(PREDICTOR_COMBINATIONS),
-            psutil.cpu_count(logical=False) * 3,
-        ),  # * 3 since dataframe loading is IO intensive, cores are likely to wait for a lot of them.
-        feature_cache_dir=PROJ_PATH / "feature_cache",
-    )
-    flattened_df.add_age(psycopmlutils.loaders.raw.birthdays())
-
-    # Outcome
-    msg.info("Adding outcome")
-    for i in [1, 3, 5]:
-        LOOKAHEAD_DAYS = int(i * 365)
-        msg.info(f"Adding outcome with {LOOKAHEAD_DAYS} days of lookahead")
-        flattened_df.add_temporal_outcome(
-            outcome_df=event_times,
-            lookahead_days=LOOKAHEAD_DAYS,
-            resolve_multiple="max",
-            fallback=0,
-            new_col_name="t2d",
-            incident=True,
-            dichotomous=True,
-        )
-
-    # Add timestamp from outcomes
-    flattened_df.add_static_info(
-        info_df=event_times,
-        prefix="",
-        input_col_name="timestamp",
-        output_col_name="timestamp_first_t2d",
-    )
-    msg.good("Finished adding outcome")
-
-    # Predictors
-    msg.info("Adding static predictors")
-    flattened_df.add_static_info(psycopmlutils.loaders.raw.sex_female())
-
-    start_time = time.time()
-
-    msg.info("Adding temporal predictors")
-
-    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_COMBINATIONS,
-        predictor_dfs=pre_loaded_dfs,
-    )
-
-    end_time = time.time()
-
-    # Finish
-    msg.good(
-        f"Finished adding {len(PREDICTOR_COMBINATIONS)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
-    )
-
-    msg.info(
-        f"Dataframe size is {int(flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 102)} MiB",
-    )
-
-    msg.good("Done!")
+    Returns:
+        Path: Path to sub directory.
+    """
 
     # Split and save to disk
+    # Create directory to store all files related to this run
+    save_dir = proj_path / feature_set_id
+
+    if not save_dir.exists():
+        save_dir.mkdir()
+
+    return save_dir
+
+
+def split_and_save_to_disk(
+    flattened_df: FlattenedDataset,
+    output_dir: Path,
+    file_prefix: str,
+) -> tuple[Path, str]:
+    """Split and save to disk.
+
+    Args:
+        flattened_df (FlattenedDataset): Flattened dataset.
+        output_dir (Path): Path to output directory.
+        file_prefix (str): File prefix.
+
+    Returns:
+        tuple[Path, str]: Path to sub directory and file prefix.
+    """
     splits = ["test", "val", "train"]
+    msg = Printer(timestamp=True)
 
     flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
 
     # Version table with current date and time
     # prefix with user name to avoid potential clashes
-    current_user = Path().home().name
-
-    # Create directory to store all files related to this run
-    sub_dir = (
-        PROJ_PATH
-        / f"{current_user}_{len(PREDICTOR_COMBINATIONS)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
-    )
-    sub_dir.mkdir()
-
-    file_prefix = f"psycop_t2d_{current_user}_{len(PREDICTOR_COMBINATIONS)}_predictors_{time.strftime('%Y_%m_%d_%H_%M')}"
 
     # Create splits
     for dataset_name in splits:
@@ -181,62 +138,258 @@ if __name__ == "__main__":
         filename = f"{file_prefix}_{dataset_name}.csv"
         msg.info(f"Saving {filename} to disk")
 
-        file_path = sub_dir / filename
+        file_path = output_dir / filename
 
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
 
-    # Log poetry lock file and file prefix to WandB for reproducibility
-    feature_settings = {
-        "file_prefix": file_prefix,
-        "save_path": sub_dir / file_prefix,
-        "predictor_list": PREDICTOR_COMBINATIONS,
-    }
+    return file_prefix
 
-    # Create data integrity report
-    create_feature_description_from_dir(
-        path=sub_dir,
-        predictor_dicts=PREDICTOR_COMBINATIONS,
-        splits=["train"],
+
+def create_flattened_dataset(
+    outcome_loader_str: str,
+    prediction_time_loader_str: str,
+    pre_loaded_dfs: dict[str, pd.DataFrame],
+    predictor_combinations: list[dict[str, dict[str, Any]]],
+    proj_path: Path,
+):
+    """Create flattened dataset.
+
+    Args:
+        outcome_loader_str (str): String to lookup in catalogue to load outcome.
+        prediction_time_loader_str (str): String to lookup in catalogue to load prediction time.
+        pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
+        predictor_combinations (list[dict[str, dict[str, Any]]]): List of predictor combinations.
+        proj_path (Path): Path to project directory.
+
+    Returns:
+        FlattenedDataset: Flattened dataset.
+    """
+    msg = Printer(timestamp=True)
+
+    msg.info(f"Generating {len(predictor_combinations)} features")
+
+    msg.info("Initialising flattened dataset")
+
+    flattened_df = FlattenedDataset(
+        prediction_times_df=pre_loaded_dfs[prediction_time_loader_str],
+        n_workers=min(
+            len(predictor_combinations),
+            psutil.cpu_count(logical=False) * 3,
+        ),  # * 3 since dataframe loading is IO intensive, cores are likely to wait for a lot of them.
+        feature_cache_dir=proj_path / "feature_cache",
     )
 
-    check_feature_set_integrity_from_dir(path=sub_dir, splits=["train", "val", "test"])
+    # Outcome
+    msg.info("Adding outcome")
+    for i in [1, 3, 5]:
+        lookahead_days = int(i * 365)
+        msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
+        flattened_df.add_temporal_outcome(
+            outcome_df=pre_loaded_dfs[outcome_loader_str],
+            lookahead_days=lookahead_days,
+            resolve_multiple="max",
+            fallback=0,
+            new_col_name="t2d",
+            incident=True,
+            dichotomous=True,
+        )
 
-    run = wandb.init(project="psycop-feature-files", config=feature_settings)
-    wandb.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
+    flattened_df.add_age(pre_loaded_dfs["birthdays"])
 
-    wandb.finish()
+    # Add timestamp from outcomes
+    flattened_df.add_static_info(
+        info_df=pre_loaded_dfs[prediction_time_loader_str],
+        prefix="",
+        input_col_name="timestamp",
+        output_col_name="timestamp_first_t2d",
+    )
+    msg.good("Finished adding outcome")
+
+    # Predictors
+    msg.info("Adding static predictors")
+    flattened_df.add_static_info(psycopmlutils.loaders.raw.sex_female())
+
+    start_time = time.time()
+
+    msg.info("Adding temporal predictors")
+
+    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
+        predictors=predictor_combinations,
+        predictor_dfs=pre_loaded_dfs,
+    )
+
+    end_time = time.time()
+
+    # Finish
+    msg.good(
+        f"Finished adding {len(predictor_combinations)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
+    )
+
+    msg.info(
+        f"Dataframe size is {int(flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 102)} MiB",
+    )
+
+    msg.good("Done!")
+
+    return flattened_df
 
 
-__all__ = [
-    "DIAGNOSIS_PREDICTORS",
-    "LAB_PREDICTORS",
-    "LOOKAHEAD_DAYS",
-    "LOOKBEHIND_DAYS",
-    "MEDICATION_PREDICTORS",
-    "PREDICTOR_COMBINATIONS",
-    "PREDICTOR_SPEC_LIST",
-    "PROJ_PATH",
-    "RESOLVE_MULTIPLE",
-    "current_user",
-    "df_split_ids",
-    "end_time",
-    "event_times",
-    "feature_settings",
-    "file_path",
-    "file_prefix",
-    "filename",
-    "flattened_df",
-    "flattened_df_ids",
-    "ids_in_split_but_not_in_flattened_df",
-    "msg",
-    "pre_loaded_dfs",
-    "prediction_times",
-    "run",
-    "split_df",
-    "split_ids",
-    "splits",
-    "start_time",
-    "sub_dir",
-]
+def setup_for_main(
+    predictor_spec_list: list[dict[str, dict[str, Any]]],
+    feature_sets_path: Path,
+    proj_name: str,
+) -> tuple[Path, list[dict[str, dict[str, Any]]]]:
+    """Setup for main.
+
+    Args:
+        predictor_spec_list (list[dict[str, dict[str, Any]]]): List of predictor specifications.
+        feature_sets_path (Path): Path to feature sets.
+        proj_name (str): Name of project.
+
+    Returns:
+        tuple[list[dict[str, dict[str, Any]]], dict[str, pd.DataFrame], Path]: Tuple of predictor combinations, pre-loaded dataframes, and project path.
+    """
+    predictor_combinations = create_feature_combinations(predictor_spec_list)
+
+    # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
+    # at the end of the list.
+    random.shuffle(predictor_spec_list)
+    random.shuffle(predictor_combinations)
+
+    proj_path = feature_sets_path / proj_name
+
+    if not proj_path.exists():
+        proj_path.mkdir()
+
+    current_user = Path().home().name
+    feature_set_id = f"psycop_{proj_name}_{current_user}_{len(predictor_combinations)}_features_{time.strftime('%Y_%m_%d_%H_%M')}"
+
+    return predictor_combinations, proj_path, feature_set_id
+
+
+def pre_load_project_dfs(
+    predictor_spec_list: list[dict[str, dict[str, Any]]],
+    outcome_loader_str: str,
+    prediction_time_loader_str: str,
+) -> dict[str, pd.DataFrame]:
+    """Pre-load dataframes for project.
+
+    Args:
+        predictor_spec_list (list[dict[str, dict[str, Any]]]): List of predictor specs.
+        outcome_loader_str (str): Outcome loader string.
+        prediction_time_loader_str (str): Prediction time loader string.
+
+    Returns:
+        dict[str, pd.DataFrame]: Dictionary of pre-loaded dataframes.
+    """
+
+    dfs_to_preload = (
+        predictor_spec_list
+        + {"predictor_df": outcome_loader_str}
+        + {"predictor_df": prediction_time_loader_str}
+        + {"predictor_df": "birthdays"}
+        + {"predictor_df": "sex_female"}
+    )
+
+    # Many features will use the same dataframes, so we can load them once and reuse them.
+    pre_loaded_dfs = pre_load_unique_dfs(
+        unique_predictor_dict_list=dfs_to_preload,
+    )
+
+    return pre_loaded_dfs
+
+
+def main(
+    proj_name: str,
+    feature_sets_path: Path,
+    prediction_time_loader_str: str,
+    outcome_loader_str: str,
+    predictor_spec_list: list[dict[str, dict[str, Any]]],
+):
+    """Main function for loading, generating and evaluating a flattened
+    dataset.
+
+    Args:
+        proj_name (str): Name of project.
+        feature_sets_path (Path): Path to where feature sets should be stored.
+        prediction_time_loader_str (str): Key to lookup in data_loaders registry for prediction time dataframe.
+        outcome_loader_str (str): Key to lookup in data_loaders registry for outcome dataframe.
+        predictor_spec_list (list[dict[str, dict[str, Any]]]): List of predictor specs.
+    """
+
+    predictor_combinations, proj_path, feature_set_id = setup_for_main(
+        predictor_spec_list=predictor_spec_list,
+        feature_sets_path=feature_sets_path,
+        proj_name=proj_name,
+    )
+
+    pre_loaded_dfs = pre_load_project_dfs(
+        predictor_spec_list=predictor_spec_list,
+        outcome_loader_str=outcome_loader_str,
+        prediction_time_loader_str=prediction_time_loader_str,
+    )
+
+    flattened_df = create_flattened_dataset(
+        outcome_loader_str=outcome_loader_str,
+        prediction_time_loader_str=prediction_time_loader_str,
+        pre_loaded_dfs=pre_loaded_dfs,
+        predictor_combinations=predictor_combinations,
+        proj_path=proj_path,
+    )
+
+    output_dir = create_save_dir(
+        feature_set_id=feature_set_id,
+        proj_path=proj_path,
+    )
+
+    split_and_save_to_disk(
+        flattened_df=flattened_df,
+        output_dir=output_dir,
+        file_prefix=feature_set_id,
+    )
+
+    log_to_wandb(
+        predictor_combinations=predictor_combinations,
+        save_dir=output_dir,
+        file_prefix=feature_set_id,
+    )
+
+    save_description_to_disk(
+        predictor_combinations=predictor_combinations,
+        flattened_csv_dir=output_dir,
+    )
+
+
+if __name__ == "__main__":
+    RESOLVE_MULTIPLE = ["max", "min", "mean", "latest"]
+    LOOKBEHIND_DAYS = [365, 1825, 9999]
+
+    LAB_PREDICTORS = get_lab_feature_spec(
+        resolve_multiple=RESOLVE_MULTIPLE,
+        lookbehind_days=LOOKBEHIND_DAYS,
+        values_to_load="numerical_and_coerce",
+    )
+
+    DIAGNOSIS_PREDICTORS = get_diagnosis_feature_spec(
+        resolve_multiple=RESOLVE_MULTIPLE,
+        lookbehind_days=LOOKBEHIND_DAYS,
+        fallback=0,
+    )
+
+    MEDICATION_PREDICTORS = get_medication_feature_spec(
+        lookbehind_days=LOOKBEHIND_DAYS,
+        resolve_multiple=["count"],
+        fallback=0,
+    )
+
+    PREDICTOR_SPEC_LIST = DIAGNOSIS_PREDICTORS + LAB_PREDICTORS + MEDICATION_PREDICTORS
+
+    main(
+        feature_sets_path=FEATURE_SETS_PATH,
+        predictor_spec_list=PREDICTOR_SPEC_LIST,
+        proj_name="t2d",
+        outcome_loader_str="t2d",
+        prediction_time_loader_str="physical_visits_to_psychiatry",
+    )
