@@ -4,13 +4,8 @@ from typing import Optional
 
 
 def get_diagnosis_feature_spec(  # pylint: disable=dangerous-default-value
-    lookbehind_days=[
-        365,
-        730,
-        1825,
-        9999,
-    ],  # Not a problem here, since the function is only ever called once.
-    resolve_multiple=["mean", "max", "min"],
+    lookbehind_days=None,  # Not a problem here, since the function is only ever called once.
+    resolve_multiple=None,
     fallback: Optional[any] = 0,
 ):
     """Create diagnosis feature combinations.
@@ -23,6 +18,18 @@ def get_diagnosis_feature_spec(  # pylint: disable=dangerous-default-value
     Returns:
         _type_: _description_
     """
+
+    if lookbehind_days is None:
+        lookbehind_days = [
+            365,
+            730,
+            1825,
+            9999,
+        ]
+
+    if resolve_multiple is None:
+        resolve_multiple = ["mean", "max", "min"]
+
     dfs = [
         "essential_hypertension",
         "hyperlipidemia",
