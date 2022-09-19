@@ -117,11 +117,18 @@ def select_metadata_cols(
 
         # If asked to add all metadata cols,
         # Save all columns with only 1 unique value
-        if metadata_cols[0] == "all" or col in metadata_cols:
+        get_all = metadata_cols[0] == "all"
+        is_metadata_col = col in metadata_cols
+
+        if get_all or is_metadata_col:
             if df[col].nunique() == 1:
                 metadata[col] = df[col].unique()[0]
             else:
-                raise ValueError(f"Meta-data {col} contains more than 1 unique value.")
+                if is_metadata_col:
+                    raise ValueError(
+                        f"Meta-data {col} contains more than 1 unique value.",
+                    )
+                continue
 
     return pd.DataFrame.from_records([metadata])
 
