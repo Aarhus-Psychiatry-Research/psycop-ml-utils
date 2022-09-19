@@ -9,12 +9,12 @@ repos:
         args: ["--profile", "black", "--filter-files"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.3
+    rev: v2.38.0
     hooks:
       - id: pyupgrade
 
   - repo: https://github.com/lensvol/pybetter
-    rev: release-0.3.7
+    rev: release-0.4.1
     hooks:
     - id: pybetter
       args: ["--exclude", "B004"]
