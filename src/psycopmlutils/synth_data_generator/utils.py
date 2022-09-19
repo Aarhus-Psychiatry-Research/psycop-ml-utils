@@ -24,3 +24,8 @@ def replace_vals_with_na(df: pd.DataFrame, na_prob: float, na_ignore_cols: list[
             df[col] = df_[col]
 
     return df
+
+
+__all__ = [
+    "replace_vals_with_na",
+]

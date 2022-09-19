@@ -190,3 +190,12 @@ def check_raw_df(  # pylint: disable=too-many-branches
         raise ValueError(source_failures)
 
     return source_failures, duplicates
+
+
+__all__ = [
+    "check_for_duplicates",
+    "check_raw_df",
+    "check_required_columns",
+    "get_column_dtype_failures",
+    "get_na_prop_failures",
+]

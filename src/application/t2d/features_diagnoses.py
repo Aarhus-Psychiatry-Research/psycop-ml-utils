@@ -48,3 +48,8 @@ def get_diagnosis_feature_spec(  # pylint: disable=dangerous-default-value
         }
         for df in dfs
     ]
+
+
+__all__ = [
+    "get_diagnosis_feature_spec",
+]

@@ -271,3 +271,11 @@ def test_wrong_formatting():
             predictors=lookbehind_days_not_int,
             predictor_dfs={"predictor_df": predictor_df},
         )
+
+
+__all__ = [
+    "test_add_df_from_catalogue",
+    "test_generate_two_features_from_dict",
+    "test_output_independent_of_order_of_input",
+    "test_wrong_formatting",
+]

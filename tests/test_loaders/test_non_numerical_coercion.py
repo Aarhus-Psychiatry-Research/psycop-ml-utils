@@ -34,3 +34,8 @@ def test_non_numerical_coercion():
 
     for col in df.columns:
         pd.testing.assert_series_equal(df[col], expected_df[col], check_dtype=False)
+
+
+__all__ = [
+    "test_non_numerical_coercion",
+]

@@ -71,3 +71,10 @@ def save_df_to_pretty_html_table(
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(HTML_TEMPLATE1 + html + HTML_TEMPLATE2)
+
+
+__all__ = [
+    "HTML_TEMPLATE1",
+    "HTML_TEMPLATE2",
+    "save_df_to_pretty_html_table",
+]

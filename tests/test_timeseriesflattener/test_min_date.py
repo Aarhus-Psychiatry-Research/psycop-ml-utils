@@ -39,3 +39,8 @@ def test_min_date():
             outcome_df[col].reset_index(drop=True),
             expected_df[col].reset_index(drop=True),
         )
+
+
+__all__ = [
+    "test_min_date",
+]

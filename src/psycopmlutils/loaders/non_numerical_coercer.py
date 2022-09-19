@@ -62,3 +62,8 @@ def multiply_inequalities_in_df(
     df[col_to_multiply] = df[col_to_multiply].astype(float)
 
     return df
+
+
+__all__ = [
+    "multiply_inequalities_in_df",
+]

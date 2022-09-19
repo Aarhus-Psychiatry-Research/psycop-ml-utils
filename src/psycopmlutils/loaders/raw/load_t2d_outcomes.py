@@ -49,3 +49,9 @@ def any_diabetes(n_rows: Optional[int] = None):
     msg.good("Finished loading any_diabetes event times")
     output = df[["dw_ek_borger", "timestamp", "value"]]
     return output.reset_index(drop=True)
+
+
+__all__ = [
+    "any_diabetes",
+    "t2d",
+]

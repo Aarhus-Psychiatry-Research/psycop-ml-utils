@@ -152,3 +152,13 @@ def add_metadata_cols(df: pd.DataFrame, metadata: pd.DataFrame) -> pd.DataFrame:
     meta_df = pd.DataFrame.from_records(meta_dict)
 
     return df.reset_index(drop=True).join(meta_df)
+
+
+__all__ = [
+    "add_metadata_cols",
+    "aggregate_predictions",
+    "idx_to_class",
+    "labels_to_int",
+    "scores_to_probs",
+    "select_metadata_cols",
+]

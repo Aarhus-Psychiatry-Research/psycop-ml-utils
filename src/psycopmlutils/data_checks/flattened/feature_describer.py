@@ -200,3 +200,14 @@ def create_feature_description_from_dir(
             title="Feature description",
             df=feature_description_df,
         )
+
+
+__all__ = [
+    "HIST_BINS",
+    "UNICODE_HIST",
+    "create_feature_description_from_dir",
+    "create_unicode_hist",
+    "generate_feature_description_df",
+    "generate_feature_description_row",
+    "get_value_proportion",
+]

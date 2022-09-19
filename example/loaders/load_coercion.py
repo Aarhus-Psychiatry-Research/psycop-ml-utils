@@ -8,3 +8,10 @@ if __name__ == "__main__":
     df = c.load_corcioncoercion_duration(n=100)
     farlighed = c.farlighed(n=20)
     bælte = c.bælte(n=100)
+
+
+__all__ = [
+    "bælte",
+    "df",
+    "farlighed",
+]

@@ -334,3 +334,13 @@ def load_synth_notes(featurizer: str) -> pd.DataFrame:
         )
 
     raise ValueError("Only tfidf featurizer supported for synth notes")
+
+
+__all__ = [
+    "get_all_valid_note_types",
+    "load_aktuel_psykisk",
+    "load_all_notes",
+    "load_and_featurize_notes",
+    "load_arbitrary_notes",
+    "load_synth_notes",
+]

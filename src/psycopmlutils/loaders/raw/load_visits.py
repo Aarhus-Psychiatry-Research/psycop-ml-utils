@@ -77,3 +77,8 @@ def physical_visits_to_psychiatry(
     msg.good("Loaded physical visits")
 
     return output_df.reset_index(drop=True)
+
+
+__all__ = [
+    "physical_visits_to_psychiatry",
+]

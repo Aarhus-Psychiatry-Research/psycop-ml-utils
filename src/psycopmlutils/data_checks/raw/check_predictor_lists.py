@@ -192,3 +192,10 @@ def check_feature_combinations_return_correct_dfs(  # noqa pylint: disable=too-m
         )
     else:
         raise ValueError(f"{failure_dicts}")
+
+
+__all__ = [
+    "check_df_conforms_to_arg_dict",
+    "get_predictor_df_with_loader_fn",
+    "get_unique_predictor_dfs",
+]

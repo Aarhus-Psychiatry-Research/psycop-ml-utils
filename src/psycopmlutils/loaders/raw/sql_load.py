@@ -69,3 +69,8 @@ def sql_load(
     engine.dispose()
 
     return df
+
+
+__all__ = [
+    "sql_load",
+]

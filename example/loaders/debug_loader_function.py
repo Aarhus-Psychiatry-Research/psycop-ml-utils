@@ -94,3 +94,11 @@ if __name__ == "__main__":
         subset_duplicates_columns=["dw_ek_borger", "timestamp", "value"],
     )
     print(errors)
+
+
+__all__ = [
+    "df",
+    "get_prop_of_each_unique_value_for_non_floats",
+    "value_props",
+    "will_it_float",
+]

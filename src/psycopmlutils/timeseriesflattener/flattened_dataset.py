@@ -1125,3 +1125,9 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             ["is_in_interval", "time_from_pred_to_val_in_days"],
             axis=1,
         )
+
+
+__all__ = [
+    "FlattenedDataset",
+    "select_and_assert_keys",
+]

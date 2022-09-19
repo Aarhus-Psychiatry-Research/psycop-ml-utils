@@ -72,3 +72,13 @@ def test_raw_df_has_duplicates():
 
     with pytest.raises(ValueError, match="NaN"):
         check_raw_df(df)
+
+
+__all__ = [
+    "test_raw_df_has_datetime_formatting",
+    "test_raw_df_has_duplicates",
+    "test_raw_df_has_expected_val_dtype",
+    "test_raw_df_has_invalid_na_prop",
+    "test_raw_df_has_required_cols",
+    "test_raw_df_has_rows",
+]

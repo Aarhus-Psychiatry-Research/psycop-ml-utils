@@ -74,3 +74,9 @@ def create_feature_combinations(
     for arg_set in arg_sets:
         feature_combinations.extend(create_feature_combinations_from_dict(arg_set))
     return feature_combinations
+
+
+__all__ = [
+    "create_feature_combinations",
+    "create_feature_combinations_from_dict",
+]
