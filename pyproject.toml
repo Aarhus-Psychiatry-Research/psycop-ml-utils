@@ -12,8 +12,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
 
@@ -22,7 +20,7 @@ classifiers = [
 pydantic = "1.9.*"
 
 # Other dependencies
-python = ">=3.8,<3.11"
+python = ">=3.9,<3.11"
 numpy = "1.*"
 scipy = "1.8.*"
 pandas = "1.4.*"
