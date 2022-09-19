@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-5.0.2, furo 2022.06.21"/>
-        <title>psycopmlutils.model_performance.utils - psycop-ml-utils 0.4.0 documentation</title>
+        <title>psycopmlutils.model_performance.utils - psycop-ml-utils 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -129,7 +129,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index.html"><div class="brand">psycop-ml-utils 0.4.0 documentation</div></a>
+      <a href="../../../index.html"><div class="brand">psycop-ml-utils 1.0.0 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -211,20 +211,16 @@
         </div>
         <article role="main">
           <h1>Source code for psycopmlutils.model_performance.utils</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="sd">&quot;&quot;&quot;Utils for model performance.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span>
 
-<span class="c1"># To specify type hints for series</span>
-<span class="n">SeriesListOfFloats</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;pandas.core.series.Series(List[float])&quot;</span><span class="p">)</span>
-<span class="n">SeriesOfFloats</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;pandas.core.series.Series(float)&quot;</span><span class="p">)</span>
-<span class="n">SeriesOfStr</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;pandas.core.series.Series(str)&quot;</span><span class="p">)</span>
-<span class="n">SeriesOfInt</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;pandas.core.series.Series(int)&quot;</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="scores_to_probs"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.scores_to_probs">[docs]</a><span class="k">def</span> <span class="nf">scores_to_probs</span><span class="p">(</span><span class="n">scores</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SeriesListOfFloats</span><span class="p">,</span> <span class="n">SeriesOfFloats</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">:</span>
+<div class="viewcode-block" id="scores_to_probs"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.scores_to_probs">[docs]</a><span class="k">def</span> <span class="nf">scores_to_probs</span><span class="p">(</span><span class="n">scores</span><span class="p">:</span> <span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Converts a series of lists of probabilities for each class or a list of</span>
 <span class="sd">    floats for binary classification a list of floats of maximum length 2.</span>
 
@@ -237,12 +233,12 @@
 
     <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">scores</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">scores</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
+
+    <span class="k">return</span> <span class="n">scores</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="labels_to_int"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.labels_to_int">[docs]</a><span class="k">def</span> <span class="nf">labels_to_int</span><span class="p">(</span>
-    <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SeriesOfStr</span><span class="p">,</span> <span class="n">SeriesOfInt</span><span class="p">],</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span>
     <span class="n">label2id</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Converts label to int mapping. Only makes sense for binary models. If</span>
@@ -258,8 +254,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">labels</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="s2">&quot;int&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">labels</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">labels</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">label2id</span><span class="p">[</span><span class="n">x</span><span class="p">])</span></div>
+
+    <span class="k">return</span> <span class="n">labels</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">label2id</span><span class="p">[</span><span class="n">x</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="aggregate_predictions"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.aggregate_predictions">[docs]</a><span class="k">def</span> <span class="nf">aggregate_predictions</span><span class="p">(</span>
@@ -280,12 +276,12 @@
 <span class="sd">        pd.DataFrame: Dataframe with aggregated predictions</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">mean_scores</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-        <span class="n">gathered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">mean_scores</span><span class="p">(</span><span class="n">scores</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="n">gathered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">gathered</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_first_entry</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">get_first_entry</span><span class="p">(</span><span class="n">scores</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">scores</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">id_col</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
         <span class="p">{</span><span class="n">predictions_col</span><span class="p">:</span> <span class="n">mean_scores</span><span class="p">,</span> <span class="n">label_col</span><span class="p">:</span> <span class="n">get_first_entry</span><span class="p">},</span>
