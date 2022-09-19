@@ -18,6 +18,32 @@ RAW_DATA_VALIDATION_PATH = SHARED_RESOURCES_PATH / "raw_data_validation"
 FEATURIZERS_PATH = SHARED_RESOURCES_PATH / "featurizers"
 
 
+def format_dict_for_printing(d: dict) -> str:
+    """Format a dictionary for printing. Removes extra apostrophes, formats
+    colon to dashes, separates items with underscores and removes curly
+    brackets.
+
+    Args:
+        d (dict): Dictionary to format.
+
+    Returns:
+        str: Formatted dictionary.
+
+    Example:
+        >>> d = {"a": 1, "b": 2}
+        >>> print(format_dict_for_printing(d))
+        >>> "a-1_b-2"
+    """
+    return (
+        str(d)
+        .replace("'", "")
+        .replace(": ", "-")
+        .replace("{", "")
+        .replace("}", "")
+        .replace(", ", "_")
+    )
+
+
 def generate_feature_colname(
     prefix: str,
     out_col_name: Union[str, List[str]],
@@ -55,32 +81,6 @@ def generate_feature_colname(
     if len(col_name) == 1:
         col_name = col_name[0]
     return col_name
-
-
-def format_dict_for_printing(d: dict) -> str:
-    """Format a dictionary for printing. Removes extra apostrophes, formats
-    colon to dashes, separates items with underscores and removes curly
-    brackets.
-
-    Args:
-        d (dict): Dictionary to format.
-
-    Returns:
-        str: Formatted dictionary.
-
-    Example:
-        >>> d = {"a": 1, "b": 2}
-        >>> print(format_dict_for_printing(d))
-        >>> "a-1_b-2"
-    """
-    return (
-        str(d)
-        .replace("'", "")
-        .replace(": ", "-")
-        .replace("{", "")
-        .replace("}", "")
-        .replace(", ", "_")
-    )
 
 
 def df_contains_duplicates(df=pd.DataFrame, col_subset=List[str]):

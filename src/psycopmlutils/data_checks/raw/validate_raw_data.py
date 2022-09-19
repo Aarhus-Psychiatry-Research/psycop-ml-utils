@@ -15,6 +15,93 @@ from psycopmlutils.data_checks.utils import save_df_to_pretty_html_table
 from psycopmlutils.utils import RAW_DATA_VALIDATION_PATH
 
 
+def median_absolute_deviation(series: pd.Series) -> np.array:
+    """Calculates a series' median absolute deviation from its own median.
+
+    Args:
+        series (pd.Series): Series to calculate the median absolute deviation of.
+
+    Returns:
+        np.array: Median absolute deviation of the series.
+    """
+    med = np.median(series)
+    return np.median(np.abs(series - med))
+
+
+def generate_column_description(series: pd.Series) -> dict:
+    """Generates a dictionary with column description.
+
+    Args:
+        series (pd.Series): Series to describe.
+
+    Returns:
+        dict: Dictionary with column description.
+    """
+
+    d = {
+        "col_name": series.name,
+        "dtype": series.dtype,
+        "n_unique": series.nunique(),
+        "n_missing": series.isna().sum(),
+        "min": series.min(),
+        "max": series.max(),
+        "mean": series.mean(),
+        "std": series.std(),
+        "median": series.median(),
+        "median_absolute_deviation": median_absolute_deviation(series),
+    }
+    d["histogram"] = create_unicode_hist(series)
+    for percentile in [0.01, 0.25, 0.5, 0.75, 0.99]:
+        d[f"{percentile}th_percentile"] = round(series.quantile(percentile), 1)
+
+    return d
+
+
+def get_na_prob(series: pd.Series) -> pd.Series:
+    """Calculates the propotion of rows that are NaT.
+
+    Args:
+        series (pd.Series): Series of timestamps
+
+    Returns:
+        pd.Series: Series with proportion of NaT
+    """
+    return series.isna().sum() / len(series)
+
+
+def highlight_large_deviation(
+    series: pd.Series,
+    threshold_ratio: float,
+    baseline_column: str,
+    variation_column: str,
+) -> List[str]:
+    """Highlights rows where the 99th/1st percentile is x times the variation
+    column larger/smaller than the baseline column (probably mean or median).
+
+    Args:
+        series (pd.Series): Series to describe.
+        threshold_ratio (float): Threshold for deviation. 3-4 might be a good value.
+        baseline_column (str): Name of the column to use as baseline. Commonly 'mean' or 'median'.
+        variation_column (str): Name of the column containing the variation.
+        Commonly 'std' or 'median_absolute_deviation'
+
+    Returns:
+        List[str]: List of styles for each row.
+    """
+    above_threshold = pd.Series(data=False, index=series.index)
+    lower_bound = series[baseline_column] - series[variation_column] * threshold_ratio
+    upper_bound = series[baseline_column] + series[variation_column] * threshold_ratio
+
+    above_threshold[baseline_column] = (
+        series.loc["0.99th_percentile"] > upper_bound
+        or series.loc["0.01th_percentile"] < lower_bound
+    )
+    return [
+        "background-color: yellow" if above_threshold.any() else ""
+        for v in above_threshold
+    ]
+
+
 def validate_raw_data(
     df: pd.DataFrame,
     feature_set_name: str,
@@ -109,90 +196,3 @@ def validate_raw_data(
         print(
             f"The following checks failed - look through the generated reports!\n{failed_checks}",
         )
-
-
-def generate_column_description(series: pd.Series) -> dict:
-    """Generates a dictionary with column description.
-
-    Args:
-        series (pd.Series): Series to describe.
-
-    Returns:
-        dict: Dictionary with column description.
-    """
-
-    d = {
-        "col_name": series.name,
-        "dtype": series.dtype,
-        "n_unique": series.nunique(),
-        "n_missing": series.isna().sum(),
-        "min": series.min(),
-        "max": series.max(),
-        "mean": series.mean(),
-        "std": series.std(),
-        "median": series.median(),
-        "median_absolute_deviation": median_absolute_deviation(series),
-    }
-    d["histogram"] = create_unicode_hist(series)
-    for percentile in [0.01, 0.25, 0.5, 0.75, 0.99]:
-        d[f"{percentile}th_percentile"] = round(series.quantile(percentile), 1)
-
-    return d
-
-
-def get_na_prob(series: pd.Series) -> pd.Series:
-    """Calculates the propotion of rows that are NaT.
-
-    Args:
-        series (pd.Series): Series of timestamps
-
-    Returns:
-        pd.Series: Series with proportion of NaT
-    """
-    return series.isna().sum() / len(series)
-
-
-def median_absolute_deviation(series: pd.Series) -> np.array:
-    """Calculates a series' median absolute deviation from its own median.
-
-    Args:
-        series (pd.Series): Series to calculate the median absolute deviation of.
-
-    Returns:
-        np.array: Median absolute deviation of the series.
-    """
-    med = np.median(series)
-    return np.median(np.abs(series - med))
-
-
-def highlight_large_deviation(
-    series: pd.Series,
-    threshold_ratio: float,
-    baseline_column: str,
-    variation_column: str,
-) -> List[str]:
-    """Highlights rows where the 99th/1st percentile is x times the variation
-    column larger/smaller than the baseline column (probably mean or median).
-
-    Args:
-        series (pd.Series): Series to describe.
-        threshold_ratio (float): Threshold for deviation. 3-4 might be a good value.
-        baseline_column (str): Name of the column to use as baseline. Commonly 'mean' or 'median'.
-        variation_column (str): Name of the column containing the variation.
-        Commonly 'std' or 'median_absolute_deviation'
-
-    Returns:
-        List[str]: List of styles for each row.
-    """
-    above_threshold = pd.Series(data=False, index=series.index)
-    lower_bound = series[baseline_column] - series[variation_column] * threshold_ratio
-    upper_bound = series[baseline_column] + series[variation_column] * threshold_ratio
-
-    above_threshold[baseline_column] = (
-        series.loc["0.99th_percentile"] > upper_bound
-        or series.loc["0.01th_percentile"] < lower_bound
-    )
-    return [
-        "background-color: yellow" if above_threshold.any() else ""
-        for v in above_threshold
-    ]

@@ -9,76 +9,6 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
-def blood_sample(
-    blood_sample_id: Union[str, List],
-    n_rows: Optional[int] = None,
-    values_to_load: str = None,
-) -> pd.DataFrame:
-    """Load a blood sample.
-
-    Args:
-        blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
-        n_rows: Number of rows to return. Defaults to None.
-        values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to None, which is coerced to "all".
-
-    Returns:
-        pd.DataFrame
-    """
-    view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
-
-    allowed_values_to_load = [
-        "numerical",
-        "numerical_and_coerce",
-        "cancelled",
-        "all",
-        None,
-    ]
-
-    dfs = []
-
-    if values_to_load not in allowed_values_to_load:
-        raise ValueError(
-            f"values_to_load must be one of {allowed_values_to_load}, not {values_to_load}",
-        )
-
-    if values_to_load is None:
-        values_to_load = "all"
-
-    fn_dict = {
-        "coerce": load_non_numerical_values_and_coerce_inequalities,
-        "numerical": load_numerical_values,
-        "cancelled": load_cancelled,
-        "all": load_all_values,
-    }
-
-    sources_to_load = [k for k in fn_dict if k in values_to_load]
-
-    if n_rows:
-        n_rows_per_fn = int(n_rows / len(sources_to_load))
-    else:
-        n_rows_per_fn = None
-
-    for k in sources_to_load:  # pylint: disable=invalid-name
-        dfs.append(
-            fn_dict[k](
-                blood_sample_id=blood_sample_id,
-                n_rows=n_rows_per_fn,
-                view=view,
-            ),
-        )
-
-    # Concatenate dfs
-    if len(dfs) > 1:
-        df = pd.concat(dfs)
-    else:
-        df = dfs[0]
-
-    return df.reset_index(drop=True).drop_duplicates(
-        subset=["dw_ek_borger", "timestamp", "value"],
-        keep="first",
-    )
-
-
 def load_non_numerical_values_and_coerce_inequalities(
     blood_sample_id: Union[str, List],
     n_rows: Optional[int],
@@ -256,6 +186,76 @@ def load_all_values(
     )
 
     return df
+
+
+def blood_sample(
+    blood_sample_id: Union[str, List],
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    """Load a blood sample.
+
+    Args:
+        blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
+        n_rows: Number of rows to return. Defaults to None.
+        values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to None, which is coerced to "all".
+
+    Returns:
+        pd.DataFrame
+    """
+    view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
+
+    allowed_values_to_load = [
+        "numerical",
+        "numerical_and_coerce",
+        "cancelled",
+        "all",
+        None,
+    ]
+
+    dfs = []
+
+    if values_to_load not in allowed_values_to_load:
+        raise ValueError(
+            f"values_to_load must be one of {allowed_values_to_load}, not {values_to_load}",
+        )
+
+    if values_to_load is None:
+        values_to_load = "all"
+
+    fn_dict = {
+        "coerce": load_non_numerical_values_and_coerce_inequalities,
+        "numerical": load_numerical_values,
+        "cancelled": load_cancelled,
+        "all": load_all_values,
+    }
+
+    sources_to_load = [k for k in fn_dict if k in values_to_load]
+
+    if n_rows:
+        n_rows_per_fn = int(n_rows / len(sources_to_load))
+    else:
+        n_rows_per_fn = None
+
+    for k in sources_to_load:  # pylint: disable=invalid-name
+        dfs.append(
+            fn_dict[k](
+                blood_sample_id=blood_sample_id,
+                n_rows=n_rows_per_fn,
+                view=view,
+            ),
+        )
+
+    # Concatenate dfs
+    if len(dfs) > 1:
+        df = pd.concat(dfs)
+    else:
+        df = dfs[0]
+
+    return df.reset_index(drop=True).drop_duplicates(
+        subset=["dw_ek_borger", "timestamp", "value"],
+        keep="first",
+    )
 
 
 @data_loaders.register("hba1c")

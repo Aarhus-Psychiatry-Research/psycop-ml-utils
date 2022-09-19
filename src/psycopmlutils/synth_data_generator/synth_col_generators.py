@@ -48,66 +48,51 @@ def create_outcome_values(
     return out
 
 
-def generate_data_columns(
-    predictors: Iterable[Dict],
+def generate_text_data(
     n_samples: int,
-    df: pd.DataFrame,
-    text_prompt: Optional[str] = None,
-) -> pd.DataFrame:
-    """Generate a dataframe with columns from the predictors iterable.
+    sequence: str,
+    tokenizer: Optional[Any] = None,
+    model: Optional[Any] = None,
+) -> List[str]:
+    """Generate text data.
 
     Args:
-        predictors (Iterable[Dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         n_samples (int): Number of rows to generate.
-        df (pd.DataFrame): Dataframe to append to
-        text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
-
-    Raises:
-        ValueError: If column_type isn't either uniform_int, text, or datetime_uniform.
+        sequence (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
+        tokenizer (Optional[Any]): Huggingface tokenizer
+        model (Optional[Any]): Huggingface model
 
     Returns:
-        pd.DataFrame: The generated dataframe.
-
-
-    Example:
-        >>> column_specifications = {
-        >>>   "citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_000},
-        >>>   "timestamp": {"column_type": "datetime_uniform", "min": 0, "max": 5 * 365},
-        >>>   "text": {"column_type": "text"},
-        >>> }
-        >>>
-        >>> df = generate_synth_data(
-        >>>     predictors=column_specifications,
-        >>>     n_samples=100,
-        >>>     text_prompt="The patient",
-        >>> )
+        List[str]: List of generated text data.
     """
-    sequence = text_prompt if text_prompt else None
 
-    for col_name, col_props in predictors.items():
-        # np.nan objects turn into "nan" strings in the real life dataframe.
-        # imitate this in the synthetic data as well.
-        if "nan" in col_name:
-            df = df.rename({col_name: col_name.replace("np.nan", "nan")}, axis=1)
-            col_name = col_name.replace("np.nan", "nan")
+    tokenizer = (
+        GPT2Tokenizer.from_pretrained("gpt2") if tokenizer is None else tokenizer
+    )
+    model = GPT2LMHeadModel.from_pretrained("gpt2") if model is None else model
 
-        column_type = col_props["column_type"]
+    inputs = tokenizer.encode(sequence, return_tensors="pt")
 
-        df[col_name] = generate_col_from_specs(
-            column_type=column_type,
-            n_samples=n_samples,
-            sequence=sequence,
-            col_specs=col_props,
+    generated_texts = []
+    for _ in range(n_samples):
+        max_tokens = np.random.randint(
+            low=0,
+            high=500,
+            size=1,
+        )[0]
+
+        outputs = model.generate(
+            inputs,
+            min_length=0,
+            max_length=max_tokens,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id,
         )
 
-        # If column has min and/or max, floor and ceil appropriately
-        if df[col_name].dtype not in ["datetime64[ns]"]:
-            if "min" in col_props:
-                df[col_name] = df[col_name].clip(lower=col_props["min"])
-            if "max" in col_props:
-                df[col_name] = df[col_name].clip(upper=col_props["max"])
+        text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        generated_texts.append(text)
 
-    return df
+    return generated_texts
 
 
 def generate_col_from_specs(
@@ -176,48 +161,63 @@ def generate_col_from_specs(
         raise ValueError(f"Unknown distribution: {column_type}")
 
 
-def generate_text_data(
+def generate_data_columns(
+    predictors: Iterable[Dict],
     n_samples: int,
-    sequence: str,
-    tokenizer: Optional[Any] = None,
-    model: Optional[Any] = None,
-) -> List[str]:
-    """Generate text data.
+    df: pd.DataFrame,
+    text_prompt: Optional[str] = None,
+) -> pd.DataFrame:
+    """Generate a dataframe with columns from the predictors iterable.
 
     Args:
+        predictors (Iterable[Dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         n_samples (int): Number of rows to generate.
-        sequence (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
-        tokenizer (Optional[Any]): Huggingface tokenizer
-        model (Optional[Any]): Huggingface model
+        df (pd.DataFrame): Dataframe to append to
+        text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
+
+    Raises:
+        ValueError: If column_type isn't either uniform_int, text, or datetime_uniform.
 
     Returns:
-        List[str]: List of generated text data.
+        pd.DataFrame: The generated dataframe.
+
+
+    Example:
+        >>> column_specifications = {
+        >>>   "citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_000},
+        >>>   "timestamp": {"column_type": "datetime_uniform", "min": 0, "max": 5 * 365},
+        >>>   "text": {"column_type": "text"},
+        >>> }
+        >>>
+        >>> df = generate_synth_data(
+        >>>     predictors=column_specifications,
+        >>>     n_samples=100,
+        >>>     text_prompt="The patient",
+        >>> )
     """
+    sequence = text_prompt if text_prompt else None
 
-    tokenizer = (
-        GPT2Tokenizer.from_pretrained("gpt2") if tokenizer is None else tokenizer
-    )
-    model = GPT2LMHeadModel.from_pretrained("gpt2") if model is None else model
+    for col_name, col_props in predictors.items():
+        # np.nan objects turn into "nan" strings in the real life dataframe.
+        # imitate this in the synthetic data as well.
+        if "nan" in col_name:
+            df = df.rename({col_name: col_name.replace("np.nan", "nan")}, axis=1)
+            col_name = col_name.replace("np.nan", "nan")
 
-    inputs = tokenizer.encode(sequence, return_tensors="pt")
+        column_type = col_props["column_type"]
 
-    generated_texts = []
-    for _ in range(n_samples):
-        max_tokens = np.random.randint(
-            low=0,
-            high=500,
-            size=1,
-        )[0]
-
-        outputs = model.generate(
-            inputs,
-            min_length=0,
-            max_length=max_tokens,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id,
+        df[col_name] = generate_col_from_specs(
+            column_type=column_type,
+            n_samples=n_samples,
+            sequence=sequence,
+            col_specs=col_props,
         )
 
-        text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        generated_texts.append(text)
+        # If column has min and/or max, floor and ceil appropriately
+        if df[col_name].dtype not in ["datetime64[ns]"]:
+            if "min" in col_props:
+                df[col_name] = df[col_name].clip(lower=col_props["min"])
+            if "max" in col_props:
+                df[col_name] = df[col_name].clip(upper=col_props["max"])
 
-    return generated_texts
+    return df

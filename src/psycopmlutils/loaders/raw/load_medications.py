@@ -8,38 +8,59 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
-def concat_medications(
-    output_col_name: str,
-    atc_code_prefixes: List[str],
+def _load_one_source(
+    atc_code: str,
+    source_timestamp_col_name: str,
+    view: str,
+    output_col_name: Optional[str] = None,
+    wildcard_icd_code: Optional[bool] = False,
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
-    column.
+    """Load the prescribed medications that match atc. If wildcard_icd_code,
+    match from atc_code*. Aggregates all that match. Beware that data is
+    incomplete prior to sep. 2016 for prescribed medications.
 
     Args:
-        output_col_name (str): Name for new column.  # noqa: DAR102
-        atc_code_prefixes (List[str]): List of atc_codes.
-        n_rows (int, optional): Number of atc_codes to aggregate. Defaults to None.
+        atc_code (str): ATC string to match on. # noqa: DAR102
+        source_timestamp_col_name (str): Name of the timestamp column in the SQL
+            table.
+        view (str): Which view to use, e.g.
+            "FOR_Medicin_ordineret_inkl_2021_feb2022"
+        output_col_name (str, optional): Name of new column string. Defaults to
+            None.
+        wildcard_icd_code (bool, optional): Whether to match on atc_code* or
+            atc_code.
+        n_rows (int, optional): Number of rows to return. Defaults to None.
 
     Returns:
-        pd.DataFrame
+        pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
+            output_col_name = 1
     """
-    dfs = [
-        load(
-            atc_code=f"{id}",
-            output_col_name=output_col_name,
-            n_rows=n_rows,
-        )
-        for id in atc_code_prefixes
-    ]
 
-    return (
-        pd.concat(dfs, axis=0)
-        .drop_duplicates(
-            subset=["dw_ek_borger", "timestamp", "value"],
-            keep="first",
-        )
-        .reset_index(drop=True)
+    if wildcard_icd_code:
+        end_of_sql = "%"
+    else:
+        end_of_sql = ""  # noqa
+
+    view = f"[{view}]"
+    sql = (
+        f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
+        + f" WHERE {source_timestamp_col_name} IS NOT NULL AND (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
+    )
+
+    df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
+
+    if output_col_name is None:
+        output_col_name = atc_code
+
+    df[output_col_name] = 1
+
+    df.drop(["atc"], axis="columns", inplace=True)
+
+    return df.rename(
+        columns={
+            source_timestamp_col_name: "timestamp",
+        },
     )
 
 
@@ -120,59 +141,38 @@ def load(
     )
 
 
-def _load_one_source(
-    atc_code: str,
-    source_timestamp_col_name: str,
-    view: str,
-    output_col_name: Optional[str] = None,
-    wildcard_icd_code: Optional[bool] = False,
+def concat_medications(
+    output_col_name: str,
+    atc_code_prefixes: List[str],
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
-    """Load the prescribed medications that match atc. If wildcard_icd_code,
-    match from atc_code*. Aggregates all that match. Beware that data is
-    incomplete prior to sep. 2016 for prescribed medications.
+    """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
+    column.
 
     Args:
-        atc_code (str): ATC string to match on. # noqa: DAR102
-        source_timestamp_col_name (str): Name of the timestamp column in the SQL
-            table.
-        view (str): Which view to use, e.g.
-            "FOR_Medicin_ordineret_inkl_2021_feb2022"
-        output_col_name (str, optional): Name of new column string. Defaults to
-            None.
-        wildcard_icd_code (bool, optional): Whether to match on atc_code* or
-            atc_code.
-        n_rows (int, optional): Number of rows to return. Defaults to None.
+        output_col_name (str): Name for new column.  # noqa: DAR102
+        atc_code_prefixes (List[str]): List of atc_codes.
+        n_rows (int, optional): Number of atc_codes to aggregate. Defaults to None.
 
     Returns:
-        pd.DataFrame: A pandas dataframe with dw_ek_borger, timestamp and
-            output_col_name = 1
+        pd.DataFrame
     """
+    dfs = [
+        load(
+            atc_code=f"{id}",
+            output_col_name=output_col_name,
+            n_rows=n_rows,
+        )
+        for id in atc_code_prefixes
+    ]
 
-    if wildcard_icd_code:
-        end_of_sql = "%"
-    else:
-        end_of_sql = ""  # noqa
-
-    view = f"[{view}]"
-    sql = (
-        f"SELECT dw_ek_borger, {source_timestamp_col_name}, atc FROM [fct].{view}"
-        + f" WHERE {source_timestamp_col_name} IS NOT NULL AND (lower(atc)) LIKE lower('{atc_code}{end_of_sql}')"
-    )
-
-    df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
-
-    if output_col_name is None:
-        output_col_name = atc_code
-
-    df[output_col_name] = 1
-
-    df.drop(["atc"], axis="columns", inplace=True)
-
-    return df.rename(
-        columns={
-            source_timestamp_col_name: "timestamp",
-        },
+    return (
+        pd.concat(dfs, axis=0)
+        .drop_duplicates(
+            subset=["dw_ek_borger", "timestamp", "value"],
+            keep="first",
+        )
+        .reset_index(drop=True)
     )
 
 

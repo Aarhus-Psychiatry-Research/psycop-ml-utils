@@ -90,7 +90,7 @@ def _concatenate_coercion(
     return pd.concat(dfs, axis=0).reset_index(drop=True)
 
 
-### REASON (begrundtekst_sei) ###
+# REASON (begrundtekst_sei) #
 
 
 @data_loaders.register("farlighed")
@@ -142,7 +142,7 @@ def nærliggende_fare(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-### GENERAL TYPE (tabeltekst) ###
+# GENERAL TYPE (tabeltekst) ###
 
 
 @data_loaders.register("magtanvendelse")
@@ -217,7 +217,7 @@ def tvangsbehandlinger(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-### SPECIFIC TYPE (typetekst_sei) ###
+# SPECIFIC TYPE (typetekst_sei) ###
 
 
 @data_loaders.register("bælte")

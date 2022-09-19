@@ -1,5 +1,5 @@
 [flake8]
-ignore = C901, E501, W503, W291
+ignore = C901, E203, E501, W503, W291
 select = B,C,E,F,W,T4
 exclude =
     .env,

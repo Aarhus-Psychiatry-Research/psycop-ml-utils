@@ -19,6 +19,11 @@ repos:
     - id: pybetter
       args: ["--exclude", "B004"]
 
+  - repo: https://github.com/bwhmather/ssort
+    rev: v0.11.6
+    hooks:
+    - id: ssort
+
   - repo: https://github.com/myint/docformatter
     rev: v1.5.0
     hooks:

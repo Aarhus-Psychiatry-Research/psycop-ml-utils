@@ -194,7 +194,7 @@ if __name__ == "__main__":
         "predictor_list": PREDICTOR_COMBINATIONS,
     }
 
-    ## Create data integrity report
+    # Create data integrity report
     create_feature_description_from_dir(
         path=sub_dir,
         predictor_dicts=PREDICTOR_COMBINATIONS,

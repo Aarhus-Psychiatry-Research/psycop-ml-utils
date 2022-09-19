@@ -47,6 +47,112 @@ def get_all_valid_note_types() -> Set[str]:
     }
 
 
+def _load_notes_for_year(
+    note_types: Union[str, List[str]],
+    year: str,
+    view: Optional[str] = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
+    n_rows: Optional[int] = None,
+) -> pd.DataFrame:
+    """Loads clinical notes from sql from a specified year and matching
+    specified note types.
+
+    Args:
+        note_names (Union[str, list[str]]): Which types of notes to load.
+        year (str): Which year to load
+        view (str, optional): Which table to load.
+            Defaults to "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret".
+        n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
+
+    Returns:
+        pd.DataFrame: Dataframe with clinical notes
+    """
+
+    sql = (
+        "SELECT dw_ek_borger, datotid_senest_aendret_i_sfien, fritekst"
+        + f" FROM [fct].[{view}_{year}_inkl_2021_feb2022]"
+        + f" WHERE overskrift IN {note_types}"
+    )
+    return sql_load(
+        sql,
+        database="USR_PS_FORSK",
+        chunksize=None,
+        n_rows=n_rows,
+    )
+
+
+def _tfidf_featurize(
+    df: pd.DataFrame,
+    tfidf_path: Optional[Path],
+    text_col: str = "text",
+) -> pd.DataFrame:
+    """TF-IDF featurize text. Assumes `df` to have a column named `text`.
+
+    Args:
+        df (pd.DataFrame): Dataframe with text column
+        tfidf_path (Optional[Path]): Path to a sklearn tf-idf vectorizer
+        text_col (str, optional): Name of text column. Defaults to "text".
+
+    Returns:
+        pd.DataFrame: Original dataframe with tf-idf features appended
+    """
+    with open(tfidf_path, "rb") as f:
+        tfidf = pkl.load(f)
+
+    vocab = ["tfidf-" + word for word in tfidf.get_feature_names()]
+
+    text = df[text_col].values
+    df = df.drop(text_col, axis=1)
+
+    text = tfidf.transform(text)
+    text = pd.DataFrame(text.toarray(), columns=vocab)
+    return pd.concat([df, text], axis=1)
+
+
+def _huggingface_featurize(model_id: str) -> pd.DataFrame:
+    # Load paraphrase-multilingual-MiniLM-L12-v2
+    # split tokens to list of list if longer than allowed sequence length
+    # which is often 128 for sentence transformers
+    # encode tokens
+    # average by list of list
+    # return embeddings
+    raise NotImplementedError
+
+
+def _load_and_featurize_notes_per_year(
+    year: str,
+    note_types: Union[str, List[str]],
+    view: str,
+    n_rows: int,
+    featurizer: str,
+    featurizer_kwargs: dict,
+) -> pd.DataFrame:
+    """Loads clinical notes and features them.
+
+    Args:
+        note_types (Union[str, List[str]]): Which note types to load.
+        year (str): Which year to load
+        view (str): Which view to load
+        n_rows (int): How many rows to load
+        featurizer (str): Which featurizer to use (tfidf or huggingface)
+        featurizer_kwargs (dict): kwargs for the featurizer
+
+    Returns:
+        pd.DataFrame: Dataframe of notes and features
+    """
+
+    df = _load_notes_for_year(
+        note_types=note_types,
+        year=year,
+        view=view,
+        n_rows=n_rows,
+    )
+    if featurizer == "tfidf":
+        df = _tfidf_featurize(df, **featurizer_kwargs)
+    elif featurizer == "huggingface":
+        df = _huggingface_featurize(df, **featurizer_kwargs)
+    return df
+
+
 def load_and_featurize_notes(
     note_types: Union[str, List[str]],
     featurizer: str,
@@ -115,112 +221,6 @@ def load_and_featurize_notes(
         axis=1,
     )
     return dfs
-
-
-def _load_and_featurize_notes_per_year(
-    year: str,
-    note_types: Union[str, List[str]],
-    view: str,
-    n_rows: int,
-    featurizer: str,
-    featurizer_kwargs: dict,
-) -> pd.DataFrame:
-    """Loads clinical notes and features them.
-
-    Args:
-        note_types (Union[str, List[str]]): Which note types to load.
-        year (str): Which year to load
-        view (str): Which view to load
-        n_rows (int): How many rows to load
-        featurizer (str): Which featurizer to use (tfidf or huggingface)
-        featurizer_kwargs (dict): kwargs for the featurizer
-
-    Returns:
-        pd.DataFrame: Dataframe of notes and features
-    """
-
-    df = _load_notes_for_year(
-        note_types=note_types,
-        year=year,
-        view=view,
-        n_rows=n_rows,
-    )
-    if featurizer == "tfidf":
-        df = _tfidf_featurize(df, **featurizer_kwargs)
-    elif featurizer == "huggingface":
-        df = _huggingface_featurize(df, **featurizer_kwargs)
-    return df
-
-
-def _load_notes_for_year(
-    note_types: Union[str, List[str]],
-    year: str,
-    view: Optional[str] = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
-    n_rows: Optional[int] = None,
-) -> pd.DataFrame:
-    """Loads clinical notes from sql from a specified year and matching
-    specified note types.
-
-    Args:
-        note_names (Union[str, list[str]]): Which types of notes to load.
-        year (str): Which year to load
-        view (str, optional): Which table to load.
-            Defaults to "[FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret".
-        n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
-
-    Returns:
-        pd.DataFrame: Dataframe with clinical notes
-    """
-
-    sql = (
-        "SELECT dw_ek_borger, datotid_senest_aendret_i_sfien, fritekst"
-        + f" FROM [fct].[{view}_{year}_inkl_2021_feb2022]"
-        + f" WHERE overskrift IN {note_types}"
-    )
-    return sql_load(
-        sql,
-        database="USR_PS_FORSK",
-        chunksize=None,
-        n_rows=n_rows,
-    )
-
-
-def _tfidf_featurize(
-    df: pd.DataFrame,
-    tfidf_path: Optional[Path],
-    text_col: str = "text",
-) -> pd.DataFrame:
-    """TF-IDF featurize text. Assumes `df` to have a column named `text`.
-
-    Args:
-        df (pd.DataFrame): Dataframe with text column
-        tfidf_path (Optional[Path]): Path to a sklearn tf-idf vectorizer
-        text_col (str, optional): Name of text column. Defaults to "text".
-
-    Returns:
-        pd.DataFrame: Original dataframe with tf-idf features appended
-    """
-    with open(tfidf_path, "rb") as f:
-        tfidf = pkl.load(f)
-
-    vocab = ["tfidf-" + word for word in tfidf.get_feature_names()]
-
-    text = df[text_col].values
-    df = df.drop(text_col, axis=1)
-
-    text = tfidf.transform(text)
-    text = pd.DataFrame(text.toarray(), columns=vocab)
-    return pd.concat([df, text], axis=1)
-
-
-def _huggingface_featurize(model_id: str) -> pd.DataFrame:
-    # Load paraphrase-multilingual-MiniLM-L12-v2
-    #  split tokens to list of list if longer than allowed sequence length
-    ## which is often 128 for sentence transformers
-    # encode tokens
-    ## average by list of list
-    # return embeddings
-    raise NotImplementedError
 
 
 @data_loaders.register("all_notes")

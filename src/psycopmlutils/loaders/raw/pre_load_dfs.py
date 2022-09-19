@@ -10,6 +10,50 @@ from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 from psycopmlutils.utils import data_loaders
 
 
+def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
+    """Load a dataframe from a SQL database.
+
+    Args:
+        predictor_df (str): The name of the SQL database.
+        values_to_load (Dict): Which values to load for medications. Takes "all", "numerical" or "numerical_and_coerce". Defaults to None.
+
+    Returns:
+        pd.DataFrame: The loaded dataframe.
+    """
+    msg = Printer(timestamp=True)
+
+    msg.info(f"Loading {predictor_df}")
+
+    loader_fns = data_loaders.get_all()
+
+    if predictor_df not in loader_fns:
+        msg.fail(f"Could not find loader for {predictor_df}.")
+    else:
+        # We need this control_flow since some loader_fns don't take values_to_load
+        if values_to_load is not None:
+            df = loader_fns[predictor_df](values_to_load=values_to_load)
+        else:
+            df = loader_fns[predictor_df]()
+
+    msg.info(f"Loaded {predictor_df} with {len(df)} rows")
+    return {predictor_df: df}
+
+
+def load_df_wrapper(predictor_dict: Dict[str, Union[str, float, int]]) -> pd.DataFrame:
+    """Wrapper to load a dataframe from a dictionary.
+
+    Args:
+        predictor_dict (Dict[str, Union[str, float, int]]): Dictionary where the key predictor_df maps to an SQL database.
+
+    Returns:
+        pd.DataFrame: The loaded dataframe.
+    """
+    return load_df(
+        predictor_df=predictor_dict["predictor_df"],
+        values_to_load=predictor_dict.get("values_to_load"),
+    )
+
+
 def pre_load_unique_dfs(
     unique_predictor_dict_list: List[Dict[str, Union[str, float, int]]],
 ) -> Dict[str, pd.DataFrame]:
@@ -56,47 +100,3 @@ def pre_load_unique_dfs(
         pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
 
     return pre_loaded_dfs
-
-
-def load_df_wrapper(predictor_dict: Dict[str, Union[str, float, int]]) -> pd.DataFrame:
-    """Wrapper to load a dataframe from a dictionary.
-
-    Args:
-        predictor_dict (Dict[str, Union[str, float, int]]): Dictionary where the key predictor_df maps to an SQL database.
-
-    Returns:
-        pd.DataFrame: The loaded dataframe.
-    """
-    return load_df(
-        predictor_df=predictor_dict["predictor_df"],
-        values_to_load=predictor_dict.get("values_to_load"),
-    )
-
-
-def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
-    """Load a dataframe from a SQL database.
-
-    Args:
-        predictor_df (str): The name of the SQL database.
-        values_to_load (Dict): Which values to load for medications. Takes "all", "numerical" or "numerical_and_coerce". Defaults to None.
-
-    Returns:
-        pd.DataFrame: The loaded dataframe.
-    """
-    msg = Printer(timestamp=True)
-
-    msg.info(f"Loading {predictor_df}")
-
-    loader_fns = data_loaders.get_all()
-
-    if predictor_df not in loader_fns:
-        msg.fail(f"Could not find loader for {predictor_df}.")
-    else:
-        # We need this control_flow since some loader_fns don't take values_to_load
-        if values_to_load is not None:
-            df = loader_fns[predictor_df](values_to_load=values_to_load)
-        else:
-            df = loader_fns[predictor_df]()
-
-    msg.info(f"Loaded {predictor_df} with {len(df)} rows")
-    return {predictor_df: df}
