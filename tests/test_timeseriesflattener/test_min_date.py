@@ -9,6 +9,7 @@ from psycopmlutils.timeseriesflattener import FlattenedDataset
 
 
 def test_min_date():
+    """Test that the min_date argument works as expected."""
     prediction_times_str = """dw_ek_borger,timestamp,
                             1,2021-12-31 00:00:01
                             1,2023-12-31 00:00:01
@@ -38,3 +39,8 @@ def test_min_date():
             outcome_df[col].reset_index(drop=True),
             expected_df[col].reset_index(drop=True),
         )
+
+
+__all__ = [
+    "test_min_date",
+]

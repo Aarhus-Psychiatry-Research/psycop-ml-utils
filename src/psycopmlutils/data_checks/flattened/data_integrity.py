@@ -1,7 +1,8 @@
 """Code to generate data integrity and train/val/test drift reports."""
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Optional
 
+import pandas as pd
 from deepchecks.core.suite import SuiteResult
 from deepchecks.tabular import Dataset, Suite
 from deepchecks.tabular.checks import (
@@ -110,180 +111,340 @@ def label_split_checks() -> Suite:
     )
 
 
-def get_name_of_failed_checks(result: SuiteResult) -> List[str]:
+def get_failed_check_names(result: SuiteResult) -> list[str]:
     """Returns a list of names of failed checks.
 
     Args:
         result (SuiteResult): A deepchecks SuiteResult
 
     Returns:
-        List[str]: List of names of failed checks
+        list[str]: list of names of failed checks
     """
     return [
         check_result.check.name() for check_result in result.get_not_passed_checks()
     ]
 
 
-def check_feature_set_integrity_from_dir(  # pylint: disable=too-many-statements
-    path: Path,
-    splits: Optional[List[str]] = None,
-    nrows: Optional[int] = None,
+def check_train_data_integrity(
+    feature_set_csv_dir: Path,
+    nrows: int,
+    out_dir: Path,
+    train_outcomes_df: pd.DataFrame,
+    outcome_checks_dir: Path,
+):
+    """Runs Deepcheck data integrity checks for the train split.
+
+    Args:
+        feature_set_csv_dir (Path): Path to a directory containing train/val/test files
+        nrows (int): Whether to only load a subset of the data.
+            Should only be used for debugging.
+        out_dir (Path): Path to the directory where the reports should be saved
+        train_outcomes_df (pd.DataFrame): The train outcomes dataframe
+        outcome_checks_dir (Path): Path to the directory where the outcome specific reports should be saved
+
+    Returns:
+        failures (dict): A dictionary containing the failed checks
+    """
+    failures = {}
+
+    msg = Printer(timestamp=True)
+
+    msg.info("Running data integrity checks...")
+
+    # Only running data integrity checks on the training set to reduce the
+    # chance of any form of peaking at the test set
+    train_predictors = load_split_predictors(
+        feature_set_csv_dir=feature_set_csv_dir,
+        split="train",
+        include_id=True,
+        nrows=nrows,
+    )
+
+    data_s = Dataset(
+        df=train_predictors,
+        index_name="dw_ek_borger",
+        datetime_name="timestamp",
+    )
+
+    # Running checks that do not require a label
+    integ_suite = pruned_data_integrity_checks(
+        timeout=0,
+    )  # timeout=0 removes timeout
+
+    suite_results = integ_suite.run(data_s)
+    suite_results.save_as_html(str(out_dir / "data_integrity.html"))
+
+    failures["data_integrity"] = get_failed_check_names(suite_results)
+
+    # Running checks that require a label for each outcome
+    label_checks = label_integrity_checks()
+
+    for outcome_column in train_outcomes_df.columns:
+        msg.info(f"Running data integrity for {outcome_column}")
+
+        data_s = Dataset(
+            df=train_predictors,
+            index_name="dw_ek_borger",
+            datetime_name="timestamp",
+            label=train_outcomes_df[outcome_column],
+        )
+
+        suite_results = label_checks.run(data_s)
+
+        suite_results.save_as_html(
+            str(outcome_checks_dir / f"{outcome_column}_check.html"),
+        )
+
+        failures[f"{outcome_column}_check"] = get_failed_check_names(
+            suite_results,
+        )
+
+    msg.good("Finshed data integrity checks!")
+
+    return failures
+
+
+def get_suite_results_for_split_pair_and_save_to_disk(
+    out_dir: Path,
+    deepchecks_suite: Any,
+    split_dicts: dict[str, dict[str, Any]],
+    split_pair: tuple[str],
+    file_suffix: str = "",
+) -> SuiteResult:
+    """Runs a Deepchecks suite on a given split and saves the results to a
+    file.
+
+    Args:
+        out_dir (Path): Path to the directory where the results should be saved
+        deepchecks_suite (Any): Deepchecks suite to run
+        split_dicts (dict[str, dict[str, Any]]): Dictionary containing the splits.
+        split_pair (tuple[str]): Splits to run the suite on
+        file_suffix (str, optional): Suffix to add to the file name. Defaults to "".
+
+    Returns:
+        SuiteResults: Results of the suite
+    """
+
+    suite_results = deepchecks_suite.run(
+        split_dicts[split_pair[0]]["ds"],
+        split_dicts[split_pair[1]]["ds"],
+    )
+
+    suite_results.save_as_html(
+        str(out_dir / f"{split_pair[0]}_{split_pair[1]}_{file_suffix}.html"),
+    )
+
+    return suite_results
+
+
+def get_split_as_ds_dict(
+    feature_set_csv_dir: Path,
+    n_rows: Optional[int],
+    split: str,
+) -> dict[str, Any]:
+    """Loads a split as a Deepchecks Dataset dict.
+
+    Args:
+        feature_set_csv_dir (Path): Path to a directory containing train/val/test files
+        n_rows (Optional[int]): Whether to only load a subset of the data.
+            Should only be used for debugging.
+        split (str): Which split to load
+
+    Returns:
+        dict: Deepchecks Dataset dict
+    """
+
+    predictors = load_split_predictors(
+        feature_set_csv_dir=feature_set_csv_dir,
+        split=split,
+        include_id=True,
+        nrows=n_rows,
+    )
+    outcomes = load_split_outcomes(
+        feature_set_csv_dir=feature_set_csv_dir,
+        split=split,
+        nrows=n_rows,
+    )
+
+    data_s = Dataset(
+        df=predictors,
+        index_name="dw_ek_borger",
+        datetime_name="timestamp",
+    )
+
+    return {
+        "predictors": predictors,
+        "outcomes": outcomes,
+        "ds": data_s,
+    }
+
+
+def run_validation_requiring_split_comparison(
+    feature_set_csv_dir: Path,
+    split_names: list[str],
+    n_rows: int,
+    out_dir: Path,
+    train_outcome_df: pd.DataFrame,
+) -> dict:
+    """Runs Deepcheck data validation checks for the train/val/test splits.
+
+    Args:
+        feature_set_csv_dir (Path): Path to a directory containing train/val/test files
+        split_names (list[str]): list of splits to check (train, val, test)
+        n_rows (int): Whether to only load a subset of the data.
+            Should only be used for debugging.
+        out_dir (Path): Path to the directory where the reports should be saved
+        train_outcome_df (pd.DataFrame): The train outcomes.
+    """
+    msg = Printer(timestamp=True)
+
+    failed_checks = {}
+
+    validation_suite = custom_train_test_validation()
+
+    split_dicts = {}
+
+    for split_name in split_names:
+        split_dicts[split_name] = get_split_as_ds_dict(
+            feature_set_csv_dir=feature_set_csv_dir,
+            n_rows=n_rows,
+            split=split_name,
+        )
+
+    for split_pair in (("train", "val"), ("train", "test")):
+        suite_results = get_suite_results_for_split_pair_and_save_to_disk(
+            out_dir=out_dir,
+            deepchecks_suite=validation_suite,
+            split_dicts=split_dicts,
+            split_pair=split_pair,
+            file_suffix="integrity",
+        )
+
+        failed_checks[
+            f"{split_pair[0]}_{split_pair[1]}_integrity"
+        ] = get_failed_check_names(suite_results)
+
+    for split_name, split_contents in split_dicts.items():
+        # don't check train/train
+        if split_name == "train":
+            continue
+
+        for outcome_col in train_outcome_df:
+            msg.info(
+                f"Running split validation for train/{split_name} and {outcome_col}",
+            )
+
+            deepchecks_ds_dict = {
+                "train": Dataset(
+                    df=split_dicts["train"]["predictors"],
+                    index_name="dw_ek_borger",
+                    datetime_name="timestamp",
+                    label=split_dicts["train"]["outcomes"][outcome_col],
+                ),
+                split_name: Dataset(
+                    df=split_contents["predictors"],
+                    index_name="dw_ek_borger",
+                    datetime_name="timestamp",
+                    label=split_contents["outcomes"][outcome_col],
+                ),
+            }
+
+            suite_results = get_suite_results_for_split_pair_and_save_to_disk(
+                out_dir=out_dir,
+                deepchecks_suite=label_split_checks(),
+                split_dicts=deepchecks_ds_dict,
+                split_pair=("train", split_name),
+                file_suffix=f"{outcome_col}_check",
+            )
+
+            failed_checks[
+                f"train_{split_name}_{outcome_col}_check"
+            ] = get_failed_check_names(suite_results)
+
+        msg.good(f"All data checks done! Saved to {out_dir}")
+
+        if len(failed_checks.keys()) > 0:
+            msg.warn(f"Failed checks: {failed_checks}")
+
+
+def check_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statements
+    feature_set_csv_dir: Path,
+    split_names: Optional[list[str]] = None,
+    n_rows: Optional[int] = None,
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a given
     directory containing train/val/test files. Splits indicates which data.
-
-    splits to check. If nrows is provided, only the first nrows are loaded - should only be used for debugging.
+    splits to check.
 
     The resulting reports are saved to a sub directory as .html files.
 
     Args:
-        path (Path): Path to a directory containing train/val/test files
-        splits (List[str]): List of splits to check (train, val, test)
-        nrows (Optional[int]): Whether to only load a subset of the data.
-        Should only be used for debugging.
+        feature_set_csv_dir (Path): Path to a directory containing train/val/test files
+        split_names (list[str]): list of splits to check (train, val, test)
+        n_rows (Optional[int]): Whether to only load a subset of the data.
+            Should only be used for debugging.
     """
-    if splits is None:
-        splits = ["train", "val", "test"]
+    if split_names is None:
+        split_names = ["train", "val", "test"]
 
-    msg = Printer(timestamp=True)
+    train_outcomes_df = load_split_outcomes(
+        feature_set_csv_dir=feature_set_csv_dir,
+        split="train",
+        nrows=n_rows,
+    )
+
     failed_checks = (
         {}
     )  # Collect failed checks for error messages at the end of the function
 
     # Check if file splits exist before running checks
-    for split in splits:
-        file = list(path.glob(f"*{split}*.csv"))
+    for split_name in split_names:
+        file = list(feature_set_csv_dir.glob(f"*{split_name}*.csv"))
         if not file or len(file) > 1:
-            raise ValueError(f"{split} split not found in {path}")
+            raise ValueError(f"{split_name} split not found in {feature_set_csv_dir}")
 
-    out_dir = path / "deepchecks"
+    out_dir = feature_set_csv_dir / "deepchecks"
     if not out_dir.exists():
         out_dir.mkdir()
-    # create subfolder for outcome specific checks
+
+    # Create subfolder for outcome specific checks
     outcome_checks_dir = out_dir / "outcomes"
     if not outcome_checks_dir.exists():
         outcome_checks_dir.mkdir()
 
-    ###################
-    # DATA INTEGRITY
-    ###################
-
-    if "train" in splits:
-        msg.info("Running data integrity checks...")
-        # Only running data integrity checks on the training set to reduce the
-        # chance of any form of peaking at the test set
-        train_predictors = load_split_predictors(
-            path=path,
-            split="train",
-            include_id=True,
-            nrows=nrows,
-        )
-        data_s = Dataset(
-            df=train_predictors,
-            index_name="dw_ek_borger",
-            datetime_name="timestamp",
+    # Check train data integrity
+    if "train" in split_names:
+        failures = check_train_data_integrity(
+            feature_set_csv_dir=feature_set_csv_dir,
+            nrows=n_rows,
+            out_dir=out_dir,
+            outcome_checks_dir=outcome_checks_dir,
+            train_outcomes_df=train_outcomes_df,
         )
 
-        # Running checks that do not require a label
-        integ_suite = pruned_data_integrity_checks(
-            timeout=0,
-        )  # timeout=0 removes timeout
-        suite_results = integ_suite.run(data_s)
-        suite_results.save_as_html(str(out_dir / "data_integrity.html"))
-        failed_checks["data_integrity"] = get_name_of_failed_checks(suite_results)
+        # Add all keys in failures to failed_checks
+        for k, v in failures:
+            failed_checks[k] = v
 
-        train_outcomes = load_split_outcomes(path=path, split="train", nrows=nrows)
-        # Running checks that require a label for each outcome
-        label_checks = label_integrity_checks()
-        for outcome_column in train_outcomes.columns:
-            msg.info(f"Running data integrity for {outcome_column}")
-            data_s = Dataset(
-                df=train_predictors,
-                index_name="dw_ek_borger",
-                datetime_name="timestamp",
-                label=train_outcomes[outcome_column],
-            )
-            suite_results = label_checks.run(data_s)
-            suite_results.save_as_html(
-                str(outcome_checks_dir / f"{outcome_column}_check.html"),
-            )
-            failed_checks[f"{outcome_column}_check"] = get_name_of_failed_checks(
-                suite_results,
-            )
-
-        msg.good("Finshed data integrity checks!")
-
-    #####################
-    # SPLIT VALIDATION
-    #####################
-    msg.info("Running split validation...")
     # Running data validation checks on train/val and train/test splits that do not
     # require a label
-    validation_suite = custom_train_test_validation()
-
-    split_dict = {}
-    for split in splits:
-        predictors = load_split_predictors(
-            path=path,
-            split=split,
-            include_id=True,
-            nrows=nrows,
-        )
-        outcomes = load_split_outcomes(path=path, split=split, nrows=nrows)
-        data_s = Dataset(
-            df=predictors,
-            index_name="dw_ek_borger",
-            datetime_name="timestamp",
-        )
-        split_dict[split] = {
-            "predictors": predictors,
-            "outcomes": outcomes,
-            "ds": data_s,
-        }
-
-    suite_results = validation_suite.run(
-        split_dict["train"]["ds"],
-        split_dict["val"]["ds"],
+    run_validation_requiring_split_comparison(
+        feature_set_csv_dir=feature_set_csv_dir,
+        split_names=split_names,
+        n_rows=n_rows,
+        out_dir=out_dir,
+        train_outcome_df=train_outcomes_df,
     )
-    suite_results.save_as_html(str(out_dir / "train_val_integrity.html"))
-    failed_checks["train_val_integrity"] = get_name_of_failed_checks(suite_results)
 
-    suite_results = validation_suite.run(
-        split_dict["train"]["ds"],
-        split_dict["test"]["ds"],
-    )
-    suite_results.save_as_html(str(out_dir / "train_test_integrity.html"))
-    failed_checks["train_test_integrity"] = get_name_of_failed_checks(suite_results)
 
-    # Running checks that require a label for each outcome
-    label_split_check = label_split_checks()
-
-    for split, content in split_dict.items():
-        # don't check train/train
-        if split == "train":
-            continue
-        for outcome_column in train_outcomes:
-            msg.info(f"Running split validation for train/{split} and {outcome_column}")
-            train_ds = Dataset(
-                df=split_dict["train"]["predictors"],
-                index_name="dw_ek_borger",
-                datetime_name="timestamp",
-                label=split_dict["train"]["outcomes"][outcome_column],
-            )
-            split_ds = Dataset(
-                df=content["predictors"],
-                index_name="dw_ek_borger",
-                datetime_name="timestamp",
-                label=content["outcomes"][outcome_column],
-            )
-            suite_results = label_split_check.run(train_ds, split_ds)
-            suite_results.save_as_html(
-                str(outcome_checks_dir / f"train_{split}_{outcome_column}_check.html"),
-            )
-            failed_checks[
-                f"train_{split}_{outcome_column}_check"
-            ] = get_name_of_failed_checks(suite_results)
-
-        msg.good(f"All data checks done! Saved to {out_dir}")
-        if len(failed_checks.keys()) > 0:
-            msg.warn(f"Failed checks: {failed_checks}")
+__all__ = [
+    "check_train_data_integrity",
+    "custom_train_test_validation",
+    "get_failed_check_names",
+    "get_split_as_ds_dict",
+    "get_suite_results_for_split_pair_and_save_to_disk",
+    "label_integrity_checks",
+    "label_split_checks",
+    "pruned_data_integrity_checks",
+    "run_validation_requiring_split_comparison",
+]

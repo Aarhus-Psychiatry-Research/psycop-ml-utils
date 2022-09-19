@@ -11,8 +11,8 @@ def get_diagnosis_feature_spec(  # pylint: disable=dangerous-default-value
     """Create diagnosis feature combinations.
 
     Args:
-        lookbehind_days (list, optional): List of lookbehind days. Defaults to [365, 730, 1825, 9999].
-        resolve_multiple (list, optional): List of resolve multiple options. Defaults to ["mean", "max", "min"].
+        lookbehind_days (list, optional): list of lookbehind days. Defaults to [365, 730, 1825, 9999].
+        resolve_multiple (list, optional): list of resolve multiple options. Defaults to ["mean", "max", "min"].
         fallback (any, optional): Fallback value. Defaults to 0.
 
     Returns:
@@ -48,3 +48,8 @@ def get_diagnosis_feature_spec(  # pylint: disable=dangerous-default-value
         }
         for df in dfs
     ]
+
+
+__all__ = [
+    "get_diagnosis_feature_spec",
+]

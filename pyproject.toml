@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "psycopmlutils"
-version = "1.0.0"
+version = "1.0.1"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = ["Martin Bernstorff <martinbernstorff@gmail.com>"]
 classifiers = [
@@ -12,8 +12,6 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
 
@@ -22,7 +20,7 @@ classifiers = [
 pydantic = "1.9.*"
 
 # Other dependencies
-python = ">=3.8,<3.11"
+python = ">=3.9,<3.11"
 numpy = "1.*"
 scipy = "1.8.*"
 pandas = "1.4.*"
@@ -90,6 +88,6 @@ build-backend = "poetry.core.masonry.api"
 known_third_party = ["wandb"]
 
 [tool.pylint]
-load-plugins = "pylint.extensions.docparams"
-good-names = "df,p,f,d,e,n,k,i"
-disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments"
+load-plugins = "pylint.extensions.docparams,pylint.extensions.code_style,pylint.extensions.for_any_all,pylint.extensions.typing"
+good-names = "df,p,f,d,e,n,k,i,v"
+disable = "too-many-lines,line-too-long,missing-raises-doc,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments"

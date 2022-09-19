@@ -17,7 +17,6 @@ repos:
     rev: release-0.4.1
     hooks:
     - id: pybetter
-      args: ["--exclude", "B004"]
 
   - repo: https://github.com/bwhmather/ssort
     rev: v0.11.6

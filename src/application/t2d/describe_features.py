@@ -46,3 +46,16 @@ if __name__ == "__main__":
         path=feature_set_dir,
         predictor_dicts=PREDICTOR_LIST,
     )
+
+
+__all__ = [
+    "DIAGNOSIS_PREDICTORS",
+    "LAB_PREDICTORS",
+    "MEDICATION_PREDICTORS",
+    "PREDICTOR_LIST",
+    "feature_set_dir",
+    "feature_set_path",
+    "lookbehind_days",
+    "out_dir",
+    "resolve_multiple",
+]

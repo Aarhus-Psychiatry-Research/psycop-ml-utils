@@ -1,5 +1,8 @@
 """Functions for resolving multiple values in a time-series into a single
 value."""
+
+# pylint: disable=missing-function-docstring
+
 import catalogue
 from pandas import DataFrame, Series
 from scipy import stats
@@ -79,3 +82,17 @@ def get_change_in_value_per_day(grouped_df: DataFrame) -> DataFrame:
     return grouped_df.apply(
         lambda x: Series({"value": stats.linregress(x.val, x.timestamp_val)[0]}),
     )
+
+
+__all__ = [
+    "get_bool_in_group",
+    "get_change_in_value_per_day",
+    "get_count_in_group",
+    "get_earliest_value_in_group",
+    "get_latest_value_in_group",
+    "get_max_in_group",
+    "get_mean_in_group",
+    "get_min_in_group",
+    "get_sum_in_group",
+    "resolve_fns",
+]

@@ -1,7 +1,8 @@
 """Utilites for testing."""
 
+from collections.abc import Callable
 from io import StringIO
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -72,8 +73,8 @@ def assert_flattened_values_as_expected(
     direction: str,
     interval_days: float,
     resolve_multiple: Union[Callable, str],
-    expected_flattened_values: List,
-    values_colname: Union[str, List] = "value",
+    expected_flattened_values: list,
+    values_colname: Union[str, list] = "value",
     fallback: Any = np.NaN,
     df_as_str: Optional[bool] = True,
 ):
@@ -85,8 +86,8 @@ def assert_flattened_values_as_expected(
         direction (str): Whether to look ahead or behind
         interval_days (float): How far to look in direction
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
-        expected_flattened_values (List): A list of the expected values in the value column of the flattened df
-        values_colname (Optional[Union[str, List]]): Column name for the new values. Defaults to "val".
+        expected_flattened_values (list): A list of the expected values in the value column of the flattened df
+        values_colname (Optional[Union[str, list]]): Column name for the new values. Defaults to "val".
         fallback (Any): What to fill if no outcome within lookahead days. Defaults to 0.
         df_as_str (bool, optional): Whether the input dfs are strings. Defaults to True.
 
@@ -163,7 +164,7 @@ def assert_flattened_outcome_as_expected(
     prediction_times_df_str: str,
     outcome_df_str: str,
     lookahead_days: float,
-    expected_flattened_values: List,
+    expected_flattened_values: list,
     resolve_multiple: Union[Callable, str],
     values_colname: str = "value",
     fallback: Any = np.NaN,
@@ -176,7 +177,7 @@ def assert_flattened_outcome_as_expected(
         outcome_df_str (str): A string-representation of an outcome df.
         lookahead_days (float): How far ahead from the prediction time to look for
             outcomes.
-        expected_flattened_values (List): A list of the expected values in the value # noqa: DAR101
+        expected_flattened_values (list): A list of the expected values in the value # noqa: DAR101
             column of the flattened df.
         resolve_multiple (Callable): How to handle multiple values within the lookahead window.
             Takes a a function that takes a list as an argument and returns a float.
@@ -218,7 +219,7 @@ def assert_flattened_predictor_as_expected(
     predictor_df_str: str,
     lookbehind_days: float,
     resolve_multiple: Union[Callable, str],
-    expected_flattened_values: List,
+    expected_flattened_values: list,
     values_colname: str = "value",
     fallback: Any = np.NaN,
 ):
@@ -229,7 +230,7 @@ def assert_flattened_predictor_as_expected(
         predictor_df_str (str): A string-representation of the predictor df
         lookbehind_days (float): How far to look behind.
         resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes a a function that takes a list as an argument and returns a float.
-        expected_flattened_values (List): A list of the expected values in the value column of the flattened df.
+        expected_flattened_values (list): A list of the expected values in the value column of the flattened df.
         values_colname (str): Column name for the new values. Defaults to "val".
         fallback (Any): What to fill if no outcome within lookahead days. Defaults to np.NaN.
 
@@ -264,6 +265,7 @@ def assert_flattened_predictor_as_expected(
 
 @data_loaders.register("load_event_times")
 def load_event_times():
+    """Load event times."""
     event_times_str = """dw_ek_borger,timestamp,value,
                     1,2021-12-30 00:00:01, 1
                     1,2021-12-29 00:00:02, 2
@@ -272,14 +274,25 @@ def load_event_times():
     return str_to_df(event_times_str)
 
 
-def check_any_item_in_list_has_str(list_of_str: List, str_: str):
+def check_any_item_in_list_has_str(list_of_str: list, str_: str):
     """Check if any item in a list contains a string.
 
     Args:
-        list_of_str (List): A list of strings.
+        list_of_str (list): A list of strings.
         str_ (str): A string.
 
     Returns:
         bool: True if any item in the list contains the string.
     """
     return any(str_ in item for item in list_of_str)
+
+
+__all__ = [
+    "assert_flattened_outcome_as_expected",
+    "assert_flattened_predictor_as_expected",
+    "assert_flattened_values_as_expected",
+    "check_any_item_in_list_has_str",
+    "convert_cols_with_matching_colnames_to_datetime",
+    "load_event_times",
+    "str_to_df",
+]

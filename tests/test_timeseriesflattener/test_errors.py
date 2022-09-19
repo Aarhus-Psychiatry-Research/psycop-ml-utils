@@ -5,6 +5,8 @@ from utils_for_testing import str_to_df  # pylint: disable=import-error
 
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 
+# pylint: disable=missing-function-docstring
+
 
 def test_col_does_not_exist_in_prediction_times():
     prediction_times_str = """dw_ek_borger,
@@ -59,3 +61,10 @@ def test_duplicate_prediction_times():
         FlattenedDataset(
             prediction_times_df=str_to_df(prediction_times_df_str),
         )
+
+
+__all__ = [
+    "test_col_does_not_exist",
+    "test_col_does_not_exist_in_prediction_times",
+    "test_duplicate_prediction_times",
+]

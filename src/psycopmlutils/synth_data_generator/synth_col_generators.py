@@ -1,6 +1,7 @@
 """Column generators for synthetic data."""
 
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from collections.abc import Iterable
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -13,7 +14,7 @@ def create_outcome_values(
     n_samples: int,
     logistic_outcome_model: str,
     intercept: Optional[float] = 0,
-    noise_mean_sd: Optional[Tuple[float, float]] = (0, 1),
+    noise_mean_sd: Optional[tuple[float, float]] = (0, 1),
 ):
     """Create outcome values for a column.
 
@@ -22,7 +23,7 @@ def create_outcome_values(
         n_samples (int): Number of samples (rows) to generate.
         logistic_outcome_model (str): The statistical model used to generate outcome values, e.g. specified as'1*col_name+1*col_name2'.
         intercept (float, optional): The intercept of the logistic outcome model. Defaults to 0.
-        noise_mean_sd (Tuple[float, float], optional): Mean and sd of the noise.
+        noise_mean_sd (tuple[float, float], optional): Mean and sd of the noise.
             Increase SD to obtain more uncertain models.
 
     Returns:
@@ -53,7 +54,7 @@ def generate_text_data(
     sequence: str,
     tokenizer: Optional[Any] = None,
     model: Optional[Any] = None,
-) -> List[str]:
+) -> list[str]:
     """Generate text data.
 
     Args:
@@ -63,7 +64,7 @@ def generate_text_data(
         model (Optional[Any]): Huggingface model
 
     Returns:
-        List[str]: List of generated text data.
+        list[str]: list of generated text data.
     """
 
     tokenizer = (
@@ -98,7 +99,7 @@ def generate_text_data(
 def generate_col_from_specs(
     column_type: str,
     n_samples: int,
-    col_specs: Dict,
+    col_specs: dict,
     sequence: str,
     tokenizer: Optional[Any] = None,
     model: Optional[Any] = None,
@@ -108,7 +109,7 @@ def generate_col_from_specs(
     Args:
         column_type (str): Type of column to generate. Either uniform_int, text, or datetime_uniform.
         n_samples (int): Number of rows to generate.
-        col_specs (Dict): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
+        col_specs (dict): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         sequence (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
         tokenizer (Optional[Any]): Huggingface tokenizer.
         model (Optional[Any]): Huggingface model.
@@ -162,7 +163,7 @@ def generate_col_from_specs(
 
 
 def generate_data_columns(
-    predictors: Iterable[Dict],
+    predictors: Iterable[dict],
     n_samples: int,
     df: pd.DataFrame,
     text_prompt: Optional[str] = None,
@@ -170,7 +171,7 @@ def generate_data_columns(
     """Generate a dataframe with columns from the predictors iterable.
 
     Args:
-        predictors (Iterable[Dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
+        predictors (iter[dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         n_samples (int): Number of rows to generate.
         df (pd.DataFrame): Dataframe to append to
         text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
@@ -221,3 +222,11 @@ def generate_data_columns(
                 df[col_name] = df[col_name].clip(upper=col_props["max"])
 
     return df
+
+
+__all__ = [
+    "create_outcome_values",
+    "generate_col_from_specs",
+    "generate_data_columns",
+    "generate_text_data",
+]

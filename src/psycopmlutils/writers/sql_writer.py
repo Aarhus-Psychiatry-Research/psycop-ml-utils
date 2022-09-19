@@ -11,6 +11,7 @@ from wasabi import msg
 
 
 def chunker(seq, size):
+    """Yield successive n-sized chunks from seq."""
     # from http://stackoverflow.com/a/434328
     return (seq[pos : pos + size] for pos in range(0, len(seq), size))
 
@@ -93,3 +94,10 @@ def write_df_to_sql(
 
     conn.close()
     engine.dispose()
+
+
+__all__ = [
+    "chunker",
+    "insert_with_progress",
+    "write_df_to_sql",
+]

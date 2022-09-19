@@ -5,6 +5,8 @@ from utils_for_testing import str_to_df  # pylint: disable=import-error
 
 from psycopmlutils.loaders.non_numerical_coercer import multiply_inequalities_in_df
 
+# pylint: disable=missing-function-docstring
+
 
 def test_non_numerical_coercion():
     df_str = """dw_ek_borger,timestamp,value
@@ -32,3 +34,8 @@ def test_non_numerical_coercion():
 
     for col in df.columns:
         pd.testing.assert_series_equal(df[col], expected_df[col], check_dtype=False)
+
+
+__all__ = [
+    "test_non_numerical_coercion",
+]

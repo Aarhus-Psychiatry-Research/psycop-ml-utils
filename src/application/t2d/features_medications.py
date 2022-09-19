@@ -2,10 +2,20 @@
 
 
 def get_medication_feature_spec(  # pylint: disable=dangerous-default-value
-    lookbehind_days=None,
-    resolve_multiple=None,
+    lookbehind_days: int = None,
+    resolve_multiple: str = None,
     fallback=0,
 ):
+    """Get feature specification for T2D medications.
+
+    Args:
+        lookbehind_days (int, optional): Defaults to None.
+        resolve_multiple (str, optional): Defaults to None.
+        fallback (int, optional): Defaults to 0.
+
+    Returns:
+        list: Feature specification.
+    """
 
     if lookbehind_days is None:
         lookbehind_days = [365, 730, 1825, 9999]
@@ -22,3 +32,8 @@ def get_medication_feature_spec(  # pylint: disable=dangerous-default-value
             "allowed_nan_value_prop": 0.0,
         },
     ]
+
+
+__all__ = [
+    "get_medication_feature_spec",
+]

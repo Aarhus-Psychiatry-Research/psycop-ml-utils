@@ -1,13 +1,12 @@
 """Load text data from a database and featurise it using a tf-idf
 vectorizer."""
 
-
-# pylint: disable=E0211,E0213
+# pylint: disable=E0211,E0213,missing-function-docstring
 
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
-from typing import List, Optional, Set, Union
+from typing import Optional, Union
 
 import dill as pkl
 import pandas as pd
@@ -16,7 +15,7 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
-def get_all_valid_note_types() -> Set[str]:
+def get_all_valid_note_types() -> set[str]:
     """Returns a set of valid note types. Notice that 'Konklusion' is replaced
     by 'Vurdering/konklusion' in 2020, so make sure to use both. 'Ordination'
     was replaced by 'Ordination, Psykiatry' in 2022, but 'Ordination,
@@ -48,7 +47,7 @@ def get_all_valid_note_types() -> Set[str]:
 
 
 def _load_notes_for_year(
-    note_types: Union[str, List[str]],
+    note_types: Union[str, list[str]],
     year: str,
     view: Optional[str] = "FOR_SFI_fritekst_resultat_udfoert_i_psykiatrien_aendret",
     n_rows: Optional[int] = None,
@@ -120,7 +119,7 @@ def _huggingface_featurize(model_id: str) -> pd.DataFrame:
 
 def _load_and_featurize_notes_per_year(
     year: str,
-    note_types: Union[str, List[str]],
+    note_types: Union[str, list[str]],
     view: str,
     n_rows: int,
     featurizer: str,
@@ -129,7 +128,7 @@ def _load_and_featurize_notes_per_year(
     """Loads clinical notes and features them.
 
     Args:
-        note_types (Union[str, List[str]]): Which note types to load.
+        note_types (Union[str, list[str]]): Which note types to load.
         year (str): Which year to load
         view (str): Which view to load
         n_rows (int): How many rows to load
@@ -154,7 +153,7 @@ def _load_and_featurize_notes_per_year(
 
 
 def load_and_featurize_notes(
-    note_types: Union[str, List[str]],
+    note_types: Union[str, list[str]],
     featurizer: str,
     featurizer_kwargs: Optional[dict] = None,
     n_rows: Optional[int] = None,
@@ -164,7 +163,7 @@ def load_and_featurize_notes(
     model). Kwargs passed to.
 
     Args:
-        note_types (Union[str, List[str]]): Which note types to load. See
+        note_types (Union[str, list[str]]): Which note types to load. See
             `get_all_valid_note_types()` for valid note types.
         featurizer (str): Which featurizer to use. Either 'tf-idf' or 'huggingface' or
             `None` to return the raw text.
@@ -281,7 +280,7 @@ def load_aktuel_psykisk(
 
 @data_loaders.register("load_note_types")
 def load_arbitrary_notes(
-    note_names: Union[str, List[str]],
+    note_names: Union[str, list[str]],
     featurizer: str,
     n_rows: Optional[int] = None,
     featurizer_kwargs: Optional[dict] = None,
@@ -292,7 +291,7 @@ def load_arbitrary_notes(
     for tfidf, and "model_id" for huggingface).
 
     Args:
-        note_names (Union[str, List[str]]): Which note types to load. See
+        note_names (Union[str, list[str]]): Which note types to load. See
             `get_all_valid_note_types()` for a list of valid note types.
         featurizer (str): Which featurizer to use. Either 'tf-idf', 'huggingface', or None
         n_rows (Optional[int], optional): Number of rows to load. Defaults to None.
@@ -335,3 +334,13 @@ def load_synth_notes(featurizer: str) -> pd.DataFrame:
         )
 
     raise ValueError("Only tfidf featurizer supported for synth notes")
+
+
+__all__ = [
+    "get_all_valid_note_types",
+    "load_aktuel_psykisk",
+    "load_all_notes",
+    "load_and_featurize_notes",
+    "load_arbitrary_notes",
+    "load_synth_notes",
+]

@@ -9,7 +9,7 @@ from psycopmlutils.data_checks.flattened.feature_describer import (
 )
 from psycopmlutils.utils import generate_feature_colname
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, missing-function-docstring
 
 
 @pytest.fixture()
@@ -57,3 +57,11 @@ def test_generate_feature_description_row(df, predictor_dicts):
     generate_feature_description_row(series=df[column_name], predictor_dict=d)
 
     generate_feature_description_df(df, predictor_dicts)
+
+
+__all__ = [
+    "df",
+    "predictor_dicts",
+    "test_generate_feature_description_row",
+    "test_load_dataset",
+]

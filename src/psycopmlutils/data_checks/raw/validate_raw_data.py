@@ -1,7 +1,7 @@
 """Functions for validating raw data – in the sense of data returned from a
 loader."""
 import time
-from typing import List, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ def generate_column_description(series: pd.Series) -> dict:
         series (pd.Series): Series to describe.
 
     Returns:
-        dict: Dictionary with column description.
+        dict: dictionary with column description.
     """
 
     d = {
@@ -74,7 +74,7 @@ def highlight_large_deviation(
     threshold_ratio: float,
     baseline_column: str,
     variation_column: str,
-) -> List[str]:
+) -> list[str]:
     """Highlights rows where the 99th/1st percentile is x times the variation
     column larger/smaller than the baseline column (probably mean or median).
 
@@ -86,7 +86,7 @@ def highlight_large_deviation(
         Commonly 'std' or 'median_absolute_deviation'
 
     Returns:
-        List[str]: List of styles for each row.
+        list[str]: list of styles for each row.
     """
     above_threshold = pd.Series(data=False, index=series.index)
     lower_bound = series[baseline_column] - series[variation_column] * threshold_ratio
@@ -196,3 +196,12 @@ def validate_raw_data(
         print(
             f"The following checks failed - look through the generated reports!\n{failed_checks}",
         )
+
+
+__all__ = [
+    "generate_column_description",
+    "get_na_prob",
+    "highlight_large_deviation",
+    "median_absolute_deviation",
+    "validate_raw_data",
+]

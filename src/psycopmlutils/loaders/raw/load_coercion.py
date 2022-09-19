@@ -1,8 +1,8 @@
 """Loaders for coercion."""
 
-# pylint: disable = non-ascii-name
+# pylint: disable = non-ascii-name,missing-function-docstring
 
-from typing import Dict, List, Optional
+from typing import Optional
 
 import pandas as pd
 
@@ -54,14 +54,14 @@ def coercion_duration(
 
 
 def _concatenate_coercion(
-    coercion_types_list: List[Dict[str, str]],
+    coercion_types_list: list[dict[str, str]],
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
     """Aggregate multiple types of coercion with multiple reasons into one
     column.
 
     Args:
-        coercion_types_list (list): List of dictionaries containing a 'coercion_type' key and a 'reason_for_coercion' key. If keys not in dicts, they are set to None # noqa: DAR102
+        coercion_types_list (list): list of dictionaries containing a 'coercion_type' key and a 'reason_for_coercion' key. If keys not in dicts, they are set to None # noqa: DAR102
         n (int, optional): Number of rows to return. Defaults to None.
 
     Returns:
@@ -298,3 +298,26 @@ def ernæring(n_rows: Optional[int] = None) -> pd.DataFrame:
         coercion_type="Ernæring",
         n_rows=n_rows,
     )
+
+
+__all__ = [
+    "af_helbredsmæssige_grunde",
+    "anden_begrundelse",
+    "beroligende_medicin",
+    "bælte",
+    "coercion_duration",
+    "ect",
+    "ernæring",
+    "farlighed",
+    "fastholden",
+    "frihedsberøvelser",
+    "handsker",
+    "magtanvendelse",
+    "medicinering",
+    "nærliggende_fare",
+    "remme",
+    "tvangsbehandlinger",
+    "tvangsindlæggelse",
+    "tvangstilbageholdelse",
+    "urolig_tilstand",
+]

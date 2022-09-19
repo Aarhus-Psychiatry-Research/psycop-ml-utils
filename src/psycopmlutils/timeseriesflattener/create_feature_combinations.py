@@ -2,20 +2,20 @@
 are lists, and then creating each possible permutation."""
 
 import itertools
-from typing import Dict, List, Union
+from typing import Union
 
 
 def create_feature_combinations_from_dict(
-    d: Dict[str, Union[str, List]],
-) -> List[Dict[str, Union[str, float, int]]]:
+    d: dict[str, Union[str, list]],
+) -> list[dict[str, Union[str, float, int]]]:
     """Create feature combinations from a dictionary of feature specifications.
     Only unpacks the top level of lists.
 
     Args:
-        d (Dict[str]): A dictionary of feature specifications.
+        d (dict[str]): A dictionary of feature specifications.
 
     Returns:
-        List[Dict[str]]: List of all possible combinations of the arguments.
+        list[dict[str]]: list of all possible combinations of the arguments.
     """
 
     # Make all elements iterable
@@ -27,17 +27,17 @@ def create_feature_combinations_from_dict(
 
 
 def create_feature_combinations(
-    arg_sets: Union[List[Dict[str, Union[str, List]]], Dict[str, Union[str, List]]],
-) -> List[Dict[str, Union[str, float, int]]]:
+    arg_sets: Union[list[dict[str, Union[str, list]]], dict[str, Union[str, list]]],
+) -> list[dict[str, Union[str, float, int]]]:
     """Create feature combinations from a dictionary or list of dictionaries of
     feature specifications.
 
     Args:
-        arg_sets (Union[List[Dict[str, Union[str, List]]], Dict[str, Union[str, List]]]):
+        arg_sets (Union[list[dict[str, Union[str, list]]], dict[str, Union[str, list]]]):
             dict/list of dicts containing arguments for .add_predictor.
 
     Returns:
-        List[Dict[str, Union[str, float, int]]]: All possible combinations of
+        list[dict[str, Union[str, float, int]]]: All possible combinations of
             arguments.
 
     Example:
@@ -74,3 +74,9 @@ def create_feature_combinations(
     for arg_set in arg_sets:
         feature_combinations.extend(create_feature_combinations_from_dict(arg_set))
     return feature_combinations
+
+
+__all__ = [
+    "create_feature_combinations",
+    "create_feature_combinations_from_dict",
+]

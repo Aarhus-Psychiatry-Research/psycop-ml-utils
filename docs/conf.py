@@ -41,7 +41,7 @@ extensions = [
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
-# List of patterns, relative to source directory, that match files and
+# list of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
@@ -96,3 +96,20 @@ html_theme_options = {
     "navigation_with_keys": True,
     "top_of_page_button": "edit",
 }
+
+
+__all__ = [
+    "author",
+    "exclude_patterns",
+    "extensions",
+    "html_context",
+    "html_favicon",
+    "html_show_sourcelink",
+    "html_static_path",
+    "html_theme",
+    "html_theme_options",
+    "project",
+    "release",
+    "source_suffix",
+    "templates_path",
+]

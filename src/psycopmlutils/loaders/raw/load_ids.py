@@ -24,3 +24,8 @@ def load_ids(split: str, n_rows: Optional[int] = None) -> pd.DataFrame:
     df = sql_load(sql, database="USR_PS_FORSK", chunksize=None, n_rows=n_rows)
 
     return df.reset_index(drop=True)
+
+
+__all__ = [
+    "load_ids",
+]

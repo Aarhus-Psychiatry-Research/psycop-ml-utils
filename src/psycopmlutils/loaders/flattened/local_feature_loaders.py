@@ -25,22 +25,26 @@ def get_predictors(df: pd.DataFrame, include_id: bool) -> pd.DataFrame:
     return df.filter(regex=pred_regex)
 
 
-def load_split(path: Path, split: str, nrows: Optional[int] = None) -> pd.DataFrame:
+def load_split(
+    feature_set_csv_dir: Path,
+    split: str,
+    nrows: Optional[int] = None,
+) -> pd.DataFrame:
     """Loads a given data split as a dataframe from a directory.
 
     Args:
-        path (Path): Path to directory containing data files
+        feature_set_csv_dir (Path): Path to directory containing data files
         split (str): Which string to look for (e.g. 'train', 'val', 'test')
         nrows (Optional[int]): Whether to only load a subset of the data
 
     Returns:
         pd.DataFrame: The loaded dataframe
     """
-    return pd.read_csv(list(path.glob(f"*{split}*"))[0], nrows=nrows)
+    return pd.read_csv(list(feature_set_csv_dir.glob(f"*{split}*"))[0], nrows=nrows)
 
 
 def load_split_predictors(
-    path: Path,
+    feature_set_csv_dir: Path,
     split: str,
     include_id: bool,
     nrows: Optional[int] = None,
@@ -49,7 +53,7 @@ def load_split_predictors(
     directory.
 
     Args:
-        path (Path): Path to directory containing data files
+        feature_set_csv_dir (Path): Path to directory containing data files
         split (str): Which string to look for (e.g. 'train', 'val', 'test')
         include_id (bool): Whether to include 'dw_ek_borger' in the returned df
         nrows (Optional[int]): Whether to only load a subset of the data
@@ -57,7 +61,10 @@ def load_split_predictors(
     Returns:
         pd.DataFrame: The loaded dataframe
     """
-    return get_predictors(load_split(path, split, nrows=nrows), include_id)
+    return get_predictors(
+        load_split(feature_set_csv_dir, split, nrows=nrows),
+        include_id,
+    )
 
 
 def get_outcomes(df: pd.DataFrame) -> pd.DataFrame:
@@ -75,18 +82,27 @@ def get_outcomes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_split_outcomes(
-    path: Path,
+    feature_set_csv_dir: Path,
     split: str,
     nrows: Optional[int] = None,
 ) -> pd.DataFrame:
     """Loads outcomes from a given data split as a dataframe from a directory.
 
     Args:
-        path (Path): Path to directory containing data files
+        feature_set_csv_dir (Path): Path to directory containing data files
         split (str): Which string to look for (e.g. 'train', 'val', 'test')
         nrows (Optional[int]): Whether to only load a subset of the data
 
     Returns:
         pd.DataFrame: The loaded dataframe
     """
-    return get_outcomes(load_split(path, split, nrows=nrows))
+    return get_outcomes(load_split(feature_set_csv_dir, split, nrows=nrows))
+
+
+__all__ = [
+    "get_outcomes",
+    "get_predictors",
+    "load_split",
+    "load_split_outcomes",
+    "load_split_predictors",
+]
