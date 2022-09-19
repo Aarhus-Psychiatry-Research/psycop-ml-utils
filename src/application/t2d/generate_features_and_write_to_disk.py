@@ -7,7 +7,7 @@ maturity.
 import random
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 import pandas as pd
@@ -48,7 +48,10 @@ def log_to_wandb(predictor_combinations, save_dir, file_prefix):
     run.finish()
 
 
-def save_description_to_disk(predictor_combinations: list, flattened_csv_dir: Path):
+def create_and_save_feature_set_description_to_disk(
+    predictor_combinations: list,
+    flattened_csv_dir: Path,
+):
     """Describe output.
 
     Args:
@@ -147,12 +150,112 @@ def split_and_save_to_disk(
     return file_prefix
 
 
+def add_metadata(
+    outcome_loader_str: str,
+    pre_loaded_dfs: dict[str, pd.DataFrame],
+    flattened_df: FlattenedDataset,
+) -> FlattenedDataset:
+    """Add metadata.
+
+    Args:
+        outcome_loader_str (str): String to lookup in catalogue to load outcome.
+        pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
+        flattened_df (FlattenedDataset): Flattened dataset.
+
+    Returns:
+        FlattenedDataset: Flattened dataset.
+    """
+
+    # Add timestamp from outcomes
+    flattened_df.add_static_info(
+        info_df=pre_loaded_dfs[outcome_loader_str],
+        prefix="",
+        input_col_name="timestamp",
+        output_col_name="timestamp_first_t2d",
+    )
+
+    return flattened_df
+
+
+def add_outcomes(
+    outcome_loader_str: str,
+    pre_loaded_dfs: dict[str, pd.DataFrame],
+    flattened_df: FlattenedDataset,
+    lookahead_years: list[Union[int, float]],
+) -> FlattenedDataset:
+    """Add outcome.
+
+    Args:
+        outcome_loader_str (str): String to lookup in catalogue to load outcome.
+        pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
+        flattened_df (FlattenedDataset): Flattened dataset.
+        lookahead_years (list[Union[int, float]]): List of lookahead years.
+
+    Returns:
+        FlattenedDataset: Flattened dataset.
+    """
+
+    msg = Printer(timestamp=True)
+    msg.info("Adding outcome")
+
+    for i in lookahead_years:
+        lookahead_days = int(i * 365)
+        msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
+        flattened_df.add_temporal_outcome(
+            outcome_df=pre_loaded_dfs[outcome_loader_str],
+            lookahead_days=lookahead_days,
+            resolve_multiple="max",
+            fallback=0,
+            new_col_name="t2d",
+            incident=True,
+            dichotomous=True,
+        )
+
+    msg.good("Finished adding outcome")
+
+    return flattened_df
+
+
+def add_predictors(pre_loaded_dfs, predictor_combinations, flattened_df):
+    """Add predictors.
+
+    Args:
+        pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
+        predictor_combinations (list[dict[str, dict[str, Any]]]): List of predictor combinations.
+        flattened_df (FlattenedDataset): Flattened dataset.
+    """
+
+    msg = Printer(timestamp=True)
+
+    msg.info("Adding static predictors")
+    flattened_df.add_static_info(pre_loaded_dfs["sex_female"])
+    flattened_df.add_age(pre_loaded_dfs["birthdays"])
+
+    start_time = time.time()
+
+    msg.info("Adding temporal predictors")
+    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
+        predictors=predictor_combinations,
+        predictor_dfs=pre_loaded_dfs,
+    )
+
+    end_time = time.time()
+
+    # Finish
+    msg.good(
+        f"Finished adding {len(predictor_combinations)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
+    )
+
+    return flattened_df
+
+
 def create_flattened_dataset(
     outcome_loader_str: str,
     prediction_time_loader_str: str,
     pre_loaded_dfs: dict[str, pd.DataFrame],
     predictor_combinations: list[dict[str, dict[str, Any]]],
     proj_path: Path,
+    lookahead_years: list[Union[int, float]],
 ):
     """Create flattened dataset.
 
@@ -162,6 +265,7 @@ def create_flattened_dataset(
         pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
         predictor_combinations (list[dict[str, dict[str, Any]]]): List of predictor combinations.
         proj_path (Path): Path to project directory.
+        lookahead_years (list[Union[int,float]]): List of lookahead years.
 
     Returns:
         FlattenedDataset: Flattened dataset.
@@ -182,56 +286,28 @@ def create_flattened_dataset(
     )
 
     # Outcome
-    msg.info("Adding outcome")
-    for i in [1, 3, 5]:
-        lookahead_days = int(i * 365)
-        msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
-        flattened_df.add_temporal_outcome(
-            outcome_df=pre_loaded_dfs[outcome_loader_str],
-            lookahead_days=lookahead_days,
-            resolve_multiple="max",
-            fallback=0,
-            new_col_name="t2d",
-            incident=True,
-            dichotomous=True,
-        )
-
-    flattened_df.add_age(pre_loaded_dfs["birthdays"])
-
-    # Add timestamp from outcomes
-    flattened_df.add_static_info(
-        info_df=pre_loaded_dfs[prediction_time_loader_str],
-        prefix="",
-        input_col_name="timestamp",
-        output_col_name="timestamp_first_t2d",
-    )
-    msg.good("Finished adding outcome")
-
-    # Predictors
-    msg.info("Adding static predictors")
-    flattened_df.add_static_info(psycopmlutils.loaders.raw.sex_female())
-
-    start_time = time.time()
-
-    msg.info("Adding temporal predictors")
-
-    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=predictor_combinations,
-        predictor_dfs=pre_loaded_dfs,
+    flattened_df = add_outcomes(
+        pre_loaded_dfs=pre_loaded_dfs,
+        outcome_loader_str=outcome_loader_str,
+        flattened_df=flattened_df,
+        lookahead_years=lookahead_years,
     )
 
-    end_time = time.time()
+    flattened_df = add_predictors(
+        pre_loaded_dfs=pre_loaded_dfs,
+        predictor_combinations=predictor_combinations,
+        flattened_df=flattened_df,
+    )
 
-    # Finish
-    msg.good(
-        f"Finished adding {len(predictor_combinations)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
+    flattened_df = add_metadata(
+        pre_loaded_dfs=pre_loaded_dfs,
+        outcome_loader_str=outcome_loader_str,
+        flattened_df=flattened_df,
     )
 
     msg.info(
         f"Dataframe size is {int(flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 102)} MiB",
     )
-
-    msg.good("Done!")
 
     return flattened_df
 
@@ -307,6 +383,7 @@ def main(
     prediction_time_loader_str: str,
     outcome_loader_str: str,
     predictor_spec_list: list[dict[str, dict[str, Any]]],
+    lookahead_years: list[Union[int, float]],
 ):
     """Main function for loading, generating and evaluating a flattened
     dataset.
@@ -317,6 +394,7 @@ def main(
         prediction_time_loader_str (str): Key to lookup in data_loaders registry for prediction time dataframe.
         outcome_loader_str (str): Key to lookup in data_loaders registry for outcome dataframe.
         predictor_spec_list (list[dict[str, dict[str, Any]]]): List of predictor specs.
+        lookahead_years (list[Union[int,float]]): List of lookahead years.
     """
 
     predictor_combinations, proj_path, feature_set_id = setup_for_main(
@@ -337,6 +415,7 @@ def main(
         pre_loaded_dfs=pre_loaded_dfs,
         predictor_combinations=predictor_combinations,
         proj_path=proj_path,
+        lookahead_years=lookahead_years,
     )
 
     output_dir = create_save_dir(
@@ -356,7 +435,7 @@ def main(
         file_prefix=feature_set_id,
     )
 
-    save_description_to_disk(
+    create_and_save_feature_set_description_to_disk(
         predictor_combinations=predictor_combinations,
         flattened_csv_dir=output_dir,
     )
@@ -392,4 +471,5 @@ if __name__ == "__main__":
         proj_name="t2d",
         outcome_loader_str="t2d",
         prediction_time_loader_str="physical_visits_to_psychiatry",
+        lookahead_years=[1, 3, 5],
     )
