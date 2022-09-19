@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-5.0.2, furo 2022.06.21"/>
-        <title>psycopmlutils.model_performance.model_performance - psycop-ml-utils 1.0.0 documentation</title>
+        <title>psycopmlutils.model_performance.model_performance - psycop-ml-utils 1.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -129,7 +129,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index.html"><div class="brand">psycop-ml-utils 1.0.0 documentation</div></a>
+      <a href="../../../index.html"><div class="brand">psycop-ml-utils 1.0.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -214,7 +214,7 @@
 <span></span><span class="sd">&quot;&quot;&quot;Tools for calculating model performance metrics.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -230,10 +230,10 @@
 <span class="kn">from</span> <span class="nn">psycopmlutils.model_performance.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">add_metadata_cols</span><span class="p">,</span>
     <span class="n">aggregate_predictions</span><span class="p">,</span>
-    <span class="n">get_metadata_cols</span><span class="p">,</span>
     <span class="n">idx_to_class</span><span class="p">,</span>
     <span class="n">labels_to_int</span><span class="p">,</span>
     <span class="n">scores_to_probs</span><span class="p">,</span>
+    <span class="n">select_metadata_cols</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -241,40 +241,40 @@
     <span class="sd">&quot;&quot;&quot;Evaluators of model performance.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ModelPerformance.performance_metrics_from_df"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.model_performance.ModelPerformance.performance_metrics_from_df">[docs]</a>    <span class="k">def</span> <span class="nf">performance_metrics_from_df</span><span class="p">(</span>
-        <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">prediction_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">id2label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>  <span class="c1"># pylint: disable=redefined-outer-name</span>
-            <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+            <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
         <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">to_wide</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Calculate performance metrics from a dataframe.</span>
 
 <span class="sd">        Row-level performance is identified by the `level` column as &#39;overall&#39;.</span>
-<span class="sd">        If the class was instantiated with an id_col_name, id-level performance is added and identfied via the ´level´ column as &#39;id&#39;.</span>
+<span class="sd">        If the class was instantiated with an id_col_name, id-level performance is added and identified via the ´level´ column as &#39;id&#39;.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            df (pd.DataFrame): Dataframe with 1 row per prediction. # noqa: DAR102</span>
+<span class="sd">            prediction_df (pd.DataFrame): Dataframe with 1 row per prediction.</span>
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
-<span class="sd">            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
+<span class="sd">            metadata_col_names (Optional[list[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
 <span class="sd">                Each column should only contain 1 unique value. E.g. model_name, modality.. If set to &quot;all&quot; will auto-detect</span>
 <span class="sd">                metadata columns and add them all.</span>
-<span class="sd">            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
+<span class="sd">            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
 <span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            pd.Dataframe: Dataframe with performance metrics</span>
+<span class="sd">            pd.Dataframe: Dataframe with performance metrics.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">concat_axis</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">to_wide</span> <span class="k">else</span> <span class="mi">0</span>
 
-        <span class="n">performance</span> <span class="o">=</span> <span class="n">ModelPerformance</span><span class="o">.</span><span class="n">_evaluate_single_model</span><span class="p">(</span>
-            <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+        <span class="n">performance_description</span> <span class="o">=</span> <span class="n">ModelPerformance</span><span class="o">.</span><span class="n">_evaluate_single_model</span><span class="p">(</span>
+            <span class="n">prediction_df</span><span class="o">=</span><span class="n">prediction_df</span><span class="p">,</span>
             <span class="n">aggregate_by_id</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">prediction_col_name</span><span class="o">=</span><span class="n">prediction_col_name</span><span class="p">,</span>
             <span class="n">label_col_name</span><span class="o">=</span><span class="n">label_col_name</span><span class="p">,</span>
@@ -286,12 +286,13 @@
         <span class="k">if</span> <span class="n">id_col_name</span><span class="p">:</span>
             <span class="c1"># add identifier for row-level metrics</span>
             <span class="k">if</span> <span class="n">to_wide</span><span class="p">:</span>
-                <span class="n">performance</span> <span class="o">=</span> <span class="n">performance</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s2">&quot;row-&quot;</span><span class="p">)</span>
+                <span class="n">performance_description</span> <span class="o">=</span> <span class="n">performance_description</span><span class="o">.</span><span class="n">add_prefix</span><span class="p">(</span><span class="s2">&quot;row-&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">performance</span><span class="p">[</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;row&quot;</span>
+                <span class="n">performance_description</span><span class="p">[</span><span class="s2">&quot;level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;row&quot;</span>
+
             <span class="c1"># Calculate performance by id and add to the dataframe</span>
             <span class="n">performance_by_id</span> <span class="o">=</span> <span class="n">ModelPerformance</span><span class="o">.</span><span class="n">_evaluate_single_model</span><span class="p">(</span>
-                <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                <span class="n">prediction_df</span><span class="o">=</span><span class="n">prediction_df</span><span class="p">,</span>
                 <span class="n">aggregate_by_id</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">prediction_col_name</span><span class="o">=</span><span class="n">prediction_col_name</span><span class="p">,</span>
                 <span class="n">label_col_name</span><span class="o">=</span><span class="n">label_col_name</span><span class="p">,</span>
@@ -299,26 +300,35 @@
                 <span class="n">to_wide</span><span class="o">=</span><span class="n">to_wide</span><span class="p">,</span>
                 <span class="n">id2label</span><span class="o">=</span><span class="n">id2label</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="n">performance</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">performance</span><span class="p">,</span> <span class="n">performance_by_id</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="n">concat_axis</span><span class="p">)</span>
+
+            <span class="n">performance_description</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">performance_description</span><span class="p">,</span> <span class="n">performance_by_id</span><span class="p">],</span>
+                <span class="n">axis</span><span class="o">=</span><span class="n">concat_axis</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">metadata_col_names</span><span class="p">:</span>
             <span class="c1"># Add metadata if specified</span>
-            <span class="n">metadata</span> <span class="o">=</span> <span class="n">get_metadata_cols</span><span class="p">(</span>
-                <span class="n">df</span><span class="p">,</span>
-                <span class="n">metadata_col_names</span><span class="p">,</span>
-                <span class="n">skip</span><span class="o">=</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">,</span> <span class="n">label_col_name</span><span class="p">],</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">select_metadata_cols</span><span class="p">(</span>
+                <span class="n">df</span><span class="o">=</span><span class="n">prediction_df</span><span class="p">,</span>
+                <span class="n">metadata_cols</span><span class="o">=</span><span class="n">metadata_col_names</span><span class="p">,</span>
+                <span class="n">skip_cols</span><span class="o">=</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">,</span> <span class="n">label_col_name</span><span class="p">],</span>
             <span class="p">)</span>
-            <span class="n">performance</span> <span class="o">=</span> <span class="n">add_metadata_cols</span><span class="p">(</span><span class="n">performance</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">performance</span></div>
+
+            <span class="n">performance_description</span> <span class="o">=</span> <span class="n">add_metadata_cols</span><span class="p">(</span>
+                <span class="n">performance_description</span><span class="p">,</span>
+                <span class="n">metadata</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">performance_description</span></div>
 
 <div class="viewcode-block" id="ModelPerformance.performance_metrics_from_file"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.model_performance.ModelPerformance.performance_metrics_from_file">[docs]</a>    <span class="k">def</span> <span class="nf">performance_metrics_from_file</span><span class="p">(</span>
         <span class="n">jsonl_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">id2label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>  <span class="c1"># pylint: disable=redefined-outer-name</span>
-            <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+            <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
         <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">to_wide</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -329,10 +339,10 @@
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
-<span class="sd">            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
+<span class="sd">            metadata_col_names (Optional[list[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
 <span class="sd">                Each column should only contain 1 unique value. E.g. model_name, modality.. If set to &quot;all&quot; will auto-detect</span>
 <span class="sd">                metadata columns and add them all.</span>
-<span class="sd">            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
+<span class="sd">            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
 <span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
 
 <span class="sd">        Raises:</span>
@@ -350,7 +360,7 @@
             <span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="n">jsonl_path</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;records&quot;</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ModelPerformance</span><span class="o">.</span><span class="n">performance_metrics_from_df</span><span class="p">(</span>
-            <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">prediction_df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
             <span class="n">prediction_col_name</span><span class="o">=</span><span class="n">prediction_col_name</span><span class="p">,</span>
             <span class="n">label_col_name</span><span class="o">=</span><span class="n">label_col_name</span><span class="p">,</span>
             <span class="n">id_col_name</span><span class="o">=</span><span class="n">id_col_name</span><span class="p">,</span>
@@ -365,9 +375,9 @@
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">metadata_col_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">id2label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>  <span class="c1"># pylint: disable=redefined-outer-name</span>
-            <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+            <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
         <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">to_wide</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -382,8 +392,8 @@
 <span class="sd">            prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.</span>
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str, optional): Column name for the id, used for grouping.</span>
-<span class="sd">            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
-<span class="sd">            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
+<span class="sd">            metadata_col_names (Optional[list[str]], optional): Column(s) containing metadata to add to the performance dataframe.</span>
+<span class="sd">            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
 <span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
 
 
@@ -407,13 +417,13 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">dfs</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_evaluate_single_model</span><span class="p">(</span>  <span class="c1"># pylint: disable=too-many-locals</span>
-        <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">prediction_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">aggregate_by_id</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">prediction_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">label_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">to_wide</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-        <span class="n">id2label</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-outer-name</span>
+        <span class="n">id2label</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># pylint: disable=redefined-outer-name</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Calculate performance metrics from a dataframe. Optionally adds</span>
 <span class="sd">        aggregated performance by id.</span>
@@ -425,7 +435,7 @@
 <span class="sd">            label_col_name (str): column containing ground truth label</span>
 <span class="sd">            id_col_name (str): Column name for the id, used for grouping.</span>
 <span class="sd">            to_wide (bool): Whether to return performance as wide format.</span>
-<span class="sd">            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
+<span class="sd">            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            pd.Dataframe: Dataframe with performance metrics containing the columns</span>
@@ -435,25 +445,27 @@
         <span class="n">level_prefix</span> <span class="o">=</span> <span class="s2">&quot;id&quot;</span> <span class="k">if</span> <span class="n">aggregate_by_id</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">aggregate_by_id</span><span class="p">:</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="n">aggregate_predictions</span><span class="p">(</span>  <span class="c1"># pylint: disable=self-cls-assignment</span>
-                <span class="n">df</span><span class="p">,</span>
-                <span class="n">id_col_name</span><span class="p">,</span>
-                <span class="n">prediction_col_name</span><span class="p">,</span>
-                <span class="n">label_col_name</span><span class="p">,</span>
+            <span class="n">prediction_df</span> <span class="o">=</span> <span class="p">(</span>  <span class="c1"># pylint: disable=self-cls-assignment</span>
+                <span class="n">aggregate_predictions</span><span class="p">(</span>
+                    <span class="n">prediction_df</span><span class="p">,</span>
+                    <span class="n">id_col_name</span><span class="p">,</span>
+                    <span class="n">prediction_col_name</span><span class="p">,</span>
+                    <span class="n">label_col_name</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="c1"># get predicted labels</span>
-        <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
-            <span class="n">argmax_indices</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prediction_df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;float&quot;</span><span class="p">:</span>
+            <span class="n">argmax_indices</span> <span class="o">=</span> <span class="n">prediction_df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">id2label</span><span class="p">:</span>
                 <span class="n">predictions</span> <span class="o">=</span> <span class="n">idx_to_class</span><span class="p">(</span><span class="n">argmax_indices</span><span class="p">,</span> <span class="n">id2label</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">predictions</span> <span class="o">=</span> <span class="n">argmax_indices</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">])</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">prediction_df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">])</span>
 
         <span class="n">metrics</span> <span class="o">=</span> <span class="n">ModelPerformance</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span>
-            <span class="n">df</span><span class="p">[</span><span class="n">label_col_name</span><span class="p">],</span>
+            <span class="n">prediction_df</span><span class="p">[</span><span class="n">label_col_name</span><span class="p">],</span>
             <span class="n">predictions</span><span class="p">,</span>
             <span class="n">to_wide</span><span class="p">,</span>
             <span class="n">level_prefix</span><span class="p">,</span>
@@ -461,11 +473,11 @@
 
         <span class="c1"># calculate roc if binary model</span>
         <span class="c1"># convoluted way to take first element of scores column and test how how many items it contains</span>
-        <span class="n">first_score</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">take</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_score</span> <span class="o">=</span> <span class="n">prediction_df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">take</span><span class="p">([</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">first_score</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_score</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">label2id</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">id2label</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span> <span class="k">if</span> <span class="n">id2label</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="n">probs</span> <span class="o">=</span> <span class="n">scores_to_probs</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">])</span>
-            <span class="n">label_int</span> <span class="o">=</span> <span class="n">labels_to_int</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">label_col_name</span><span class="p">],</span> <span class="n">label2id</span><span class="p">)</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">scores_to_probs</span><span class="p">(</span><span class="n">prediction_df</span><span class="p">[</span><span class="n">prediction_col_name</span><span class="p">])</span>
+            <span class="n">label_int</span> <span class="o">=</span> <span class="n">labels_to_int</span><span class="p">(</span><span class="n">prediction_df</span><span class="p">[</span><span class="n">label_col_name</span><span class="p">],</span> <span class="n">label2id</span><span class="p">)</span>
             <span class="n">auc_df</span> <span class="o">=</span> <span class="n">ModelPerformance</span><span class="o">.</span><span class="n">calculate_roc_auc</span><span class="p">(</span>
                 <span class="n">label_int</span><span class="p">,</span>
                 <span class="n">probs</span><span class="p">,</span>
@@ -482,8 +494,8 @@
 
 <div class="viewcode-block" id="ModelPerformance.calculate_roc_auc"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.model_performance.ModelPerformance.calculate_roc_auc">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">calculate_roc_auc</span><span class="p">(</span>
-        <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span>
-        <span class="n">predicted</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+        <span class="n">predicted</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
         <span class="n">to_wide</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">add_level_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -494,8 +506,8 @@
 <span class="sd">        instead of label predictions</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            labels (Union[pd.Series, List]): True labels as 0 or 1</span>
-<span class="sd">            predicted (Union[pd.Series, List]): Predictions as values between 0 and 1</span>
+<span class="sd">            labels (Union[pd.Series, list]): True labels as 0 or 1</span>
+<span class="sd">            predicted (Union[pd.Series, list]): Predictions as values between 0 and 1</span>
 <span class="sd">            to_wide (bool): Whether to return roc_auc as wide format.</span>
 <span class="sd">            add_level_prefix (Optional[str]): Whether to add a prefix to the metric names.</span>
 <span class="sd">                Can be used to indicate aggregation level.</span>
@@ -527,8 +539,8 @@
 
 <div class="viewcode-block" id="ModelPerformance.compute_metrics"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.model_performance.ModelPerformance.compute_metrics">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span>
-        <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span>
-        <span class="n">predicted</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+        <span class="n">predicted</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]],</span>
         <span class="n">to_wide</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">add_level_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -536,8 +548,8 @@
 <span class="sd">        multiclass tasks.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            labels (Union[pd.Series, List]): True class</span>
-<span class="sd">            predicted (Union[pd.Series, List]): Predicted class</span>
+<span class="sd">            labels (Union[pd.Series, list]): True class</span>
+<span class="sd">            predicted (Union[pd.Series, list]): Predicted class</span>
 <span class="sd">            to_wide (bool): Whether to return performance as wide or long format</span>
 <span class="sd">            add_level_prefix (Optional[str]): Whether to add a prefix to the metric names.</span>
 <span class="sd">                Can be used to indicate aggregation level.</span>
@@ -664,6 +676,16 @@
         <span class="n">metadata_col_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">to_wide</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ModelPerformance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;binary_df&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;binary_res&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;id2label&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multiclass_df&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;multiclass_res&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
         </article>
       </div>

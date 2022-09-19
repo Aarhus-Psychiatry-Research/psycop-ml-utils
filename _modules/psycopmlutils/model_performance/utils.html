@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-5.0.2, furo 2022.06.21"/>
-        <title>psycopmlutils.model_performance.utils - psycop-ml-utils 1.0.0 documentation</title>
+        <title>psycopmlutils.model_performance.utils - psycop-ml-utils 1.0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=40978830699223671f4072448e654b5958f38b89" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
@@ -129,7 +129,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index.html"><div class="brand">psycop-ml-utils 1.0.0 documentation</div></a>
+      <a href="../../../index.html"><div class="brand">psycop-ml-utils 1.0.1 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -213,8 +213,6 @@
           <h1>Source code for psycopmlutils.model_performance.utils</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Utils for model performance.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">Series</span>
@@ -225,7 +223,7 @@
 <span class="sd">    floats for binary classification a list of floats of maximum length 2.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        scores (Union[Series[List[float]], Series[float]]): Series containing probabilities for each class or a list of floats for binary classification.</span>
+<span class="sd">        scores (Union[Series[list[float]], Series[float]]): Series containing probabilities for each class or a list of floats for binary classification.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Series: Probability of class 1</span>
@@ -239,7 +237,7 @@
 
 <div class="viewcode-block" id="labels_to_int"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.labels_to_int">[docs]</a><span class="k">def</span> <span class="nf">labels_to_int</span><span class="p">(</span>
     <span class="n">labels</span><span class="p">:</span> <span class="n">Series</span><span class="p">,</span>
-    <span class="n">label2id</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">label2id</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Series</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Converts label to int mapping. Only makes sense for binary models. If</span>
 <span class="sd">    already int will return as is.</span>
@@ -247,7 +245,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        labels (Union[Series[str], Series[int]]): Series containing labels.</span>
 <span class="sd">        Either as string (e.g. &quot;ASD&quot;) or as int.</span>
-<span class="sd">        label2id (dict[str, int]): Dictionary mapping the labels to 0 and 1</span>
+<span class="sd">        label2id (dict[str, int]): dictionary mapping the labels to 0 and 1</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Series: _description_</span>
@@ -288,31 +286,31 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="idx_to_class"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.idx_to_class">[docs]</a><span class="k">def</span> <span class="nf">idx_to_class</span><span class="p">(</span><span class="n">idx</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">mapping</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="idx_to_class"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.idx_to_class">[docs]</a><span class="k">def</span> <span class="nf">idx_to_class</span><span class="p">(</span><span class="n">idx</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">mapping</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Returns the label from an id2label mapping.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        idx (List[int]): index</span>
+<span class="sd">        idx (list[int]): index</span>
 <span class="sd">        mapping (dict): dictionary mapping index to label</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        List[str]: Labels matching the indices</span>
+<span class="sd">        list[str]: Labels matching the indices</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="nb">id</span><span class="p">]</span> <span class="k">for</span> <span class="nb">id</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_metadata_cols"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.get_metadata_cols">[docs]</a><span class="k">def</span> <span class="nf">get_metadata_cols</span><span class="p">(</span>
+<div class="viewcode-block" id="select_metadata_cols"><a class="viewcode-back" href="../../../api.model_performance.html#psycopmlutils.model_performance.utils.select_metadata_cols">[docs]</a><span class="k">def</span> <span class="nf">select_metadata_cols</span><span class="p">(</span>
     <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
-    <span class="n">cols</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-    <span class="n">skip</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">metadata_cols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">skip_cols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Extracts model metadata to a 1 row dataframe.</span>
+    <span class="sd">&quot;&quot;&quot;Selects columns with model metadata to a 1 row dataframe.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        df (pd.DataFrame): Dataframe with predictions and metadata.</span>
-<span class="sd">        cols (List[str]): Which columns contain metadata.</span>
-<span class="sd">            The columns should only contain a single value. If &quot;all&quot;, will add all metadata.</span>
-<span class="sd">        skip (List[str]): columns to definitely not include.</span>
+<span class="sd">        metadata_cols (list[str]): Which columns contain metadata.</span>
+<span class="sd">            The columns should only contain a single value. If &quot;all&quot;, will add all columns.</span>
+<span class="sd">        skip_cols (list[str]): Columns to definitely not include.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: If a metadata col contains more than a single unique value.</span>
@@ -323,34 +321,28 @@
 
     <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">cols</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata_cols</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">metadata_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">metadata_cols</span><span class="p">]</span>
 
-    <span class="c1"># if metadata not specified save all columns with only 1 unique value</span>
-    <span class="k">if</span> <span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
-            <span class="c1"># Necessary to skip predictions column if it is a list, otherwise errors</span>
-            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="n">n_unique</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">n_unique</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">skip_cols</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># If asked to add all metadata cols,</span>
+        <span class="c1"># Save all columns with only 1 unique value</span>
+        <span class="n">get_all</span> <span class="o">=</span> <span class="n">metadata_cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="n">is_metadata_col</span> <span class="o">=</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">metadata_cols</span>
+
+        <span class="k">if</span> <span class="n">get_all</span> <span class="ow">or</span> <span class="n">is_metadata_col</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">metadata</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="c1"># otherwise iterate over specified columns</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">all_columns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">all_columns</span><span class="p">:</span>
-                <span class="n">val</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The column &#39;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">&#39; contains more than one unique value.&quot;</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="n">metadata</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The metadata column &#39;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">&#39; is not contained in the data&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">is_metadata_col</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Meta-data </span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2"> contains more than 1 unique value.&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">continue</span>
+
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">([</span><span class="n">metadata</span><span class="p">])</span></div>
 
 
@@ -373,6 +365,16 @@
     <span class="n">meta_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_df</span><span class="p">)</span></div>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;add_metadata_cols&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;aggregate_predictions&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;idx_to_class&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;labels_to_int&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;scores_to_probs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;select_metadata_cols&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
         </article>
       </div>
