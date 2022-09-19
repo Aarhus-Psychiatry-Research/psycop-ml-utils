@@ -2,7 +2,7 @@
 df."""
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -85,16 +85,16 @@ def create_unicode_hist(series: pd.Series) -> pd.Series:
 
 def generate_feature_description_row(
     series: pd.Series,
-    predictor_dict: Dict[str, str],
-) -> Dict:
+    predictor_dict: dict[str, str],
+) -> dict:
     """Generate a row with feature description.
 
     Args:
         series (pd.Series): Series with data to describe.
-        predictor_dict (Dict[str, str]): Dictionary with predictor information.
+        predictor_dict (dict[str, str]): dictionary with predictor information.
 
     Returns:
-        Dict: Dictionary with feature description.
+        dict: dictionary with feature description.
     """
 
     d = {
@@ -121,13 +121,13 @@ def generate_feature_description_row(
 
 def generate_feature_description_df(
     df: pd.DataFrame,
-    predictor_dicts: List[Dict[str, str]],
+    predictor_dicts: list[dict[str, str]],
 ) -> pd.DataFrame:
     """Generate a data frame with feature descriptions.
 
     Args:
         df (pd.DataFrame): Data frame with data to describe.
-        predictor_dicts (List[Dict[str, str]]): List of dictionaries with predictor information.
+        predictor_dicts (list[dict[str, str]]): list of dictionaries with predictor information.
 
     Returns:
         pd.DataFrame: Data frame with feature descriptions.
@@ -158,15 +158,15 @@ def generate_feature_description_df(
 
 def create_feature_description_from_dir(
     path: Path,
-    predictor_dicts: List[Dict[str, str]],
-    splits: Optional[List[str]] = None,
+    predictor_dicts: list[dict[str, str]],
+    splits: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """Write a csv with feature descriptions in the directory.
 
     Args:
         path (Path): Path to directory with data frames.
-        predictor_dicts (List[Dict[str, str]]): List of dictionaries with predictor information.
-        splits (List[str]): List of splits to include in the description. Defaults to ["train"].
+        predictor_dicts (list[dict[str, str]]): list of dictionaries with predictor information.
+        splits (list[str]): list of splits to include in the description. Defaults to ["train"].
     """
     if splits is None:
         splits = ["train"]

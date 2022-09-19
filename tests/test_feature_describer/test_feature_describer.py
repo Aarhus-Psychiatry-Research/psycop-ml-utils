@@ -9,7 +9,7 @@ from psycopmlutils.data_checks.flattened.feature_describer import (
 )
 from psycopmlutils.utils import generate_feature_colname
 
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name, missing-function-docstring
 
 
 @pytest.fixture()

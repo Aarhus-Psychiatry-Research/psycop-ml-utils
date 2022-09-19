@@ -8,6 +8,8 @@ import pytest
 
 from psycopmlutils.model_performance import ModelPerformance
 
+# pylint: disable=missing-function-docstring
+
 
 @pytest.fixture(scope="function")
 def multiclass_df():
@@ -79,7 +81,7 @@ def test_multiclass_transform_from_dataframe(multiclass_df, multiclass_score_map
 
 def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
     res = ModelPerformance.performance_metrics_from_df(
-        df=binary_df,
+        prediction_df=binary_df,
         id_col_name="id",
         metadata_col_names="all",
         prediction_col_name="scores",
@@ -99,7 +101,7 @@ def test_binary_transform_from_dataframe(binary_df, binary_score_mapping):
 
 def test_binary_transform_from_dataframe_with_float(binary_float_df):
     res = ModelPerformance.performance_metrics_from_df(
-        df=binary_float_df,
+        prediction_df=binary_float_df,
         metadata_col_names="all",
         prediction_col_name="scores",
         label_col_name="label",

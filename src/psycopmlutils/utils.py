@@ -4,7 +4,7 @@ utilities. If this file grows, consider splitting it up.
 """
 
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import catalogue
 import pandas as pd
@@ -24,7 +24,7 @@ def format_dict_for_printing(d: dict) -> str:
     brackets.
 
     Args:
-        d (dict): Dictionary to format.
+        d (dict): dictionary to format.
 
     Returns:
         str: Formatted dictionary.
@@ -46,12 +46,12 @@ def format_dict_for_printing(d: dict) -> str:
 
 def generate_feature_colname(
     prefix: str,
-    out_col_name: Union[str, List[str]],
+    out_col_name: Union[str, list[str]],
     interval_days: int,
     resolve_multiple: str,
     fallback: str,
     loader_kwargs: Optional[dict] = None,
-) -> Union[str, List[str]]:
+) -> Union[str, list[str]]:
     """Generates standardized column name from feature collapse information.
 
     Args:
@@ -83,12 +83,12 @@ def generate_feature_colname(
     return col_name
 
 
-def df_contains_duplicates(df=pd.DataFrame, col_subset=List[str]):
+def df_contains_duplicates(df=pd.DataFrame, col_subset=list[str]):
     """Check if a dataframe contains duplicates.
 
     Args:
         df (pd.DataFrame): Dataframe to check.
-        col_subset (List[str]): Columns to check for duplicates.
+        col_subset (list[str]): Columns to check for duplicates.
 
     Returns:
         bool: True if duplicates are found.

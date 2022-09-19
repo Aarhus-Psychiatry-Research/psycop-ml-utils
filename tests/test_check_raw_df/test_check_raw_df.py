@@ -5,6 +5,8 @@ from utils_for_testing import str_to_df  # noqa pylint: disable=import-error
 
 from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 
+# pylint: disable=missing-function-docstring
+
 
 def test_raw_df_has_rows():
     df_str = """dw_ek_borger,timestamp,value

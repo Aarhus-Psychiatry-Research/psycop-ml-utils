@@ -90,6 +90,6 @@ build-backend = "poetry.core.masonry.api"
 known_third_party = ["wandb"]
 
 [tool.pylint]
-load-plugins = "pylint.extensions.docparams"
-good-names = "df,p,f,d,e,n,k,i"
-disable = "too-many-lines,line-too-long,missing-raises-doc,missing-function-docstring,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments"
+load-plugins = "pylint.extensions.docparams,pylint.extensions.code_style,pylint.extensions.for_any_all,pylint.extensions.typing"
+good-names = "df,p,f,d,e,n,k,i,v"
+disable = "too-many-lines,line-too-long,missing-raises-doc,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments"

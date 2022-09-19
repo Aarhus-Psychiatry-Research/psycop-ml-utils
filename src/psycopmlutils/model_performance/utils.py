@@ -1,7 +1,5 @@
 """Utils for model performance."""
 
-from typing import Dict, List
-
 import numpy as np
 import pandas as pd
 from pandas import Series
@@ -12,7 +10,7 @@ def scores_to_probs(scores: Series) -> Series:
     floats for binary classification a list of floats of maximum length 2.
 
     Args:
-        scores (Union[Series[List[float]], Series[float]]): Series containing probabilities for each class or a list of floats for binary classification.
+        scores (Union[Series[list[float]], Series[float]]): Series containing probabilities for each class or a list of floats for binary classification.
 
     Returns:
         Series: Probability of class 1
@@ -26,7 +24,7 @@ def scores_to_probs(scores: Series) -> Series:
 
 def labels_to_int(
     labels: Series,
-    label2id: Dict[str, int],
+    label2id: dict[str, int],
 ) -> Series:
     """Converts label to int mapping. Only makes sense for binary models. If
     already int will return as is.
@@ -34,7 +32,7 @@ def labels_to_int(
     Args:
         labels (Union[Series[str], Series[int]]): Series containing labels.
         Either as string (e.g. "ASD") or as int.
-        label2id (dict[str, int]): Dictionary mapping the labels to 0 and 1
+        label2id (dict[str, int]): dictionary mapping the labels to 0 and 1
 
     Returns:
         Series: _description_
@@ -75,31 +73,31 @@ def aggregate_predictions(
     )
 
 
-def idx_to_class(idx: List[int], mapping: dict) -> List[str]:
+def idx_to_class(idx: list[int], mapping: dict) -> list[str]:
     """Returns the label from an id2label mapping.
 
     Args:
-        idx (List[int]): index
+        idx (list[int]): index
         mapping (dict): dictionary mapping index to label
 
     Returns:
-        List[str]: Labels matching the indices
+        list[str]: Labels matching the indices
     """
     return [mapping[id] for id in idx]
 
 
-def get_metadata_cols(
+def select_metadata_cols(
     df: pd.DataFrame,
-    cols: List[str],
-    skip: List[str],
+    metadata_cols: list[str],
+    skip_cols: list[str],
 ) -> pd.DataFrame:
-    """Extracts model metadata to a 1 row dataframe.
+    """Selects columns with model metadata to a 1 row dataframe.
 
     Args:
         df (pd.DataFrame): Dataframe with predictions and metadata.
-        cols (List[str]): Which columns contain metadata.
-            The columns should only contain a single value. If "all", will add all metadata.
-        skip (List[str]): columns to definitely not include.
+        metadata_cols (list[str]): Which columns contain metadata.
+            The columns should only contain a single value. If "all", will add all columns.
+        skip_cols (list[str]): Columns to definitely not include.
 
     Raises:
         ValueError: If a metadata col contains more than a single unique value.
@@ -110,34 +108,21 @@ def get_metadata_cols(
 
     metadata = {}
 
-    if isinstance(cols, str):
-        cols = [cols]
+    if isinstance(metadata_cols, str):
+        metadata_cols = [metadata_cols]
 
-    # if metadata not specified save all columns with only 1 unique value
-    if cols[0] == "all":
-        for col in df.columns:
-            # Necessary to skip predictions column if it is a list, otherwise errors
-            if col in skip:
-                continue
-            n_unique = df[col].nunique()
-            if n_unique == 1:
+    for col in df.columns:
+        if col in skip_cols:
+            continue
+
+        # If asked to add all metadata cols,
+        # Save all columns with only 1 unique value
+        if metadata_cols[0] == "all" or col in metadata_cols:
+            if df[col].nunique() == 1:
                 metadata[col] = df[col].unique()[0]
-
-    # otherwise iterate over specified columns
-    else:
-        all_columns = df.columns
-        for col in cols:
-            if col in all_columns:
-                val = df[col].unique()
-                if len(val) > 1:
-                    raise ValueError(
-                        f"The column '{col}' contains more than one unique value.",
-                    )
-                metadata[col] = val[0]
             else:
-                raise ValueError(
-                    f"The metadata column '{col}' is not contained in the data",
-                )
+                raise ValueError(f"Meta-data {col} contains more than 1 unique value.")
+
     return pd.DataFrame.from_records([metadata])
 
 

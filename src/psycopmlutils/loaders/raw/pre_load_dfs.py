@@ -1,7 +1,7 @@
 """Pre-load dataframes to avoid duplicate loading."""
 
 from multiprocessing import Pool
-from typing import Dict, List, Union
+from typing import Union
 
 import pandas as pd
 from wasabi import Printer
@@ -15,7 +15,7 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
 
     Args:
         predictor_df (str): The name of the SQL database.
-        values_to_load (Dict): Which values to load for medications. Takes "all", "numerical" or "numerical_and_coerce". Defaults to None.
+        values_to_load (dict): Which values to load for medications. Takes "all", "numerical" or "numerical_and_coerce". Defaults to None.
 
     Returns:
         pd.DataFrame: The loaded dataframe.
@@ -39,11 +39,11 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
     return {predictor_df: df}
 
 
-def load_df_wrapper(predictor_dict: Dict[str, Union[str, float, int]]) -> pd.DataFrame:
+def load_df_wrapper(predictor_dict: dict[str, Union[str, float, int]]) -> pd.DataFrame:
     """Wrapper to load a dataframe from a dictionary.
 
     Args:
-        predictor_dict (Dict[str, Union[str, float, int]]): Dictionary where the key predictor_df maps to an SQL database.
+        predictor_dict (dict[str, Union[str, float, int]]): dictionary where the key predictor_df maps to an SQL database.
 
     Returns:
         pd.DataFrame: The loaded dataframe.
@@ -55,15 +55,15 @@ def load_df_wrapper(predictor_dict: Dict[str, Union[str, float, int]]) -> pd.Dat
 
 
 def pre_load_unique_dfs(
-    unique_predictor_dict_list: List[Dict[str, Union[str, float, int]]],
-) -> Dict[str, pd.DataFrame]:
+    unique_predictor_dict_list: list[dict[str, Union[str, float, int]]],
+) -> dict[str, pd.DataFrame]:
     """Pre-load unique dataframes to avoid duplicate loading.
 
     Args:
-        unique_predictor_dict_list (List[Dict[str, Union[str, float, int]]]): List of dictionaries where the key predictor_df maps to an SQL database.
+        unique_predictor_dict_list (list[dict[str, Union[str, float, int]]]): list of dictionaries where the key predictor_df maps to an SQL database.
 
     Returns:
-        Dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
+        dict[str, pd.DataFrame]: A dictionary with keys predictor_df and values the loaded dataframe.
     """
 
     # Get unique predictor_df values from predictor_dict_list

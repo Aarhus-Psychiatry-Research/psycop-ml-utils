@@ -1,6 +1,6 @@
 """Loaders for lab results loading."""
 
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -8,20 +8,22 @@ from psycopmlutils.loaders.non_numerical_coercer import multiply_inequalities_in
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
+# pylint: disable=missing-function-docstring
+
 
 def load_non_numerical_values_and_coerce_inequalities(
-    blood_sample_id: Union[str, List],
+    blood_sample_id: Union[str, list[str]],
     n_rows: Optional[int],
     view: str,
-    ineq2mult: Optional[Dict[str, float]] = None,
+    ineq2mult: Optional[dict[str, float]] = None,
 ) -> pd.DataFrame:
     """Load non-numerical values for a blood sample.
 
     Args:
-        blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
+        blood_sample_id (Union[str, list]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
         n_rows (Optional[int]): Number of rows to return. Defaults to None.
         view (str): The view to load from.
-        ineq2mult (Dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
+        ineq2mult (dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
 
     Returns:
         pd.DataFrame: A dataframe with the non-numerical values.
@@ -189,14 +191,14 @@ def load_all_values(
 
 
 def blood_sample(
-    blood_sample_id: Union[str, List],
+    blood_sample_id: Union[str, list],
     n_rows: Optional[int] = None,
     values_to_load: str = None,
 ) -> pd.DataFrame:
     """Load a blood sample.
 
     Args:
-        blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
+        blood_sample_id (Union[str, list]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
         n_rows: Number of rows to return. Defaults to None.
         values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to None, which is coerced to "all".
 

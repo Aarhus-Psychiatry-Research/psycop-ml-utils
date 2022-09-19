@@ -4,7 +4,9 @@ Is growing quite a bit, loaders may have to be split out into separate
 files (e.g. psychiatric, cardiovascular, metabolic etc.) over time.
 """
 
-from typing import List, Optional, Union
+# pylint: disable=missing-function-docstring
+
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -13,7 +15,7 @@ from psycopmlutils.utils import data_loaders
 
 
 def _load(
-    icd_code: Union[List[str], str],
+    icd_code: Union[list[str], str],
     source_timestamp_col_name: str,
     fct: str,
     output_col_name: Optional[str] = None,
@@ -24,7 +26,7 @@ def _load(
     beginning of their adiagnosekode string. Aggregates all that match.
 
     Args:
-        icd_code (Union[List[str], str]): Substring(s) to match diagnoses for. # noqa: DAR102
+        icd_code (Union[list[str], str]): Substring(s) to match diagnoses for. # noqa: DAR102
             Matches any diagnoses, whether a-diagnosis, b-diagnosis etc. If a list is passed, will
             count a diagnosis as a match if any of the icd_codes in the list match.
         source_timestamp_col_name (str): Name of the timestamp column in the SQL
@@ -99,7 +101,7 @@ def _load(
 
 
 def concat_from_physical_visits(
-    icd_codes: List[str],
+    icd_codes: list[str],
     output_col_name: str,
     wildcard_icd_code: Optional[bool] = False,
     n_rows: Optional[int] = None,
@@ -108,7 +110,7 @@ def concat_from_physical_visits(
     output_col_name and set to 1.
 
     Args:
-        icd_codes (List[str]): List of icd_codes. # noqa: DAR102
+        icd_codes (list[str]): list of icd_codes. # noqa: DAR102
         output_col_name (str): Output column name
         wildcard_icd_code (bool, optional): Whether to match on icd_codes* or icd_codes. Defaults to False.
         n_rows: Number of rows to return. Defaults to None.

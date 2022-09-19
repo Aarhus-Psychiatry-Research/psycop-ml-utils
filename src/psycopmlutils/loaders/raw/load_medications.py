@@ -1,11 +1,13 @@
 """Loaders for medications."""
-from typing import List, Optional
+from typing import Optional
 
 import pandas as pd
 from wasabi import msg
 
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
+
+# pylint: disable=missing-function-docstring
 
 
 def _load_one_source(
@@ -143,7 +145,7 @@ def load(
 
 def concat_medications(
     output_col_name: str,
-    atc_code_prefixes: List[str],
+    atc_code_prefixes: list[str],
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
     """Aggregate multiple blood_sample_ids (typically NPU-codes) into one
@@ -151,7 +153,7 @@ def concat_medications(
 
     Args:
         output_col_name (str): Name for new column.  # noqa: DAR102
-        atc_code_prefixes (List[str]): List of atc_codes.
+        atc_code_prefixes (list[str]): list of atc_codes.
         n_rows (int, optional): Number of atc_codes to aggregate. Defaults to None.
 
     Returns:

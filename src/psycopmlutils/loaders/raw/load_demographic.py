@@ -7,8 +7,10 @@ import pandas as pd
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
+# pylint: disable=missing-function-docstring
 
-@data_loaders.register("birthdays")
+
+@data_loaders.register("birthdays")  # noqa
 def birthdays(n_rows: Optional[int] = None) -> pd.DataFrame:
     view = "[FOR_kohorte_demografi_inkl_2021_feb2022]"
 

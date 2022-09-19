@@ -1,7 +1,7 @@
 """Tools for calculating model performance metrics."""
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -17,10 +17,10 @@ from sklearn.metrics import (
 from psycopmlutils.model_performance.utils import (
     add_metadata_cols,
     aggregate_predictions,
-    get_metadata_cols,
     idx_to_class,
     labels_to_int,
     scores_to_probs,
+    select_metadata_cols,
 )
 
 
@@ -28,40 +28,40 @@ class ModelPerformance:
     """Evaluators of model performance."""
 
     def performance_metrics_from_df(
-        df: pd.DataFrame,
+        prediction_df: pd.DataFrame,
         prediction_col_name: str,
         label_col_name: str,
         id_col_name: Optional[str] = None,
-        metadata_col_names: Optional[List[str]] = None,
+        metadata_col_names: Optional[list[str]] = None,
         id2label: Optional[  # pylint: disable=redefined-outer-name
-            Dict[int, str]
+            dict[int, str]
         ] = None,
         to_wide: Optional[bool] = False,
     ) -> pd.DataFrame:
         """Calculate performance metrics from a dataframe.
 
         Row-level performance is identified by the `level` column as 'overall'.
-        If the class was instantiated with an id_col_name, id-level performance is added and identfied via the ´level´ column as 'id'.
+        If the class was instantiated with an id_col_name, id-level performance is added and identified via the ´level´ column as 'id'.
 
         Args:
-            df (pd.DataFrame): Dataframe with 1 row per prediction. # noqa: DAR102
+            prediction_df (pd.DataFrame): Dataframe with 1 row per prediction.
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
-            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
+            metadata_col_names (Optional[list[str]], optional): Column(s) containing metadata to add to the performance dataframe.
                 Each column should only contain 1 unique value. E.g. model_name, modality.. If set to "all" will auto-detect
                 metadata columns and add them all.
-            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
+            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
             to_wide (bool): Whether to return performance as wide format.
 
         Returns:
-            pd.Dataframe: Dataframe with performance metrics
+            pd.Dataframe: Dataframe with performance metrics.
         """
 
         concat_axis = 1 if to_wide else 0
 
-        performance = ModelPerformance._evaluate_single_model(
-            df=df,
+        performance_description = ModelPerformance._evaluate_single_model(
+            prediction_df=prediction_df,
             aggregate_by_id=False,
             prediction_col_name=prediction_col_name,
             label_col_name=label_col_name,
@@ -73,12 +73,13 @@ class ModelPerformance:
         if id_col_name:
             # add identifier for row-level metrics
             if to_wide:
-                performance = performance.add_prefix("row-")
+                performance_description = performance_description.add_prefix("row-")
             else:
-                performance["level"] = "row"
+                performance_description["level"] = "row"
+
             # Calculate performance by id and add to the dataframe
             performance_by_id = ModelPerformance._evaluate_single_model(
-                df=df,
+                prediction_df=prediction_df,
                 aggregate_by_id=True,
                 prediction_col_name=prediction_col_name,
                 label_col_name=label_col_name,
@@ -86,26 +87,35 @@ class ModelPerformance:
                 to_wide=to_wide,
                 id2label=id2label,
             )
-            performance = pd.concat([performance, performance_by_id], axis=concat_axis)
+
+            performance_description = pd.concat(
+                [performance_description, performance_by_id],
+                axis=concat_axis,
+            )
 
         if metadata_col_names:
             # Add metadata if specified
-            metadata = get_metadata_cols(
-                df,
-                metadata_col_names,
-                skip=[prediction_col_name, label_col_name],
+            metadata = select_metadata_cols(
+                df=prediction_df,
+                metadata_cols=metadata_col_names,
+                skip_cols=[prediction_col_name, label_col_name],
             )
-            performance = add_metadata_cols(performance, metadata)
-        return performance
+
+            performance_description = add_metadata_cols(
+                performance_description,
+                metadata,
+            )
+
+        return performance_description
 
     def performance_metrics_from_file(
         jsonl_path: Union[str, Path],
         prediction_col_name: str,
         label_col_name: str,
         id_col_name: Optional[str] = None,
-        metadata_col_names: Optional[List[str]] = None,
+        metadata_col_names: Optional[list[str]] = None,
         id2label: Optional[  # pylint: disable=redefined-outer-name
-            Dict[int, str]
+            dict[int, str]
         ] = None,
         to_wide: Optional[bool] = False,
     ) -> pd.DataFrame:
@@ -116,10 +126,10 @@ class ModelPerformance:
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
-            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
+            metadata_col_names (Optional[list[str]], optional): Column(s) containing metadata to add to the performance dataframe.
                 Each column should only contain 1 unique value. E.g. model_name, modality.. If set to "all" will auto-detect
                 metadata columns and add them all.
-            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
+            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
             to_wide (bool): Whether to return performance as wide format.
 
         Raises:
@@ -137,7 +147,7 @@ class ModelPerformance:
             )
         df = pd.read_json(jsonl_path, orient="records", lines=True)
         return ModelPerformance.performance_metrics_from_df(
-            df=df,
+            prediction_df=df,
             prediction_col_name=prediction_col_name,
             label_col_name=label_col_name,
             id_col_name=id_col_name,
@@ -152,9 +162,9 @@ class ModelPerformance:
         prediction_col_name: str,
         label_col_name: str,
         id_col_name: Optional[str] = None,
-        metadata_col_names: Optional[List[str]] = None,
+        metadata_col_names: Optional[list[str]] = None,
         id2label: Optional[  # pylint: disable=redefined-outer-name
-            Dict[int, str]
+            dict[int, str]
         ] = None,
         to_wide=False,
     ) -> pd.DataFrame:
@@ -169,8 +179,8 @@ class ModelPerformance:
             prediction_col_name (str): column containing probabilities for each class or a list of floats for binary classification.
             label_col_name (str): column containing ground truth label
             id_col_name (str, optional): Column name for the id, used for grouping.
-            metadata_col_names (Optional[List[str]], optional): Column(s) containing metadata to add to the performance dataframe.
-            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
+            metadata_col_names (Optional[list[str]], optional): Column(s) containing metadata to add to the performance dataframe.
+            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
             to_wide (bool): Whether to return performance as wide format.
 
 
@@ -194,13 +204,13 @@ class ModelPerformance:
         return pd.concat(dfs)
 
     def _evaluate_single_model(  # pylint: disable=too-many-locals
-        df: pd.DataFrame,
+        prediction_df: pd.DataFrame,
         aggregate_by_id: bool,
         prediction_col_name: str,
         label_col_name: str,
         id_col_name: str,
         to_wide: bool,
-        id2label: Dict[int, str] = None,  # pylint: disable=redefined-outer-name
+        id2label: dict[int, str] = None,  # pylint: disable=redefined-outer-name
     ) -> pd.DataFrame:
         """Calculate performance metrics from a dataframe. Optionally adds
         aggregated performance by id.
@@ -212,7 +222,7 @@ class ModelPerformance:
             label_col_name (str): column containing ground truth label
             id_col_name (str): Column name for the id, used for grouping.
             to_wide (bool): Whether to return performance as wide format.
-            id2label (Dict[int, str]): Dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
+            id2label (dict[int, str]): dict mapping indices to labels. Not needed for binary models if labels are 0 and 1. Defaults to None.
 
         Returns:
             pd.Dataframe: Dataframe with performance metrics containing the columns
@@ -222,25 +232,27 @@ class ModelPerformance:
         level_prefix = "id" if aggregate_by_id else None
 
         if aggregate_by_id:
-            df = aggregate_predictions(  # pylint: disable=self-cls-assignment
-                df,
-                id_col_name,
-                prediction_col_name,
-                label_col_name,
+            prediction_df = (  # pylint: disable=self-cls-assignment
+                aggregate_predictions(
+                    prediction_df,
+                    id_col_name,
+                    prediction_col_name,
+                    label_col_name,
+                )
             )
 
         # get predicted labels
-        if df[prediction_col_name].dtype != "float":
-            argmax_indices = df[prediction_col_name].apply(np.argmax)
+        if prediction_df[prediction_col_name].dtype != "float":
+            argmax_indices = prediction_df[prediction_col_name].apply(np.argmax)
             if id2label:
                 predictions = idx_to_class(argmax_indices, id2label)
             else:
                 predictions = argmax_indices
         else:
-            predictions = np.round(df[prediction_col_name])
+            predictions = np.round(prediction_df[prediction_col_name])
 
         metrics = ModelPerformance.compute_metrics(
-            df[label_col_name],
+            prediction_df[label_col_name],
             predictions,
             to_wide,
             level_prefix,
@@ -248,11 +260,11 @@ class ModelPerformance:
 
         # calculate roc if binary model
         # convoluted way to take first element of scores column and test how how many items it contains
-        first_score = df[prediction_col_name].take([0]).values[0]
+        first_score = prediction_df[prediction_col_name].take([0]).values[0]
         if isinstance(first_score, float) or len(first_score) == 2:
             label2id = {v: k for k, v in id2label.items()} if id2label else None
-            probs = scores_to_probs(df[prediction_col_name])
-            label_int = labels_to_int(df[label_col_name], label2id)
+            probs = scores_to_probs(prediction_df[prediction_col_name])
+            label_int = labels_to_int(prediction_df[label_col_name], label2id)
             auc_df = ModelPerformance.calculate_roc_auc(
                 label_int,
                 probs,
@@ -269,8 +281,8 @@ class ModelPerformance:
 
     @staticmethod
     def calculate_roc_auc(
-        labels: Union[pd.Series, List],
-        predicted: Union[pd.Series, List],
+        labels: Union[pd.Series, list],
+        predicted: Union[pd.Series, list],
         to_wide: bool,
         add_level_prefix: Optional[str] = None,
     ) -> pd.DataFrame:
@@ -281,8 +293,8 @@ class ModelPerformance:
         instead of label predictions
 
         Args:
-            labels (Union[pd.Series, List]): True labels as 0 or 1
-            predicted (Union[pd.Series, List]): Predictions as values between 0 and 1
+            labels (Union[pd.Series, list]): True labels as 0 or 1
+            predicted (Union[pd.Series, list]): Predictions as values between 0 and 1
             to_wide (bool): Whether to return roc_auc as wide format.
             add_level_prefix (Optional[str]): Whether to add a prefix to the metric names.
                 Can be used to indicate aggregation level.
@@ -314,8 +326,8 @@ class ModelPerformance:
 
     @staticmethod
     def compute_metrics(
-        labels: Union[pd.Series, List],
-        predicted: Union[pd.Series, List[Union[str, int]]],
+        labels: Union[pd.Series, list],
+        predicted: Union[pd.Series, list[Union[str, int]]],
         to_wide: bool,
         add_level_prefix: Optional[str] = None,
     ) -> pd.DataFrame:
@@ -323,8 +335,8 @@ class ModelPerformance:
         multiclass tasks.
 
         Args:
-            labels (Union[pd.Series, List]): True class
-            predicted (Union[pd.Series, List]): Predicted class
+            labels (Union[pd.Series, list]): True class
+            predicted (Union[pd.Series, list]): Predicted class
             to_wide (bool): Whether to return performance as wide or long format
             add_level_prefix (Optional[str]): Whether to add a prefix to the metric names.
                 Can be used to indicate aggregation level.

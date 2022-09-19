@@ -1,4 +1,6 @@
 """Tests of resolve_multiple strategies."""
+# pylint: disable=missing-function-docstring
+
 import numpy as np
 
 from psycopmlutils.timeseriesflattener.resolve_multiple_functions import (  # noqa pylint: disable=unused-import
@@ -15,6 +17,7 @@ from tests.helpers.utils_for_testing import (  # pylint: disable=import-error
 
 
 def test_resolve_multiple_catalogue():
+    """Test that resolve_multiple functions can be retrieved from catalogue."""
     prediction_times_str = """dw_ek_borger,timestamp,
                             1,2021-12-31 00:00:00
                             """

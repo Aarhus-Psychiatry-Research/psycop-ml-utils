@@ -1,5 +1,7 @@
 """Tests for feature_combination creation."""
 
+# pylint: disable=missing-function-docstring
+
 from psycopmlutils.timeseriesflattener.create_feature_combinations import (
     create_feature_combinations,
 )

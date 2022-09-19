@@ -1,6 +1,5 @@
 """Train a TF-IDF featurizer on train set of all clinical notes."""
 from pathlib import Path
-from typing import List, Tuple
 
 import dill as pkl
 import pandas as pd
@@ -13,7 +12,7 @@ from psycopmlutils.utils import FEATURIZERS_PATH
 
 
 def create_tfidf_vectorizer(
-    ngram_range: Tuple[int, int] = (1, 2),
+    ngram_range: tuple[int, int] = (1, 2),
     max_df: float = 0.95,
     min_df: float = 0.01,
     max_features: int = 100,
@@ -41,7 +40,7 @@ def create_tfidf_vectorizer(
     )
 
 
-def whitespace_tokenizer(string: str) -> List[str]:
+def whitespace_tokenizer(string: str) -> list[str]:
     """Whitespace tokenizer."""
     return string.split(" ")
 

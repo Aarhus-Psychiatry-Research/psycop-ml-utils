@@ -5,10 +5,20 @@ import numpy as np
 
 def get_lab_feature_spec(  # pylint: disable=dangerous-default-value
     # Not a problem since the function is only called once.
-    lookbehind_days=None,
-    resolve_multiple=None,
+    lookbehind_days: int = None,
+    resolve_multiple: str = None,
     values_to_load="all",
-):
+) -> list:
+    """Get feature specification for T2D blood samples.
+
+    Args:
+        lookbehind_days (int, optional): Defaults to None.
+        resolve_multiple (str, optional): Defaults to None.
+        values_to_load (str, optional): Defaults to "all".
+
+    Returns:
+        list: Feature specification.
+    """
 
     if lookbehind_days is None:
         lookbehind_days = [

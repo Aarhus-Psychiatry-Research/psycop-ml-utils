@@ -2,7 +2,8 @@
 
 import urllib
 import urllib.parse
-from typing import Generator, Optional, Union
+from collections.abc import Generator
+from typing import Optional, Union
 
 import pandas as pd
 from sqlalchemy import create_engine

@@ -1,5 +1,7 @@
 """Loaders for T2D outcomes."""
 
+# pylint: disable=missing-function-docstring
+
 from typing import Optional
 
 import pandas as pd

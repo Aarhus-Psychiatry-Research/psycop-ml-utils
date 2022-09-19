@@ -1,5 +1,8 @@
 """Functions for resolving multiple values in a time-series into a single
 value."""
+
+# pylint: disable=missing-function-docstring
+
 import catalogue
 from pandas import DataFrame, Series
 from scipy import stats
