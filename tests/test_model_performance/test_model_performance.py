@@ -1,3 +1,6 @@
+"""Tests of the model performance module."""
+# pylint: disable=redefined-outer-name
+
 from pathlib import Path
 
 import pandas as pd

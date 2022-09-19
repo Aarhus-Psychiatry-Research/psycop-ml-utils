@@ -1,3 +1,4 @@
+"""Tests of the feature describer module."""
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,10 +9,12 @@ from psycopmlutils.data_checks.flattened.feature_describer import (
 )
 from psycopmlutils.utils import generate_feature_colname
 
+# pylint: disable=redefined-outer-name
+
 
 @pytest.fixture()
 def predictor_dicts():
-    PREDICTOR_DICTS = [
+    predictor_dicts = [
         {
             "predictor_df": "hba1c",
             "lookbehind_days": 100,
@@ -26,7 +29,7 @@ def predictor_dicts():
         },
     ]
 
-    return PREDICTOR_DICTS
+    return predictor_dicts
 
 
 @pytest.fixture()

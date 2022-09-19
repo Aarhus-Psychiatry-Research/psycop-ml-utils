@@ -1,3 +1,5 @@
+"""Tests for generating tf-idf vocabulary."""
+
 from pathlib import Path
 
 import dill as pkl

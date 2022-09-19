@@ -1,16 +1,16 @@
 """Check that any raw df conforms to the required format."""
 
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 
 
-def check_raw_df(
+def check_raw_df(  # pylint: disable=too-many-branches
     df: pd.DataFrame,
-    required_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
-    subset_duplicates_columns: List[str] = ["dw_ek_borger", "timestamp", "value"],
+    required_columns: Optional[List[str]] = None,
+    subset_duplicates_columns: Optional[List[str]] = None,
     allowed_nan_value_prop: float = 0.0,
-    expected_val_dtypes: List[str] = ["float64", "int64"],
+    expected_val_dtypes: Optional[List[str]] = None,
     raise_error: bool = True,
 ) -> List[str]:
     """Check that the raw df conforms to the required format and doesn't
@@ -31,6 +31,15 @@ def check_raw_df(
         ValueError: If the df fails the checks and raise_error is True.
     """
     source_failures = []
+
+    if required_columns is None:
+        required_columns = ["dw_ek_borger", "timestamp", "value"]
+
+    if subset_duplicates_columns is None:
+        subset_duplicates_columns = ["dw_ek_borger", "timestamp", "value"]
+
+    if expected_val_dtypes is None:
+        expected_val_dtypes = ["float64", "int64"]
 
     # Check that the dataframe has a meaningful length
     if df.shape[0] == 0:

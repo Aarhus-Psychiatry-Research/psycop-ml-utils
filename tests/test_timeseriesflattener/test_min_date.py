@@ -1,5 +1,9 @@
+"""Tests of the min_date argument in the FlattenedDataset class.
+
+May want to refactor into a test_flattened_dataset module.
+"""
 import pandas as pd
-from utils_for_testing import str_to_df
+from utils_for_testing import str_to_df  # pylint: disable=import-error
 
 from psycopmlutils.timeseriesflattener import FlattenedDataset
 

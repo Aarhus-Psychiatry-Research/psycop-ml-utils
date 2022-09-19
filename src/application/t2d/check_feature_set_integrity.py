@@ -1,3 +1,5 @@
+"""Example for how to check feature set integrity."""
+
 from pathlib import Path
 
 from psycopmlutils.data_checks.flattened.data_integrity import (

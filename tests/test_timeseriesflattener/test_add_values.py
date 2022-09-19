@@ -1,17 +1,23 @@
+"""Tests for adding values to a flattened dataset."""
+
 import numpy as np
 import pandas as pd
 import pytest
-from utils_for_testing import (
+from utils_for_testing import (  # pylint: disable=import-error
     assert_flattened_outcome_as_expected,
     assert_flattened_predictor_as_expected,
     str_to_df,
 )
 
-from psycopmlutils.loaders.raw.load_text import LoadText  # noqa
+from psycopmlutils.loaders.raw.load_text import (  # noqa pylint: disable=unused-import
+    load_synth_notes,
+)
 from psycopmlutils.timeseriesflattener import (
     FlattenedDataset,
     create_feature_combinations,
 )
+
+# pylint: disable=import-error
 from tests.test_data.test_tfidf.test_tfidf_vocab import TEST_TFIDF_VOCAB
 
 
@@ -412,7 +418,7 @@ def test_add_temporal_predictors_then_temporal_outcome():
         n_workers=4,
     )
 
-    PREDICTOR_LIST = create_feature_combinations(
+    predictor_spec_list = create_feature_combinations(
         [
             {
                 "predictor_df": "predictors",
@@ -424,7 +430,7 @@ def test_add_temporal_predictors_then_temporal_outcome():
     )
 
     flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_LIST,
+        predictors=predictor_spec_list,
         predictor_dfs={"predictors": predictors_df},
     )
 
@@ -505,7 +511,7 @@ def test_add_text_data():
         n_workers=4,
     )
 
-    PREDICTOR_LIST = create_feature_combinations(
+    predictor_list = create_feature_combinations(
         [
             {
                 "predictor_df": "synth_notes",
@@ -519,7 +525,7 @@ def test_add_text_data():
     )
 
     flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictors=PREDICTOR_LIST,
+        predictors=predictor_list,
     )
 
     outcome_df = flattened_dataset.df

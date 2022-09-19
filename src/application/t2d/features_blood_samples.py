@@ -1,11 +1,26 @@
+"""Feature specificatin for T2D blood samples."""
+
 import numpy as np
 
 
-def get_lab_feature_spec(
-    lookbehind_days=[365, 730, 1825, 9999],
-    resolve_multiple=["mean", "max", "min"],
+def get_lab_feature_spec(  # pylint: disable=dangerous-default-value
+    # Not a problem since the function is only called once.
+    lookbehind_days=None,
+    resolve_multiple=None,
     values_to_load="all",
 ):
+
+    if lookbehind_days is None:
+        lookbehind_days = [
+            365,
+            730,
+            1825,
+            9999,
+        ]
+
+    if resolve_multiple is None:
+        resolve_multiple = ["mean", "max", "min"]
+
     dfs = [
         "hba1c",
         "alat",

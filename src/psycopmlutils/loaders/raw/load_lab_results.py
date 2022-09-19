@@ -1,3 +1,5 @@
+"""Loaders for lab results loading."""
+
 from typing import Dict, List, Optional, Union
 
 import pandas as pd
@@ -7,445 +9,479 @@ from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 
 
-class LoadLabResults:
-    def blood_sample(
-        blood_sample_id: Union[str, List],
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        """Load a blood sample.
+def load_non_numerical_values_and_coerce_inequalities(
+    blood_sample_id: Union[str, List],
+    n_rows: Optional[int],
+    view: str,
+    ineq2mult: Optional[Dict[str, float]] = None,
+) -> pd.DataFrame:
+    """Load non-numerical values for a blood sample.
 
-        Args:
-            blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
-            n: Number of rows to return. Defaults to None.
-            values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to None, which is coerced to "all".
+    Args:
+        blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
+        n_rows (Optional[int]): Number of rows to return. Defaults to None.
+        view (str): The view to load from.
+        ineq2mult (Dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
 
-        Returns:
-            pd.DataFrame
-        """
-        view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
+    Returns:
+        pd.DataFrame: A dataframe with the non-numerical values.
+    """
+    cols = "dw_ek_borger, datotid_sidstesvar, svar"
 
-        allowed_values_to_load = [
-            "numerical",
-            "numerical_and_coerce",
-            "cancelled",
-            "all",
-            None,
-        ]
-
-        dfs = []
-
-        if values_to_load not in allowed_values_to_load:
-            raise ValueError(
-                f"values_to_load must be one of {allowed_values_to_load}, not {values_to_load}",
-            )
-
-        if values_to_load is None:
-            values_to_load = "all"
-
-        fn_dict = {
-            "coerce": LoadLabResults.load_non_numerical_values_and_coerce_inequalities,
-            "numerical": LoadLabResults.load_numerical_values,
-            "cancelled": LoadLabResults.load_cancelled,
-            "all": LoadLabResults.load_all_values,
-        }
-
-        sources_to_load = [k for k in fn_dict.keys() if k in values_to_load]
-
-        if n:
-            n_per_fn = int(n / len(sources_to_load))
-        else:
-            n_per_fn = None
-
-        for k in sources_to_load:
-            dfs.append(
-                fn_dict[k](
-                    blood_sample_id=blood_sample_id,
-                    n=n_per_fn,
-                    view=view,
-                ),
-            )
-
-        # Concatenate dfs
-        if len(dfs) > 1:
-            df = pd.concat(dfs)
-        else:
-            df = dfs[0]
-
-        return df.reset_index(drop=True).drop_duplicates(
-            subset=["dw_ek_borger", "timestamp", "value"],
-            keep="first",
+    if isinstance(blood_sample_id, list):
+        npu_codes = ", ".join(
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
-    def load_non_numerical_values_and_coerce_inequalities(
-        blood_sample_id: Union[str, List],
-        n: int,
-        view: str,
-        ineq2mult: Dict[str, float] = {
-            "<": 0.67,
-            "<=": 0.8,
-            ">": 1.5,
-            ">=": 1.2,
-        },
-    ) -> pd.DataFrame:
-        """Load non-numerical values for a blood sample.
+        npu_where = f"npukode in ({npu_codes})"
+    else:
+        npu_where = f"npukode = '{blood_sample_id}'"
 
-        Args:
-            blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
-            n (int): Number of rows to return. Defaults to None.
-            view (str): The view to load from.
-            ineq2mult (Dict[str, float]): A dictionary mapping inequalities to a multiplier. Defaults to None.
+    sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where} AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
 
-        Returns:
-            pd.DataFrame: A dataframe with the non-numerical values.
-        """
-        cols = "dw_ek_borger, datotid_sidstesvar, svar"
+    df = sql_load(
+        sql,
+        database="USR_PS_FORSK",
+        chunksize=None,
+        n_rows=n_rows,
+    )
 
-        if isinstance(blood_sample_id, list):
-            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+    df.rename(
+        columns={"datotid_sidstesvar": "timestamp", "svar": "value"},
+        inplace=True,
+    )
 
-            npu_where = f"npukode in ({npu_codes})"
-        else:
-            npu_where = f"npukode = '{blood_sample_id}'"
+    if ineq2mult:
+        return multiply_inequalities_in_df(df, ineq2mult=ineq2mult)
+    return multiply_inequalities_in_df(df)
 
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where} AND numerisksvar IS NULL AND (left(Svar,1) = '>' OR left(Svar, 1) = '<')"
 
-        df = sql_load(
-            sql,
-            database="USR_PS_FORSK",
-            chunksize=None,
-            n=n,
+def load_numerical_values(
+    blood_sample_id: str,
+    n_rows: Optional[int],
+    view: str,
+) -> pd.DataFrame:
+    """Load numerical values for a blood sample.
+
+    Args:
+        blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+        n_rows (Optional[int]): Number of rows to return. Defaults to None.
+        view (str): The view to load from.
+
+    Returns:
+        pd.DataFrame: A dataframe with the numerical values.
+    """
+
+    cols = "dw_ek_borger, datotid_sidstesvar, numerisksvar"
+
+    if isinstance(blood_sample_id, list):
+        npu_codes = ", ".join(
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
-        df.rename(
-            columns={"datotid_sidstesvar": "timestamp", "svar": "value"},
-            inplace=True,
+        npu_where = f"npukode in ({npu_codes})"
+    else:
+        npu_where = f"npukode = '{blood_sample_id}'"
+
+    sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where} AND numerisksvar IS NOT NULL"
+    df = sql_load(
+        sql,
+        database="USR_PS_FORSK",
+        chunksize=None,
+        n_rows=n_rows,
+    )
+
+    df.rename(
+        columns={"datotid_sidstesvar": "timestamp", "numerisksvar": "value"},
+        inplace=True,
+    )
+
+    return df
+
+
+def load_cancelled(
+    blood_sample_id: str,
+    n_rows: Optional[int],
+    view: str,
+) -> pd.DataFrame:
+    """Load cancelled samples for a blood sample.
+
+    Args:
+        blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+        n_rows (Optional[int]): Number of rows to return. Defaults to None.
+        view (str): The view to load from.
+
+    Returns:
+        pd.DataFrame: A dataframe with the timestamps for cancelled values.
+    """
+    cols = "dw_ek_borger, datotid_sidstesvar"
+
+    if isinstance(blood_sample_id, list):
+        npu_codes = ", ".join(
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
-        if ineq2mult:
-            return multiply_inequalities_in_df(df, ineq2mult=ineq2mult)
-        else:
-            return multiply_inequalities_in_df(df)
+        npu_where = f"npukode in ({npu_codes})"
+    else:
+        npu_where = f"npukode = '{blood_sample_id}'"
 
-    def load_numerical_values(blood_sample_id: str, n: int, view: str) -> pd.DataFrame:
-        """Load numerical values for a blood sample.
+    sql = f"SELECT {cols} FROM [fct].{view} {npu_where} AND datotid_sidstesvar IS NOT NULL AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
 
-        Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
-            n (int): Number of rows to return. Defaults to None.
-            view (str): The view to load from.
+    df = sql_load(
+        sql,
+        database="USR_PS_FORSK",
+        chunksize=None,
+        n_rows=n_rows,
+    )
 
-        Returns:
-            pd.DataFrame: A dataframe with the numerical values.
-        """
+    # Create the value column == 1, since all timestamps here are from cancelled blood samples
+    df["value"] = 1
 
-        cols = "dw_ek_borger, datotid_sidstesvar, numerisksvar"
+    df.rename(
+        columns={"datotid_sidstesvar": "timestamp"},
+        inplace=True,
+    )
 
-        if isinstance(blood_sample_id, list):
-            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+    return df
 
-            npu_where = f"npukode in ({npu_codes})"
-        else:
-            npu_where = f"npukode = '{blood_sample_id}'"
 
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where} AND numerisksvar IS NOT NULL"
-        df = sql_load(
-            sql,
-            database="USR_PS_FORSK",
-            chunksize=None,
-            n=n,
+def load_all_values(
+    blood_sample_id: str,
+    n_rows: Optional[int],
+    view: str,
+) -> pd.DataFrame:
+    """Load all samples for a blood sample.
+
+    Args:
+        blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
+        n_rows (Optional[int]): Number of rows to return. Defaults to None.
+        view (str): The view to load from.
+
+    Returns:
+        pd.DataFrame: A dataframe with all values.
+    """
+    cols = "dw_ek_borger, datotid_sidstesvar, svar"
+
+    if isinstance(blood_sample_id, list):
+        npu_codes = ", ".join(
+            [f"'{x}'" for x in blood_sample_id],  # pylint: disable=not-an-iterable
         )
 
-        df.rename(
-            columns={"datotid_sidstesvar": "timestamp", "numerisksvar": "value"},
-            inplace=True,
+        npu_where = f"npukode in ({npu_codes})"
+    else:
+        npu_where = f"npukode = '{blood_sample_id}'"
+
+    sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where}"
+
+    df = sql_load(
+        sql,
+        database="USR_PS_FORSK",
+        chunksize=None,
+        n_rows=n_rows,
+    )
+
+    df.rename(
+        columns={"datotid_sidstesvar": "timestamp", "svar": "value"},
+        inplace=True,
+    )
+
+    return df
+
+
+def blood_sample(
+    blood_sample_id: Union[str, List],
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    """Load a blood sample.
+
+    Args:
+        blood_sample_id (Union[str, List]): The blood_sample_id, typically an NPU code. If a list, concatenates the values. # noqa: DAR102
+        n_rows: Number of rows to return. Defaults to None.
+        values_to_load (str): Which values to load. Takes either "numerical", "numerical_and_coerce", "cancelled" or "all". Defaults to None, which is coerced to "all".
+
+    Returns:
+        pd.DataFrame
+    """
+    view = "[FOR_labka_alle_blodprover_inkl_2021_feb2022]"
+
+    allowed_values_to_load = [
+        "numerical",
+        "numerical_and_coerce",
+        "cancelled",
+        "all",
+        None,
+    ]
+
+    dfs = []
+
+    if values_to_load not in allowed_values_to_load:
+        raise ValueError(
+            f"values_to_load must be one of {allowed_values_to_load}, not {values_to_load}",
         )
 
-        return df
+    if values_to_load is None:
+        values_to_load = "all"
 
-    def load_cancelled(blood_sample_id: str, n: int, view: str) -> pd.DataFrame:
-        """Load cancelled samples for a blood sample.
+    fn_dict = {
+        "coerce": load_non_numerical_values_and_coerce_inequalities,
+        "numerical": load_numerical_values,
+        "cancelled": load_cancelled,
+        "all": load_all_values,
+    }
 
-        Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
-            n (int): Number of rows to return. Defaults to None.
-            view (str): The view to load from.
+    sources_to_load = [k for k in fn_dict if k in values_to_load]
 
-        Returns:
-            pd.DataFrame: A dataframe with the timestamps for cancelled values.
-        """
-        cols = "dw_ek_borger, datotid_sidstesvar"
+    if n_rows:
+        n_rows_per_fn = int(n_rows / len(sources_to_load))
+    else:
+        n_rows_per_fn = None
 
-        if isinstance(blood_sample_id, list):
-            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
-
-            npu_where = f"npukode in ({npu_codes})"
-        else:
-            npu_where = f"npukode = '{blood_sample_id}'"
-
-        sql = f"SELECT {cols} FROM [fct].{view} {npu_where} AND datotid_sidstesvar IS NOT NULL AND Svar == 'Aflyst' AND (left(Svar,1) == '>' OR left(Svar, 1) == '<')"
-
-        df = sql_load(
-            sql,
-            database="USR_PS_FORSK",
-            chunksize=None,
-            n=n,
+    for k in sources_to_load:  # pylint: disable=invalid-name
+        dfs.append(
+            fn_dict[k](
+                blood_sample_id=blood_sample_id,
+                n_rows=n_rows_per_fn,
+                view=view,
+            ),
         )
 
-        # Create the value column == 1, since all timestamps here are from cancelled blood samples
-        df["value"] = 1
+    # Concatenate dfs
+    if len(dfs) > 1:
+        df = pd.concat(dfs)
+    else:
+        df = dfs[0]
 
-        df.rename(
-            columns={"datotid_sidstesvar": "timestamp"},
-            inplace=True,
-        )
+    return df.reset_index(drop=True).drop_duplicates(
+        subset=["dw_ek_borger", "timestamp", "value"],
+        keep="first",
+    )
 
-        return df
 
-    def load_all_values(blood_sample_id: str, n: int, view: str) -> pd.DataFrame:
-        """Load all samples for a blood sample.
+@data_loaders.register("hba1c")
+def hba1c(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU27300",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-        Args:
-            blood_sample_id (str): The blood_sample_id, typically an NPU code.  # noqa: DAR102
-            n (int): Number of rows to return. Defaults to None.
-            view (str): The view to load from.
 
-        Returns:
-            pd.DataFrame: A dataframe with all values.
-        """
-        cols = "dw_ek_borger, datotid_sidstesvar, svar"
+@data_loaders.register("scheduled_glc")
+def scheduled_glc(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    npu_suffixes = [
+        "08550",
+        "08551",
+        "08552",
+        "08553",
+        "08554",
+        "08555",
+        "08556",
+        "08557",
+        "08558",
+        "08559",
+        "08560",
+        "08561",
+        "08562",
+        "08563",
+        "08564",
+        "08565",
+        "08566",
+        "08567",
+        "08893",
+        "08894",
+        "08895",
+        "08896",
+        "08897",
+        "08898",
+        "08899",
+        "08900",
+        "08901",
+        "08902",
+        "08903",
+        "08904",
+        "08905",
+        "08906",
+        "08907",
+        "08908",
+        "08909",
+        "08910",
+        "08911",
+        "08912",
+        "08913",
+        "08914",
+        "08915",
+        "08916",
+    ]
 
-        if isinstance(blood_sample_id, list):
-            npu_codes = ", ".join([f"'{x}'" for x in blood_sample_id])
+    blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
 
-            npu_where = f"npukode in ({npu_codes})"
-        else:
-            npu_where = f"npukode = '{blood_sample_id}'"
+    return blood_sample(
+        blood_sample_id=blood_sample_ids,
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-        sql = f"SELECT {cols} FROM [fct].{view} WHERE datotid_sidstesvar IS NOT NULL AND {npu_where}"
 
-        df = sql_load(
-            sql,
-            database="USR_PS_FORSK",
-            chunksize=None,
-            n=n,
-        )
+@data_loaders.register("unscheduled_p_glc")
+def unscheduled_p_glc(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    npu_suffixes = [
+        "02192",
+        "21533",
+        "21531",
+    ]
 
-        df.rename(
-            columns={"datotid_sidstesvar": "timestamp", "svar": "value"},
-            inplace=True,
-        )
+    dnk_suffixes = ["35842"]
 
-        return df
+    blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
+    blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
 
-    @data_loaders.register("hba1c")
-    def hba1c(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU27300",
-            n=n,
-            values_to_load=values_to_load,
-        )
+    return blood_sample(
+        blood_sample_id=blood_sample_ids,
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("scheduled_glc")
-    def scheduled_glc(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        npu_suffixes = [
-            "08550",
-            "08551",
-            "08552",
-            "08553",
-            "08554",
-            "08555",
-            "08556",
-            "08557",
-            "08558",
-            "08559",
-            "08560",
-            "08561",
-            "08562",
-            "08563",
-            "08564",
-            "08565",
-            "08566",
-            "08567",
-            "08893",
-            "08894",
-            "08895",
-            "08896",
-            "08897",
-            "08898",
-            "08899",
-            "08900",
-            "08901",
-            "08902",
-            "08903",
-            "08904",
-            "08905",
-            "08906",
-            "08907",
-            "08908",
-            "08909",
-            "08910",
-            "08911",
-            "08912",
-            "08913",
-            "08914",
-            "08915",
-            "08916",
-        ]
 
-        blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
+@data_loaders.register("triglycerides")
+def triglycerides(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU04094",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-        return LoadLabResults.blood_sample(
-            blood_sample_id=blood_sample_ids,
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("unscheduled_p_glc")
-    def unscheduled_p_glc(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        npu_suffixes = [
-            "02192",
-            "21533",
-            "21531",
-        ]
+@data_loaders.register("fasting_triglycerides")
+def fasting_triglycerides(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU03620",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-        dnk_suffixes = ["35842"]
 
-        blood_sample_ids = [f"NPU{suffix}" for suffix in npu_suffixes]
-        blood_sample_ids += [f"DNK{suffix}" for suffix in dnk_suffixes]
+@data_loaders.register("hdl")
+def hdl(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU01567",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-        return LoadLabResults.blood_sample(
-            blood_sample_id=blood_sample_ids,
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("triglycerides")
-    def triglycerides(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU04094",
-            n=n,
-            values_to_load=values_to_load,
-        )
+@data_loaders.register("ldl")
+def ldl(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id=["NPU01568", "AAB00101"],
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("fasting_triglycerides")
-    def fasting_triglycerides(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU03620",
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("hdl")
-    def hdl(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU01567",
-            n=n,
-            values_to_load=values_to_load,
-        )
+@data_loaders.register("fasting_ldl")
+def fasting_ldl(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id=["NPU10171", "AAB00102"],
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("ldl")
-    def ldl(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id=["NPU01568", "AAB00101"],
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("fasting_ldl")
-    def fasting_ldl(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id=["NPU10171", "AAB00102"],
-            n=n,
-            values_to_load=values_to_load,
-        )
+@data_loaders.register("alat")
+def alat(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU19651",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("alat")
-    def alat(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU19651",
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("asat")
-    def asat(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU19654",
-            n=n,
-            values_to_load=values_to_load,
-        )
+@data_loaders.register("asat")
+def asat(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU19654",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("lymphocytes")
-    def lymphocytes(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU02636",
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("leukocytes")
-    def leukocytes(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU02593",
-            n=n,
-            values_to_load=values_to_load,
-        )
+@data_loaders.register("lymphocytes")
+def lymphocytes(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU02636",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("crp")
-    def crp(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU19748",
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("creatinine")
-    def creatinine(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id=["NPU18016", "ASS00355", "ASS00354"],
-            n=n,
-        )
+@data_loaders.register("leukocytes")
+def leukocytes(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU02593",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
 
-    @data_loaders.register("egfr")
-    def egfr(n: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
-            n=n,
-            values_to_load=values_to_load,
-        )
 
-    @data_loaders.register("albumine_creatinine_ratio")
-    def albumine_creatinine_ratio(
-        n: Optional[int] = None,
-        values_to_load: str = None,
-    ) -> pd.DataFrame:
-        return LoadLabResults.blood_sample(
-            blood_sample_id="NPU19661",
-            n=n,
-            values_to_load=values_to_load,
-        )
+@data_loaders.register("crp")
+def crp(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU19748",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
+
+
+@data_loaders.register("creatinine")
+def creatinine(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id=["NPU18016", "ASS00355", "ASS00354"],
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
+
+
+@data_loaders.register("egfr")
+def egfr(n_rows: Optional[int] = None, values_to_load: str = None) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id=["DNK35302", "DNK35131", "AAB00345", "AAB00343"],
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )
+
+
+@data_loaders.register("albumine_creatinine_ratio")
+def albumine_creatinine_ratio(
+    n_rows: Optional[int] = None,
+    values_to_load: str = None,
+) -> pd.DataFrame:
+    return blood_sample(
+        blood_sample_id="NPU19661",
+        n_rows=n_rows,
+        values_to_load=values_to_load,
+    )

@@ -1,10 +1,12 @@
+"""Tests for feature_combination creation."""
+
 from psycopmlutils.timeseriesflattener.create_feature_combinations import (
     create_feature_combinations,
 )
 
 
 def test_skip_all_if_no_need_to_process():
-    input = [
+    feature_spec_list = [
         {
             "predictor_df": "prediction_times_df",
             "source_values_col_name": "val",
@@ -14,11 +16,11 @@ def test_skip_all_if_no_need_to_process():
         },
     ]
 
-    assert create_feature_combinations(input) == input
+    assert create_feature_combinations(feature_spec_list) == feature_spec_list
 
 
 def test_skip_one_if_no_need_to_process():
-    input = [
+    feature_spec_list = [
         {
             "predictor_df": "prediction_times_df",
             "source_values_col_name": "val",
@@ -52,11 +54,11 @@ def test_skip_one_if_no_need_to_process():
         },
     ]
 
-    assert create_feature_combinations(input) == expected_output
+    assert create_feature_combinations(feature_spec_list) == expected_output
 
 
 def test_create_feature_combinations():
-    input = [
+    feature_spec_list = [
         {
             "predictor_df": "prediction_times_df",
             "source_values_col_name": "val",
@@ -83,7 +85,7 @@ def test_create_feature_combinations():
         },
     ]
 
-    assert create_feature_combinations(arg_sets=input) == expected_output
+    assert create_feature_combinations(arg_sets=feature_spec_list) == expected_output
 
 
 def test_create_multiple_feature_combinations():

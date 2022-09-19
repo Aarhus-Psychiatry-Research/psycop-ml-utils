@@ -7,8 +7,8 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from wasabi import Printer
 
-from psycopmlutils.loaders.raw import LoadIDs
-from psycopmlutils.loaders.raw.load_text import LoadText
+from psycopmlutils.loaders.raw.load_ids import load_ids
+from psycopmlutils.loaders.raw.load_text import load_all_notes
 from psycopmlutils.utils import FEATURIZERS_PATH
 
 
@@ -41,8 +41,9 @@ def create_tfidf_vectorizer(
     )
 
 
-def whitespace_tokenizer(text: str) -> List[str]:
-    return text.split(" ")
+def whitespace_tokenizer(string: str) -> List[str]:
+    """Whitespace tokenizer."""
+    return string.split(" ")
 
 
 if __name__ == "__main__":
@@ -57,9 +58,14 @@ if __name__ == "__main__":
         if not FEATURIZERS_PATH.exists():
             FEATURIZERS_PATH.mkdir()
 
-        text = LoadText.load_all_notes(featurizer=None, n=None, featurizer_kwargs=None)
+        text = load_all_notes(  # pylint: disable=undefined-variable
+            featurizer=None,
+            n_rows=None,
+            featurizer_kwargs=None,
+        )
+
         # Subset only train set
-        train_ids = LoadIDs.load(split="train")
+        train_ids = load_ids(split="train")
         train_ids = train_ids["dw_ek_borger"].unique()
         text = text[text["dw_ek_borger"].isin(train_ids)]
         text = text["text"].tolist()
@@ -73,7 +79,10 @@ if __name__ == "__main__":
                 pkl.dump(vectorizer, f)
 
             vocab = ["tfidf-" + word for word in vectorizer.get_feature_names()]
-            with open(FEATURIZERS_PATH / f"tfidf_{n_features}_vocab.txt", "w") as f:
+            with open(  # pylint: disable=unspecified-encoding
+                FEATURIZERS_PATH / f"tfidf_{n_features}_vocab.txt",
+                "w",
+            ) as f:
                 f.write("\n".join(vocab))
 
     # train TF-IDF on synthetic data

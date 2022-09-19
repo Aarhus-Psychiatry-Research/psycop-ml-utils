@@ -9,9 +9,20 @@ repos:
         args: ["--profile", "black", "--filter-files"]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.3
+    rev: v2.38.0
     hooks:
       - id: pyupgrade
+
+  - repo: https://github.com/lensvol/pybetter
+    rev: release-0.4.1
+    hooks:
+    - id: pybetter
+      args: ["--exclude", "B004"]
+
+  - repo: https://github.com/bwhmather/ssort
+    rev: v0.11.6
+    hooks:
+    - id: ssort
 
   - repo: https://github.com/myint/docformatter
     rev: v1.5.0
@@ -25,7 +36,7 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
 
@@ -34,8 +45,16 @@ repos:
     hooks:
       - id: flake8
         args: [--config, .flake8]
-        
-  - repo: https://github.com/zricethezav/gitleaks
-    rev: v8.12.0
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.15.2
     hooks:
-      - id: gitleaks
+      - id: pylint
+        types: [python]
+        args:
+          [
+            "-rn", # Only display messages
+            "-sn", # Don't display the score
+            "--disable=R,import-error" # Refactors are not important enough to block a commit. 
+            # Unused-imports aren't testable by the github action, so don't test that here.
+          ]
