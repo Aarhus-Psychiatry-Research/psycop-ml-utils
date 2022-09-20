@@ -107,14 +107,65 @@ def _tfidf_featurize(
     return pd.concat([df, text], axis=1)
 
 
-def _huggingface_featurize(model_id: str) -> pd.DataFrame:
+def _huggingface_featurize(
+    df: pd.DataFrame, model_id: str, text_col: str = "text"
+) -> pd.DataFrame:
+    """Featurize text using a huggingface model and generate a dataframe
+    with the embeddings.
+
+    Args:
+        df (pd.DataFrame): Dataframe with text column
+        model_id (str): Huggingface model id (from the sentence-transformers library)
+        text_col (str, optional): Name of text column. Defaults to "text".
+
+    Returns:
+        pd.DataFrame: Original dataframe with huggingface embeddings appended
+
+    Example:
+        >>> p = Path("tests") / "test_data"
+        >>> huggingface_model_id = ("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+        >>> df_p = p / "synth_txt_data.csv"
+
+        >>> df = pd.read_csv(df_p)
+        >>> df = df.dropna()
+
+        >>> x = LoadText._huggingface_featurize(df, huggingface_model_id)
+    """
+
     # Load paraphrase-multilingual-MiniLM-L12-v2
-    # split tokens to list of list if longer than allowed sequence length
-    # which is often 128 for sentence transformers
-    # encode tokens
-    # average by list of list
-    # return embeddings
-    raise NotImplementedError
+    model = SentenceTransformer(model_id)
+
+    # Load text
+    df = df[df[text_col].notna()]
+    text = df[text_col].values
+    df = df.drop(text_col, axis=1)
+
+    # Set allowed sequence length according to model specificaiton
+    x = int(
+        model.max_seq_length / 1.5,
+    )  # allowing space for more word piece tokens than words in original sequence
+
+    # Generate embeddings
+    embeddings = []
+    for t in text:
+        words = t.split(" ")
+        # If text is not longer than allowed sequence length, extract and save embeddings
+        if len(words) <= x:
+            embd = model.encode(t)
+            embeddings.append(embd)
+        # If text is longer than allowed sequence length, split text into chunks before extracting embeddings and save average across chunks
+        else:
+            words_in_chunks = [words[y - x : y] for y in range(x, len(words) + x, x)]
+            chunks = [
+                " ".join(w) for w in words_in_chunks if len(w) == x
+            ]  # drop small remainder of shorter size
+
+            embd = model.encode(chunks)
+
+            embeddings.append(np.mean(embd, axis=0))
+
+    embeddings = pd.DataFrame(embeddings)
+    return pd.concat([df, embeddings], axis=1)
 
 
 def _load_and_featurize_notes_per_year(
