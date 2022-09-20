@@ -1,6 +1,7 @@
 """Column generators for synthetic data."""
 
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
@@ -10,7 +11,7 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 
 def create_outcome_values(
-    df: pd.DataFrame,
+    df: pd.DataFrame,  # pylint: disable=redefined-outer-name
     n_samples: int,
     logistic_outcome_model: str,
     intercept: Optional[float] = 0,
@@ -130,7 +131,8 @@ def generate_col_from_specs(
         )
 
         return generated_texts
-
+    elif column_type == "id":
+        return -np.arange(n_samples)
     elif column_type == "uniform_int":
         return np.random.randint(
             low=col_specs["min"],
@@ -165,7 +167,7 @@ def generate_col_from_specs(
 def generate_data_columns(
     predictors: Iterable[dict],
     n_samples: int,
-    df: pd.DataFrame,
+    df: Optional[pd.DataFrame] = None,  # pylint: disable=redefined-outer-name
     text_prompt: Optional[str] = None,
 ) -> pd.DataFrame:
     """Generate a dataframe with columns from the predictors iterable.
@@ -173,7 +175,7 @@ def generate_data_columns(
     Args:
         predictors (iter[dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         n_samples (int): Number of rows to generate.
-        df (pd.DataFrame): Dataframe to append to
+        df (pd.DataFrame): Dataframe to append to.
         text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
 
     Raises:
@@ -197,6 +199,9 @@ def generate_data_columns(
         >>> )
     """
     sequence = text_prompt if text_prompt else None
+
+    if df is None:
+        df = pd.DataFrame()
 
     for col_name, col_props in predictors.items():
         # np.nan objects turn into "nan" strings in the real life dataframe.
@@ -222,3 +227,22 @@ def generate_data_columns(
                 df[col_name] = df[col_name].clip(upper=col_props["max"])
 
     return df
+
+
+if __name__ == "__main__":
+    # Get project root directory
+    project_root = Path(__file__).resolve().parents[3]
+
+    column_specs = {
+        "dw_ek_borger": {
+            "column_type": "id",
+        },
+        "raw_predictor": {"column_type": "uniform_float", "min": 0, "max": 10},
+    }
+
+    df = generate_data_columns(
+        predictors=column_specs,
+        n_samples=10_000,
+    )
+
+    df.to_csv(project_root / "tests" / "test_data" / "synth_raw.csv", index=False)
