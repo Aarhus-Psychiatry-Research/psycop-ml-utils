@@ -1,4 +1,4 @@
-"""Loaders for coercion."""
+"""Loaders for coercion data."""
 
 # pylint: disable = non-ascii-name,missing-function-docstring
 
@@ -110,6 +110,24 @@ def farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
+# Røde papir ved tvangsindlæggelse/tvangstilbageholdelse
+@data_loaders.register("paa_grund_af_farlighed")
+def paa_grund_af_farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return coercion_duration(
+        reason_for_coercion="På grund af farlighed",
+        n_rows=n_rows,
+    )
+
+
+# Gule papir ved tvangsindlæggelse/tvangstilbageholdelse
+@data_loaders.register("af_helbredsmaessige_grunde")
+def af_helbredsmaessige_grunde(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return coercion_duration(
+        reason_for_coercion=" Af helbredsmæssige grunde",
+        n_rows=n_rows,
+    )
+
+
 @data_loaders.register("urolig_tilstand")
 def urolig_tilstand(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
@@ -126,59 +144,18 @@ def anden_begrundelse(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("af helbredsmæssige grunde")
-def af_helbredsmæssige_grunde(n_rows: Optional[int] = None) -> pd.DataFrame:
+@data_loaders.register("naerliggende_eller_vaesentlig_fare_for_patienten_eller_andre")
+def naerliggende_fare(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
-        reason_for_coercion=" Af helbredsmæssige grunde",
-        n_rows=n_rows,
-    )
-
-
-@data_loaders.register("nærliggende eller væsentlig fare for patienten eller andre")
-def nærliggende_fare(n_rows: Optional[int] = None) -> pd.DataFrame:
-    return coercion_duration(
-        reason_for_coercion="Nærliggende eller væsentlig fare for patienten eller andre",
+        reason_for_coercion="Nærliggende_eller_væsentlig_fare_for_patienten_eller_andre",
         n_rows=n_rows,
     )
 
 
 # GENERAL TYPE (tabeltekst) ###
-
-
-@data_loaders.register("magtanvendelse")
-def magtanvendelse(n_rows: Optional[int] = None) -> pd.DataFrame:
-    coercion_types_list = [
-        {
-            "coercion_type": "Bælte",
-        },
-        {
-            "coercion_type": "Remme",
-        },
-        {
-            "coercion_type": "Fastholden",
-        },
-        {
-            "coercion_type": "Beroligende medicin",
-        },
-        {
-            "coercion_type": "Døraflåsning",
-        },
-        {
-            "coercion_type": "Personlig afskærmning over 24 timer",
-        },
-        {
-            "coercion_type": "Handsker",
-        },
-    ]
-
-    return _concatenate_coercion(
-        coercion_types_list=coercion_types_list,
-        n_rows=n_rows,
-    )
-
-
-@data_loaders.register("frihedsberøvelser")
-def frihedsberøvelser(n_rows: Optional[int] = None) -> pd.DataFrame:
+# frihedsberøvelser
+@data_loaders.register("skema_1")
+def skema_1(n_rows: Optional[int] = None) -> pd.DataFrame:
     coercion_types_list = [
         {
             "coercion_type": "Tvangsindlæggelse",
@@ -194,8 +171,9 @@ def frihedsberøvelser(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("tvangsbehandlinger")
-def tvangsbehandlinger(n_rows: Optional[int] = None) -> pd.DataFrame:
+# tvangsbehandlinger
+@data_loaders.register("skema_2")
+def skema_2(n_rows: Optional[int] = None) -> pd.DataFrame:
     coercion_types_list = [
         {
             "coercion_type": "Af legemlig lidelse",
@@ -217,11 +195,41 @@ def tvangsbehandlinger(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
+# magtanvendelse
+@data_loaders.register("skema_3")
+def skema_3(n_rows: Optional[int] = None) -> pd.DataFrame:
+    coercion_types_list = [
+        {
+            "coercion_type": "Bælte",
+        },
+        {
+            "coercion_type": "Remme",
+        },
+        {
+            "coercion_type": "Fastholden",
+        },
+        {
+            "coercion_type": "Beroligende medicin",
+        },
+        {
+            "coercion_type": "Handsker",
+        },
+    ]
+
+    # "døraflåsning" and "personlig skærmning" are not included
+
+    return _concatenate_coercion(
+        coercion_types_list=coercion_types_list,
+        n_rows=n_rows,
+    )
+
+
 # SPECIFIC TYPE (typetekst_sei) ###
+# exists in the data, but not included here: [døraflåsning, personlig afskærmning, stofbælte, særlige dørlåse, tvungen opfølgning, personlige alarm, udskrivningsaftale, koordinationsplan]
 
 
-@data_loaders.register("bælte")
-def bælte(n_rows: Optional[int] = None) -> pd.DataFrame:
+@data_loaders.register("baelte")
+def baelte(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
         coercion_type="Bælte",
         n_rows=n_rows,
@@ -244,7 +252,7 @@ def fastholden(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("beroligende medicin")
+@data_loaders.register("beroligende_medicin")
 def beroligende_medicin(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
         coercion_type="Beroligende medicin",
@@ -260,8 +268,8 @@ def handsker(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("tvangsindlæggelse")
-def tvangsindlæggelse(n_rows: Optional[int] = None) -> pd.DataFrame:
+@data_loaders.register("tvangsindlaeggelse")
+def tvangsindlaeggelse(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
         coercion_type="Tvangsindlæggelse",
         n_rows=n_rows,
@@ -292,32 +300,41 @@ def ect(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("ernæring")
-def ernæring(n_rows: Optional[int] = None) -> pd.DataFrame:
+@data_loaders.register("ernaering")
+def ernaering(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
         coercion_type="Ernæring",
         n_rows=n_rows,
     )
 
 
+@data_loaders.register("af_legemlig_lidelse")
+def af_legemlig_lidelse(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return coercion_duration(
+        coercion_type="Af legemlig lidelse",
+        n_rows=n_rows,
+    )
+
+
 __all__ = [
-    "af_helbredsmæssige_grunde",
+    "af_helbredsmaessige_grunde",
     "anden_begrundelse",
     "beroligende_medicin",
-    "bælte",
+    "baelte",
     "coercion_duration",
     "ect",
-    "ernæring",
+    "ernaering",
+    "af_legemlig_lidelse",
     "farlighed",
     "fastholden",
-    "frihedsberøvelser",
+    "skema_1",
     "handsker",
-    "magtanvendelse",
+    "skema_3",
     "medicinering",
-    "nærliggende_fare",
+    "naerliggende_fare",
     "remme",
-    "tvangsbehandlinger",
-    "tvangsindlæggelse",
+    "skema_3",
+    "tvangsindlaeggelse",
     "tvangstilbageholdelse",
     "urolig_tilstand",
 ]
