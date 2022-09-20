@@ -1,4 +1,4 @@
-"""Loaders for coercion."""
+"""Loaders for coercion data."""
 
 # pylint: disable = non-ascii-name,missing-function-docstring
 
