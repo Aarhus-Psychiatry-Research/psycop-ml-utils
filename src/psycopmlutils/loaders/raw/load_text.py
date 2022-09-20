@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Optional, Union
 
 import dill as pkl
-import pandas as pd
 import numpy as np
+import pandas as pd
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
 from sentence_transformers import SentenceTransformer
