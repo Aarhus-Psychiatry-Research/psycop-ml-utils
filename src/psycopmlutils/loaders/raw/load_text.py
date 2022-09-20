@@ -110,7 +110,9 @@ def _tfidf_featurize(
 
 
 def _huggingface_featurize(
-    df: pd.DataFrame, model_id: str, text_col: str = "text"
+    df: pd.DataFrame,
+    model_id: str,
+    text_col: str = "text",
 ) -> pd.DataFrame:
     """Featurize text using a huggingface model and generate a dataframe with
     the embeddings.
@@ -143,23 +145,26 @@ def _huggingface_featurize(
     df = df.drop(text_col, axis=1)
 
     # Set allowed sequence length according to model specificaiton
-    x = int(
+    seq_length = int(
         model.max_seq_length / 1.5,
     )  # allowing space for more word piece tokens than words in original sequence
 
     # Generate embeddings
     embeddings = []
-    for t in text:
-        words = t.split(" ")
+    for txt in text:
+        words = txt.split(" ")
         # If text is not longer than allowed sequence length, extract and save embeddings
-        if len(words) <= x:
-            embd = model.encode(t)
+        if len(words) <= seq_length:
+            embd = model.encode(txt)
             embeddings.append(embd)
         # If text is longer than allowed sequence length, split text into chunks before extracting embeddings and save average across chunks
         else:
-            words_in_chunks = [words[y - x : y] for y in range(x, len(words) + x, x)]
+            words_in_chunks = [
+                words[y - seq_length : y]
+                for y in range(seq_length, len(words) + seq_length, seq_length)
+            ]
             chunks = [
-                " ".join(w) for w in words_in_chunks if len(w) == x
+                " ".join(w) for w in words_in_chunks if len(w) == seq_length
             ]  # drop small remainder of shorter size
 
             embd = model.encode(chunks)
