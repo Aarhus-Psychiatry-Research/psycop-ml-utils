@@ -11,9 +11,10 @@ from typing import Optional, Union
 import dill as pkl
 import numpy as np
 import pandas as pd
+from sentence_transformers import SentenceTransformer
+
 from psycopmlutils.loaders.raw.sql_load import sql_load
 from psycopmlutils.utils import data_loaders
-from sentence_transformers import SentenceTransformer
 
 
 def get_all_valid_note_types() -> set[str]:
@@ -111,8 +112,8 @@ def _tfidf_featurize(
 def _huggingface_featurize(
     df: pd.DataFrame, model_id: str, text_col: str = "text"
 ) -> pd.DataFrame:
-    """Featurize text using a huggingface model and generate a dataframe
-    with the embeddings.
+    """Featurize text using a huggingface model and generate a dataframe with
+    the embeddings.
 
     Args:
         df (pd.DataFrame): Dataframe with text column
