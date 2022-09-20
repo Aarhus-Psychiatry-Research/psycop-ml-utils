@@ -214,8 +214,9 @@ def skema_3(n_rows: Optional[int] = None) -> pd.DataFrame:
         {
             "coercion_type": "Handsker",
         },
-        # "døraflåsning" and "personlig skærmning" are not included
     ]
+
+    # "døraflåsning" and "personlig skærmning" are not included
 
     return _concatenate_coercion(
         coercion_types_list=coercion_types_list,
