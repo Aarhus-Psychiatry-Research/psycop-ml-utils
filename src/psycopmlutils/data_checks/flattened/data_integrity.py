@@ -367,10 +367,11 @@ def run_validation_requiring_split_comparison(
             msg.warn(f"Failed checks: {failed_checks}")
 
 
-def check_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statements
+def save_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statements
     feature_set_csv_dir: Path,
     split_names: Optional[list[str]] = None,
     n_rows: Optional[int] = None,
+    out_dir: Optional[Path] = None,
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a given
     directory containing train/val/test files. Splits indicates which data.
@@ -383,9 +384,18 @@ def check_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-state
         split_names (list[str]): list of splits to check (train, val, test)
         n_rows (Optional[int]): Whether to only load a subset of the data.
             Should only be used for debugging.
+        out_dir (Optional[Path]): Path to the directory where the reports should be saved
     """
     if split_names is None:
         split_names = ["train", "val", "test"]
+
+    if out_dir is None:
+        out_dir = feature_set_csv_dir / "deepchecks"
+    else:
+        out_dir = out_dir / "deepchecks"
+
+    if not out_dir.exists():
+        out_dir.mkdir()
 
     train_outcomes_df = load_split_outcomes(
         feature_set_csv_dir=feature_set_csv_dir,
@@ -402,10 +412,6 @@ def check_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-state
         file = list(feature_set_csv_dir.glob(f"*{split_name}*.csv"))
         if not file or len(file) > 1:
             raise ValueError(f"{split_name} split not found in {feature_set_csv_dir}")
-
-    out_dir = feature_set_csv_dir / "deepchecks"
-    if not out_dir.exists():
-        out_dir.mkdir()
 
     # Create subfolder for outcome specific checks
     outcome_checks_dir = out_dir / "outcomes"

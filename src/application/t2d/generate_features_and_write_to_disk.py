@@ -7,7 +7,7 @@ maturity.
 import random
 import time
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -20,10 +20,10 @@ from application.t2d.features_blood_samples import get_lab_feature_spec
 from application.t2d.features_diagnoses import get_diagnosis_feature_spec
 from application.t2d.features_medications import get_medication_feature_spec
 from psycopmlutils.data_checks.flattened.data_integrity import (
-    check_feature_set_integrity_from_dir,
+    save_feature_set_integrity_from_dir,
 )
 from psycopmlutils.data_checks.flattened.feature_describer import (
-    create_feature_description_from_dir,
+    save_feature_description_from_dir,
 )
 from psycopmlutils.loaders.raw.pre_load_dfs import pre_load_unique_dfs
 from psycopmlutils.timeseriesflattener import (
@@ -50,28 +50,32 @@ def log_to_wandb(predictor_combinations, save_dir):
 def save_feature_set_description_to_disk(
     predictor_combinations: list,
     flattened_csv_dir: Path,
+    out_dir: Optional[Path] = None,
 ):
     """Describe output.
 
     Args:
         predictor_combinations (list): List of predictor specs.
         flattened_csv_dir (Path): Path to flattened csv dir.
+        out_dir (Optional[Path], optional): Path to output dir. Defaults to None.
     """
 
     # Create data integrity report
-    create_feature_description_from_dir(
-        path=flattened_csv_dir,
+    save_feature_description_from_dir(
+        feature_set_csv_dir=flattened_csv_dir,
         predictor_dicts=predictor_combinations,
         splits=["train"],
+        out_dir=out_dir,
     )
 
-    check_feature_set_integrity_from_dir(
+    save_feature_set_integrity_from_dir(
         feature_set_csv_dir=flattened_csv_dir,
         split_names=["train", "val", "test"],
+        out_dir=out_dir,
     )
 
 
-def create_save_dir(
+def create_save_dir_path(
     proj_path: Path,
     feature_set_id: str,
 ) -> Path:
@@ -97,14 +101,14 @@ def create_save_dir(
 
 def split_and_save_to_disk(
     flattened_df: FlattenedDataset,
-    output_dir: Path,
+    out_dir: Path,
     file_prefix: str,
 ) -> tuple[Path, str]:
     """Split and save to disk.
 
     Args:
         flattened_df (FlattenedDataset): Flattened dataset.
-        output_dir (Path): Path to output directory.
+        out_dir (Path): Path to output directory.
         file_prefix (str): File prefix.
 
     Returns:
@@ -140,7 +144,7 @@ def split_and_save_to_disk(
         filename = f"{file_prefix}_{dataset_name}.csv"
         msg.info(f"Saving {filename} to disk")
 
-        file_path = output_dir / filename
+        file_path = out_dir / filename
 
         split_df.to_csv(file_path, index=False)
 
@@ -417,25 +421,26 @@ def main(
         lookahead_years=lookahead_years,
     )
 
-    output_dir = create_save_dir(
+    out_dir = create_save_dir_path(
         feature_set_id=feature_set_id,
         proj_path=proj_path,
     )
 
     split_and_save_to_disk(
         flattened_df=flattened_df,
-        output_dir=output_dir,
+        out_dir=out_dir,
         file_prefix=feature_set_id,
     )
 
     log_to_wandb(
         predictor_combinations=predictor_combinations,
-        save_dir=output_dir,  # Save-dir as argument because we want to log the path
+        save_dir=out_dir,  # Save-dir as argument because we want to log the path
     )
 
     save_feature_set_description_to_disk(
         predictor_combinations=predictor_combinations,
-        flattened_csv_dir=output_dir,
+        flattened_csv_dir=out_dir,
+        out_dir=out_dir,
     )
 
 

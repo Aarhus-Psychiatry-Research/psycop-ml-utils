@@ -112,7 +112,7 @@ def generate_feature_description_row(
         ),
     }
 
-    for percentile in [0.01, 0.25, 0.5, 0.75, 0.99]:
+    for percentile in (0.01, 0.25, 0.5, 0.75, 0.99):
         # Get the value representing the percentile
         d[f"{percentile*100}-percentile"] = round(series.quantile(percentile), 1)
 
@@ -156,23 +156,30 @@ def generate_feature_description_df(
     return feature_description_df
 
 
-def create_feature_description_from_dir(
-    path: Path,
+def save_feature_description_from_dir(
+    feature_set_csv_dir: Path,
     predictor_dicts: list[dict[str, str]],
     splits: Optional[list[str]] = None,
+    out_dir: Path = None,
 ) -> pd.DataFrame:
     """Write a csv with feature descriptions in the directory.
 
     Args:
-        path (Path): Path to directory with data frames.
+        feature_set_csv_dir (Path): Path to directory with data frames.
         predictor_dicts (list[dict[str, str]]): list of dictionaries with predictor information.
         splits (list[str]): list of splits to include in the description. Defaults to ["train"].
+        out_dir (Path): Path to directory where to save the feature description. Defaults to None.
     """
     if splits is None:
         splits = ["train"]
 
     msg = Printer(timestamp=True)
-    save_dir = path / "feature_descriptions"
+
+    if out_dir is None:
+        save_dir = feature_set_csv_dir / "feature_descriptions"
+
+    else:
+        save_dir = out_dir / "feature_descriptions"
 
     if not save_dir.exists():
         save_dir.mkdir()
@@ -180,7 +187,11 @@ def create_feature_description_from_dir(
     for split in splits:
         msg.info(f"{split}: Creating feature description")
 
-        predictors = load_split_predictors(path=path, split=split, include_id=False)
+        predictors = load_split_predictors(
+            feature_set_csv_dir=feature_set_csv_dir,
+            split=split,
+            include_id=False,
+        )
 
         msg.info(f"{split}: Generating feature description dataframe")
         feature_description_df = generate_feature_description_df(
