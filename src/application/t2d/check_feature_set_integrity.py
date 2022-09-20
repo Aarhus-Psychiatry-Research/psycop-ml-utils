@@ -15,8 +15,3 @@ if __name__ == "__main__":
         feature_set_csv_dir=subdir,
         split_names=["train", "val", "test"],
     )
-
-
-__all__ = [
-    "subdir",
-]

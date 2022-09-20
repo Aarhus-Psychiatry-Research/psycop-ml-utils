@@ -298,26 +298,3 @@ def ernæring(n_rows: Optional[int] = None) -> pd.DataFrame:
         coercion_type="Ernæring",
         n_rows=n_rows,
     )
-
-
-__all__ = [
-    "af_helbredsmæssige_grunde",
-    "anden_begrundelse",
-    "beroligende_medicin",
-    "bælte",
-    "coercion_duration",
-    "ect",
-    "ernæring",
-    "farlighed",
-    "fastholden",
-    "frihedsberøvelser",
-    "handsker",
-    "magtanvendelse",
-    "medicinering",
-    "nærliggende_fare",
-    "remme",
-    "tvangsbehandlinger",
-    "tvangsindlæggelse",
-    "tvangstilbageholdelse",
-    "urolig_tilstand",
-]

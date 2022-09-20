@@ -487,28 +487,3 @@ def albumine_creatinine_ratio(
         n_rows=n_rows,
         values_to_load=values_to_load,
     )
-
-
-__all__ = [
-    "alat",
-    "albumine_creatinine_ratio",
-    "asat",
-    "blood_sample",
-    "creatinine",
-    "crp",
-    "egfr",
-    "fasting_ldl",
-    "fasting_triglycerides",
-    "hba1c",
-    "hdl",
-    "ldl",
-    "leukocytes",
-    "load_all_values",
-    "load_cancelled",
-    "load_non_numerical_values_and_coerce_inequalities",
-    "load_numerical_values",
-    "lymphocytes",
-    "scheduled_glc",
-    "triglycerides",
-    "unscheduled_p_glc",
-]

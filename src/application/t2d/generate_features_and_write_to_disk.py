@@ -33,12 +33,11 @@ from psycopmlutils.timeseriesflattener import (
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 
-def log_to_wandb(predictor_combinations, save_dir, file_prefix):
+def log_to_wandb(predictor_combinations, save_dir):
     """Log poetry lock file and file prefix to WandB for reproducibility."""
 
     feature_settings = {
-        "file_prefix": file_prefix,
-        "save_path": save_dir / file_prefix,
+        "save_path": save_dir,
         "predictor_list": predictor_combinations,
     }
 
@@ -48,7 +47,7 @@ def log_to_wandb(predictor_combinations, save_dir, file_prefix):
     run.finish()
 
 
-def create_and_save_feature_set_description_to_disk(
+def save_feature_set_description_to_disk(
     predictor_combinations: list,
     flattened_csv_dir: Path,
 ):
@@ -431,11 +430,10 @@ def main(
 
     log_to_wandb(
         predictor_combinations=predictor_combinations,
-        save_dir=output_dir,
-        file_prefix=feature_set_id,
+        save_dir=output_dir,  # Save-dir as argument because we want to log the path
     )
 
-    create_and_save_feature_set_description_to_disk(
+    save_feature_set_description_to_disk(
         predictor_combinations=predictor_combinations,
         flattened_csv_dir=output_dir,
     )

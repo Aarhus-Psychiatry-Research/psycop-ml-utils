@@ -16,9 +16,3 @@ def get_tfidf_vocab(
 
 
 TFIDF_VOCAB = {n: get_tfidf_vocab(n) for n in [100, 500, 1000]}
-
-
-__all__ = [
-    "TFIDF_VOCAB",
-    "get_tfidf_vocab",
-]

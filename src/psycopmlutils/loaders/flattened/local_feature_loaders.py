@@ -97,12 +97,3 @@ def load_split_outcomes(
         pd.DataFrame: The loaded dataframe
     """
     return get_outcomes(load_split(feature_set_csv_dir, split, nrows=nrows))
-
-
-__all__ = [
-    "get_outcomes",
-    "get_predictors",
-    "load_split",
-    "load_split_outcomes",
-    "load_split_predictors",
-]

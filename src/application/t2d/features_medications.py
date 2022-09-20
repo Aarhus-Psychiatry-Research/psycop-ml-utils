@@ -32,8 +32,3 @@ def get_medication_feature_spec(  # pylint: disable=dangerous-default-value
             "allowed_nan_value_prop": 0.0,
         },
     ]
-
-
-__all__ = [
-    "get_medication_feature_spec",
-]

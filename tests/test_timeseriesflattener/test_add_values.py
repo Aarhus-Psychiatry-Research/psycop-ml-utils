@@ -538,23 +538,3 @@ def test_add_text_data():
     assert outcome_df.isna().sum().sum() == 20
 
     # assert len()
-
-
-__all__ = [
-    "test_add_age",
-    "test_add_age_error",
-    "test_add_multiple_static_predictors",
-    "test_add_temporal_incident_binary_outcome",
-    "test_add_temporal_predictors_then_temporal_outcome",
-    "test_add_text_data",
-    "test_citizen_without_outcome",
-    "test_event_after_prediction_time",
-    "test_event_before_prediction",
-    "test_incident_outcome_removing_prediction_times",
-    "test_multiple_citizens_outcome",
-    "test_multiple_citizens_predictor",
-    "test_predictor_after_prediction_time",
-    "test_predictor_before_prediction",
-    "test_raise_error_if_timestamp_col_not_timestamp_type",
-    "test_static_predictor",
-]

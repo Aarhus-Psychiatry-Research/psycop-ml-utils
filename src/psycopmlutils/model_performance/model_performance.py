@@ -463,13 +463,3 @@ if __name__ == "__main__":
         metadata_col_names=None,
         to_wide=True,
     )
-
-
-__all__ = [
-    "ModelPerformance",
-    "binary_df",
-    "binary_res",
-    "id2label",
-    "multiclass_df",
-    "multiclass_res",
-]
