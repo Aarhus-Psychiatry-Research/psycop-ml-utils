@@ -24,7 +24,7 @@ jobs:
 
     ### Caching
     - name: Overwrite version number from pyproject.toml, so it doesn't invalidate cache
-      id: remove-version-from-toml
+      id: get-dir
       run: |
         ls
 
