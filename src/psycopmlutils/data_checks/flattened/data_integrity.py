@@ -410,8 +410,13 @@ def save_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statem
     # Check if file splits exist before running checks
     for split_name in split_names:
         file = list(feature_set_csv_dir.glob(f"*{split_name}*.csv"))
-        if not file or len(file) > 1:
+
+        if not file:
             raise ValueError(f"{split_name} split not found in {feature_set_csv_dir}")
+        if len(file) > 1:
+            raise ValueError(
+                f"Multiple {split_name} files found in {feature_set_csv_dir}",
+            )
 
     # Create subfolder for outcome specific checks
     outcome_checks_dir = out_dir / "outcomes"
@@ -429,7 +434,7 @@ def save_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statem
         )
 
         # Add all keys in failures to failed_checks
-        for k, v in failures:
+        for k, v in failures.items():
             failed_checks[k] = v
 
     # Running data validation checks on train/val and train/test splits that do not

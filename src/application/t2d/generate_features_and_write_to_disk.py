@@ -33,7 +33,7 @@ from psycopmlutils.timeseriesflattener import (
 from psycopmlutils.utils import FEATURE_SETS_PATH
 
 
-def log_to_wandb(predictor_combinations, save_dir):
+def log_to_wandb(wandb_project_name, predictor_combinations, save_dir):
     """Log poetry lock file and file prefix to WandB for reproducibility."""
 
     feature_settings = {
@@ -41,7 +41,7 @@ def log_to_wandb(predictor_combinations, save_dir):
         "predictor_list": predictor_combinations,
     }
 
-    run = wandb.init(project="psycop-feature-files", config=feature_settings)
+    run = wandb.init(project=wandb_project_name, config=feature_settings)
     run.log_artifact("poetry.lock", name="poetry_lock_file", type="poetry_lock")
 
     run.finish()
@@ -100,35 +100,48 @@ def create_save_dir_path(
 
 
 def split_and_save_to_disk(
-    flattened_df: FlattenedDataset,
+    flattened_df: Union[FlattenedDataset, pd.DataFrame],
     out_dir: Path,
     file_prefix: str,
+    split_ids_dict: Optional[dict[str, pd.Series]] = None,
+    splits: Optional[list[str]] = None,
 ) -> tuple[Path, str]:
     """Split and save to disk.
 
     Args:
-        flattened_df (FlattenedDataset): Flattened dataset.
+        flattened_df (Union[FlattenedDataset, pd.DataFrame]): Flattened dataset.
         out_dir (Path): Path to output directory.
         file_prefix (str): File prefix.
+        split_ids_dict (Optional[dict[str, list[str]]]): Dictionary of split ids, like {"train": pd.Series with ids}.
+        splits (list, optional): Which splits to create. Defaults to ["train", "val", "test"].
 
     Returns:
         tuple[Path, str]: Path to sub directory and file prefix.
     """
-    splits = ["test", "val", "train"]
+
+    if splits is None:
+        splits = ["train", "val", "test"]
+
     msg = Printer(timestamp=True)
 
-    flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
+    if isinstance(flattened_df, FlattenedDataset):
+        flattened_df = flattened_df.df
+
+    flattened_df_ids = flattened_df["dw_ek_borger"].unique()
 
     # Version table with current date and time
     # prefix with user name to avoid potential clashes
 
     # Create splits
     for dataset_name in splits:
-        df_split_ids = psycopmlutils.loaders.raw.load_ids(split=dataset_name)
+        if split_ids_dict is None:
+            df_split_ids = psycopmlutils.loaders.raw.load_ids(split=dataset_name)
+        else:
+            df_split_ids = split_ids_dict[dataset_name]
 
         # Find IDs which are in split_ids, but not in flattened_df
         split_ids = df_split_ids["dw_ek_borger"].unique()
-        flattened_df_ids = flattened_df.df["dw_ek_borger"].unique()
+        flattened_df_ids = flattened_df["dw_ek_borger"].unique()
 
         ids_in_split_but_not_in_flattened_df = split_ids[
             ~np.isin(split_ids, flattened_df_ids)
@@ -138,7 +151,7 @@ def split_and_save_to_disk(
             f"{dataset_name}: There are {len(ids_in_split_but_not_in_flattened_df)} ({round(len(ids_in_split_but_not_in_flattened_df)/len(split_ids)*100, 2)}%) ids which are in {dataset_name}_ids but not in flattened_df_ids, will get dropped during merge. If examining patients based on physical visits, see 'OBS: Patients without physical visits' on the wiki for more info.",
         )
 
-        split_df = pd.merge(flattened_df.df, df_split_ids, how="inner", validate="m:1")
+        split_df = pd.merge(flattened_df, df_split_ids, how="inner", validate="m:1")
 
         # Version table with current date and time
         filename = f"{file_prefix}_{dataset_name}.csv"
@@ -252,7 +265,7 @@ def add_predictors(pre_loaded_dfs, predictor_combinations, flattened_df):
     return flattened_df
 
 
-def create_flattened_dataset(
+def create_full_flattened_dataset(
     outcome_loader_str: str,
     prediction_time_loader_str: str,
     pre_loaded_dfs: dict[str, pd.DataFrame],
@@ -412,7 +425,7 @@ def main(
         prediction_time_loader_str=prediction_time_loader_str,
     )
 
-    flattened_df = create_flattened_dataset(
+    flattened_df = create_full_flattened_dataset(
         outcome_loader_str=outcome_loader_str,
         prediction_time_loader_str=prediction_time_loader_str,
         pre_loaded_dfs=pre_loaded_dfs,
@@ -435,6 +448,7 @@ def main(
     log_to_wandb(
         predictor_combinations=predictor_combinations,
         save_dir=out_dir,  # Save-dir as argument because we want to log the path
+        wandb_project_name=proj_name,
     )
 
     save_feature_set_description_to_disk(

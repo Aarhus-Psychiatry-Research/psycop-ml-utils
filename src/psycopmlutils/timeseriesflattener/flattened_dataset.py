@@ -100,9 +100,9 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         self.predictor_col_name_prefix = predictor_col_name_prefix
         self.outcome_col_name_prefix = outcome_col_name_prefix
         self.min_date = min_date
+        self.feature_cache_dir = feature_cache_dir
 
         if feature_cache_dir:
-            self.feature_cache_dir = feature_cache_dir
             if not self.feature_cache_dir.exists():
                 self.feature_cache_dir.mkdir()
 

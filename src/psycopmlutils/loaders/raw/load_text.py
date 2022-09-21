@@ -323,7 +323,7 @@ def load_synth_notes(featurizer: str) -> pd.DataFrame:
         pd.DataFrame: (Featurized) synthetic notes
     """
     p = Path("tests") / "test_data"
-    df = pd.read_csv(p / "synth_txt_data.csv")
+    df = pd.read_csv(p / "raw" / "synth_txt_data.csv")
     df = df.dropna()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 

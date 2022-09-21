@@ -34,8 +34,10 @@ def predictor_dicts():
 
 @pytest.fixture()
 def df():
-    """Load the synthetic data set."""
-    return pd.read_csv("tests/test_data/synth_prediction_data.csv")
+    """Load the synthetic flattened data set."""
+    return pd.read_csv(
+        "tests/test_data/flattened/generated_with_outcome/synth_flattened_with_outcome.csv",
+    )
 
 
 def test_load_dataset(df):
