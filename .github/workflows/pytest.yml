@@ -27,12 +27,8 @@ jobs:
       id: remove-version-from-toml
       run: |
         sed -i "s/version = \".*\"/version = \"0.0.0\"/g" pyproject.toml
-    
-    - name: Check pyproject.toml
-      id: pyproject-toml
-      run: |
         cat pyproject.toml
-
+        
     - name: Load cached $HOME/.local (cache poetry)
       uses: actions/cache@v2.1.6
       with:
@@ -61,6 +57,11 @@ jobs:
       run: poetry install
     
     ### Run tests
+    - name: Parralelise pytest
+      run: |
+        echo -e "[pytest]\naddopts='-n 2'" > pytest.ini
+        cat pytest.ini
+
     - name: Source .venv
       run: |
         source $VENV
