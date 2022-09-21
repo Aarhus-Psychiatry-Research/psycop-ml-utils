@@ -16,7 +16,7 @@ FEATURE_SETS_PATH = SHARED_RESOURCES_PATH / "feature_sets"
 OUTCOME_DATA_PATH = SHARED_RESOURCES_PATH / "outcome_data"
 RAW_DATA_VALIDATION_PATH = SHARED_RESOURCES_PATH / "raw_data_validation"
 FEATURIZERS_PATH = SHARED_RESOURCES_PATH / "featurizers"
-
+EVALUATION_DATA_PATH = SHARED_RESOURCES_PATH / "evaluation_data"
 
 def format_dict_for_printing(d: dict) -> str:
     """Format a dictionary for printing. Removes extra apostrophes, formats
