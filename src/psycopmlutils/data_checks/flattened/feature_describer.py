@@ -180,7 +180,11 @@ def create_feature_description_from_dir(
     for split in splits:
         msg.info(f"{split}: Creating feature description")
 
-        predictors = load_split_predictors(path=path, split=split, include_id=False)
+        predictors = load_split_predictors(
+            feature_set_csv_dir=path,
+            split=split,
+            include_id=False,
+        )
 
         msg.info(f"{split}: Generating feature description dataframe")
         feature_description_df = generate_feature_description_df(
