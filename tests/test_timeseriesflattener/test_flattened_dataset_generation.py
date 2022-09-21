@@ -22,6 +22,34 @@ from src.application.t2d.generate_features_and_write_to_disk import (
 )
 
 
+@pytest.fixture(scope="function")
+def synth_prediction_times():
+    """Load the prediction times."""
+    return load_synth_prediction_times()
+
+
+@pytest.fixture(scope="function")
+def base_predictor_combinations():
+    """Basic predictor combinations."""
+
+    return [
+        {
+            "predictor_df": "synth_predictor",
+            "lookbehind_days": 365,
+            "resolve_multiple": "max",
+            "fallback": np.NaN,
+            "allowed_nan_value_prop": 0.0,
+        },
+        {
+            "predictor_df": "synth_predictor",
+            "lookbehind_days": 730,
+            "resolve_multiple": "max",
+            "fallback": np.NaN,
+            "allowed_nan_value_prop": 0.0,
+        },
+    ]
+
+
 def check_dfs_have_same_contents_by_column(df1, df2):
     """Check that two dataframes have the same contents by column.
 
@@ -81,18 +109,6 @@ def create_flattened_df(cache_dir, predictor_combinations, prediction_times_df):
     return first_df.df
 
 
-def recursively_delete_dir_with_contents(dir_path: Path):
-    """Delete a directory and all its contents, even if those contents are
-    directories themselves."""
-    for item in dir_path.iterdir():
-        if item.is_dir():
-            recursively_delete_dir_with_contents(item)
-        else:
-            item.unlink()
-
-    dir_path.rmdir()
-
-
 def load_cache(temp_dir, predictor_combinations, prediction_times_df):
     """Create a new dataset which should hit the cache."""
     cache_df = FlattenedDataset(
@@ -108,95 +124,54 @@ def load_cache(temp_dir, predictor_combinations, prediction_times_df):
     return cache_df
 
 
-@pytest.fixture(scope="function")
-def synth_prediction_times():
-    """Load the prediction times."""
-    return load_synth_prediction_times()
-
-
-@pytest.fixture(scope="function")
-def base_predictor_combinations():
-    """Basic predictor combinations."""
-
-    return [
-        {
-            "predictor_df": "synth_predictor",
-            "lookbehind_days": 365,
-            "resolve_multiple": "max",
-            "fallback": np.NaN,
-            "allowed_nan_value_prop": 0.0,
-        },
-        {
-            "predictor_df": "synth_predictor",
-            "lookbehind_days": 730,
-            "resolve_multiple": "max",
-            "fallback": np.NaN,
-            "allowed_nan_value_prop": 0.0,
-        },
-    ]
-
-
-@pytest.fixture(scope="function")
-def temp_dir_path():
-    """Get temp dir path."""
-    # Get project root dir
-    project_root = Path(__file__).resolve().parents[2]
-
-    return project_root / "tests" / "test_data" / "temp"
-
-
-def init_temp_dir(temp_dir_path):
+def init_temp_dir(tmp_path):
     """Create a temp dir for testing."""
     # Delete temp dir
-    if temp_dir_path.exists():
-        recursively_delete_dir_with_contents(temp_dir_path)
+    # Add a random number so tmp_paths from different processes don't overlap
 
-    return temp_dir_path.mkdir(exist_ok=True)
+    tmp_path = Path(tmp_path / f"temp_{np.random.randint(100_000_000)}")
+
+    # Create temp dir
+    tmp_path.mkdir(parents=True, exist_ok=True)
+
+    return tmp_path
 
 
 def test_cache_hitting(
-    temp_dir_path,
+    tmp_path,
     synth_prediction_times,
     base_predictor_combinations,
 ):
     """Test that the cache is hit when the same data is requested twice."""
 
-    # Create temp dir for testing
-    init_temp_dir(temp_dir_path)
-
     # Create the cache
     first_df = create_flattened_df(
-        cache_dir=temp_dir_path,
+        cache_dir=tmp_path,
         predictor_combinations=base_predictor_combinations,
         prediction_times_df=synth_prediction_times,
     )
 
     # Load the cache
     cache_df = create_flattened_df(
-        cache_dir=temp_dir_path,
+        cache_dir=tmp_path,
         predictor_combinations=base_predictor_combinations,
         prediction_times_df=synth_prediction_times,
     )
 
     # If cache_df doesn't hit the cache, it creates its own files
     # Thus, number of files is an indicator of whether the cache was hit
-    assert len(list(temp_dir_path.glob("*"))) == len(base_predictor_combinations)
+    assert len(list(tmp_path.glob("*"))) == len(base_predictor_combinations)
 
     # Assert that each column has the same contents
     check_dfs_have_same_contents_by_column(first_df, cache_df)
 
-    # Delete temp dir
-    recursively_delete_dir_with_contents(temp_dir_path)
-
 
 def test_all_non_online_elements_in_pipeline(
-    temp_dir_path,
+    tmp_path,
     synth_prediction_times,
     base_predictor_combinations,
 ):
     """Test that the splitting and saving to disk works as expected."""
-
-    init_temp_dir(temp_dir_path=temp_dir_path)
 
     flattened_df = create_flattened_df(
         cache_dir=None,
@@ -224,7 +199,7 @@ def test_all_non_online_elements_in_pipeline(
 
     split_and_save_to_disk(
         flattened_df=flattened_df,
-        out_dir=temp_dir_path,
+        out_dir=tmp_path,
         file_prefix="integration",
         split_ids_dict=split_ids,
         splits=splits,
@@ -232,8 +207,6 @@ def test_all_non_online_elements_in_pipeline(
 
     save_feature_set_description_to_disk(
         predictor_combinations=base_predictor_combinations,
-        flattened_csv_dir=temp_dir_path,
-        out_dir=temp_dir_path,
+        flattened_csv_dir=tmp_path,
+        out_dir=tmp_path,
     )
-
-    recursively_delete_dir_with_contents(dir_path=temp_dir_path)
