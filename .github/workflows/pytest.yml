@@ -28,7 +28,7 @@ jobs:
       run: |
         sed -i "s/version = \".*\"/version = \"0.0.0\"/g" pyproject.toml
     
-    - name: Check pyproject.toml
+    - name: Check pyproject-toml
       id: echo-pyproject.toml
       run: |
         echo pyproject.toml
