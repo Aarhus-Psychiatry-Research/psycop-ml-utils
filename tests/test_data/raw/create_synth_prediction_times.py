@@ -1,4 +1,4 @@
-"""Generate raw float dataframe."""
+"""Generate dataframe with prediction times."""
 
 from pathlib import Path
 
@@ -21,16 +21,14 @@ if __name__ == "__main__":
             "min": -5 * 365,
             "max": 0 * 365,
         },
-        "value": {"column_type": "uniform_float", "min": 0, "max": 10},
     }
 
-    for i in (1, 2):
-        df = generate_data_columns(
-            predictors=column_specs,
-            n_samples=10_000,
-        )
+    df = generate_data_columns(
+        predictors=column_specs,
+        n_samples=10_000,
+    )
 
-        df.to_csv(
-            project_root / "tests" / "test_data" / "raw" / f"synth_raw_float_{i}.csv",
-            index=False,
-        )
+    df.to_csv(
+        project_root / "tests" / "test_data" / "raw" / "synth_prediction_times.csv",
+        index=False,
+    )
