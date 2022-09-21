@@ -24,14 +24,14 @@ jobs:
 
     ### Caching
     - name: Overwrite version number from pyproject.toml, so it doesn't invalidate cache
-      id: get-dir
-      run: |
-        ls
-
-    - name: Overwrite version number from pyproject.toml, so it doesn't invalidate cache
       id: remove-version-from-toml
       run: |
         sed -i "s/version = \".*\"/version = \"0.0.0\"/g" pyproject.toml
+    
+    - name: Check pyproject.toml
+      id: echo-pyproject.toml
+      run: |
+        echo pyproject.toml
 
     - name: Load cached $HOME/.local (cache poetry)
       uses: actions/cache@v2.1.6
