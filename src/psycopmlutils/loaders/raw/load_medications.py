@@ -178,6 +178,7 @@ def concat_medications(
     )
 
 
+# data_loaders primarly used in psychiatry
 @data_loaders.register("antipsychotics")
 def antipsychotics(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
@@ -185,6 +186,74 @@ def antipsychotics(n_rows: Optional[int] = None) -> pd.DataFrame:
         load_prescribed=True,
         load_administered=True,
         wildcard_icd_code=True,
+        n_rows=n_rows,
+    )
+
+
+# 1. generation antipsychotics [flupentixol, pimozid, haloperidol, zuclopenthixol, melperon,pipamperon, chlorprotixen]
+@data_loaders.register("first_gen_antipsychotics")
+def first_gen_antipsychotics(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code=[
+            "N05AF01",
+            "N05AG02",
+            "N05AD01",
+            "N05AF05",
+            "N05AD03",
+            "N05AD05",
+            "N05AF03",
+        ],
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
+# 2. generation antipsychotics [amisulpride, aripiprazole,asenapine, brexpiprazole, cariprazine, lurasidone, olanzapine, paliperidone, Quetiapine, risperidone, sertindol]
+@data_loaders.register("second_gen_antipsychotics")
+def second_gen_antipsychotics(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code=[
+            "N05AL05",
+            "N05AX12",
+            "N05AH05",
+            "N05AX16",
+            "N05AX15",
+            "N05AE02",
+            "N05AE05",
+            "N05AH03",
+            "N05AX13",
+            "N05AH04",
+            "N05AX08",
+            "N05AE04",
+            "N05AE03",
+        ],
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
+@data_loaders.register("olanzapine")
+def olanzapine(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code="N05AH03",
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
+@data_loaders.register("clozapine")
+def clozapine(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code="N05AH02",
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
         n_rows=n_rows,
     )
 
@@ -222,6 +291,53 @@ def antidepressives(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
+# SSRIs [escitalopram, citalopram, fluvoxamin, fluoxetin, paroxetin]
+@data_loaders.register("ssri")
+def ssri(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code=["N06AB10", "N06AB04", "N06AB08", "N06AB03", "N06AB05", "N06AB06"],
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
+# SNRIs [duloxetin, venlafaxin]
+@data_loaders.register("snri")
+def snri(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code=["N06AX21", "N06AX16"],
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
+# TCAs [amitryptilin, clomipramin, imipramin, nortriptyline, dosulepin]
+@data_loaders.register("tca")
+def tca(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code=["N06AA09", "N06AA04", "N06AA02", "N06AA10", "N06AA16"],
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
+@data_loaders.register("lithium")
+def lithium(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code="N05AN01",
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
 @data_loaders.register("hyperactive disorders medications")
 def hyperactive_disorders_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
@@ -255,8 +371,20 @@ def anti_epileptics(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
+# medications used in alcohol abstinence treatment [thiamin, b-combin, klopoxid, fenemal]
+@data_loaders.register("alcohol_abstinence")
+def alcohol_abstinence(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code=["A11DA01", "A11EA", "N05BA02", "N03AA02"],
+        load_prescribed=True,
+        load_administered=True,
+        wildcard_icd_code=False,
+        n_rows=n_rows,
+    )
+
+
 # data loaders for medications primarily used outside psychiatry
-@data_loaders.register("alimentary tract and metabolism medications")
+@data_loaders.register("alimentary_tract_and_metabolism_medications")
 def alimentary_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="A",
@@ -267,7 +395,7 @@ def alimentary_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("blood and blood forming organs")
+@data_loaders.register("blood_and_blood_forming_organs_medications")
 def blood_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="B",
@@ -278,7 +406,7 @@ def blood_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("cardiovascular system")
+@data_loaders.register("cardiovascular_medications")
 def cardiovascular_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="C",
@@ -300,7 +428,7 @@ def dermatological_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("genito urinary system and sex hormones")
+@data_loaders.register("genito_urinary_system_and_sex_hormones_medications")
 def genito_sex_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="G",
@@ -311,7 +439,7 @@ def genito_sex_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("systemic hormonal preparations")
+@data_loaders.register("systemic_hormonal_preparations")
 def hormonal_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="H",
@@ -344,10 +472,32 @@ def antineoplastic(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("musculoskeletal")
+@data_loaders.register("musculoskeletal_medications")
 def musculoskeletal_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="M",
+        load_prescribed=False,
+        load_administered=True,
+        wildcard_icd_code=True,
+        n_rows=n_rows,
+    )
+
+
+@data_loaders.register("nervous_system_medications")
+def nervous_system_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code="N",
+        load_prescribed=False,
+        load_administered=True,
+        wildcard_icd_code=True,
+        n_rows=n_rows,
+    )
+
+
+@data_loaders.register("analgesics")
+def analgesic(n_rows: Optional[int] = None) -> pd.DataFrame:
+    return load(
+        atc_code="N02",
         load_prescribed=False,
         load_administered=True,
         wildcard_icd_code=True,
@@ -366,7 +516,7 @@ def antiparasitic(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("respiratory medications")
+@data_loaders.register("respiratory_medications")
 def respiratory_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="R",
@@ -377,7 +527,7 @@ def respiratory_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("sensory organs medications")
+@data_loaders.register("sensory_organs_medications")
 def sensory_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="S",
@@ -388,7 +538,7 @@ def sensory_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-@data_loaders.register("various medications")
+@data_loaders.register("various_medications")
 def various_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
     return load(
         atc_code="V",
