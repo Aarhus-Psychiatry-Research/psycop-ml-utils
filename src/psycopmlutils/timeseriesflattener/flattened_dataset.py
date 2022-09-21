@@ -2,7 +2,6 @@
 describing values."""
 
 import datetime as dt
-import os
 from collections.abc import Callable
 from datetime import timedelta
 from multiprocessing import Pool
@@ -20,6 +19,7 @@ from psycopmlutils.utils import (
     data_loaders,
     df_contains_duplicates,
     generate_feature_colname,
+    load_most_recent_df_matching_pattern,
 )
 
 
@@ -161,7 +161,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         """Check that the required columns are present in the initial
         dataframe."""
 
-        for col_name in [self.timestamp_col_name, self.id_col_name]:
+        for col_name in (self.timestamp_col_name, self.id_col_name):
             if col_name not in self.df.columns:
                 raise ValueError(
                     f"{col_name} does not exist in prediction_times_df, change the df or set another argument",
@@ -187,32 +187,6 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 f"Didn't generate any features because: {warnings}",
             )
 
-    def _load_most_recent_df_matching_pattern(
-        self,
-        dir_path: Path,
-        file_pattern: str,
-    ) -> DataFrame:
-        """Load most recent df matching pattern.
-
-        Args:
-            dir (Path): Directory to search
-            file_pattern (str): Pattern to match
-
-        Returns:
-            DataFrame: DataFrame matching pattern
-
-        Raises:
-            FileNotFoundError: If no file matching pattern is found
-        """
-        files = list(dir_path.glob(f"*{file_pattern}*.csv"))
-
-        if len(files) == 0:
-            raise FileNotFoundError(f"No files matching pattern {file_pattern} found")
-
-        most_recent_file = max(files, key=os.path.getctime)
-
-        return pd.read_csv(most_recent_file)
-
     def _load_cached_df_and_expand_fallback(
         self,
         file_pattern: str,
@@ -230,7 +204,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Returns:
             DataFrame: DataFrame with fallback column expanded
         """
-        df = self._load_most_recent_df_matching_pattern(
+        df = load_most_recent_df_matching_pattern(
             dir_path=self.feature_cache_dir,
             file_pattern=file_pattern,
         )
@@ -273,7 +247,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             return False
 
         # Check that file contents match expected
-        cache_df = self._load_most_recent_df_matching_pattern(
+        cache_df = load_most_recent_df_matching_pattern(
             dir_path=self.feature_cache_dir,
             file_pattern=file_pattern,
         )
@@ -283,13 +257,9 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         # Check that some values in generated_df differ from fallback
         # Otherwise, comparison to cache is meaningless
         n_to_generate = 1_000
-
         while not any(
             generated_df[full_col_str] != kwargs_dict["fallback"],
         ):
-            self.msg.info(
-                f"{full_col_str}: Generated_df was all fallback values, regenerating",
-            )
 
             generated_df = self.flatten_temporal_values_to_df(
                 prediction_times_with_uuid_df=self.df.sample(n_to_generate),
@@ -299,9 +269,26 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 **kwargs_dict,
             )
 
-            n_to_generate = (
-                n_to_generate**1.5
-            )  # Increase n_to_generate by 1.5x each time to increase chance of non_fallback values
+            # Keep only values in generated_df which are not NaN
+            generated_df = generated_df[generated_df[full_col_str].notna()]
+
+            # Saving to csv rounds floats, so we need to round here too
+            # to avoid false negatives. Otherwise, it thinks the .csv
+            # file has different values from the generated_df, simply because
+            # generated_df has more decimal places.
+            generated_df = generated_df.round(5)
+            cache_df = cache_df.round(5)
+
+            if not any(
+                generated_df[full_col_str] != kwargs_dict["fallback"],
+            ):
+                self.msg.info(
+                    f"{full_col_str}: Generated_df was all fallback values, regenerating",
+                )
+
+                n_to_generate = (
+                    n_to_generate**1.5
+                )  # Increase n_to_generate by 1.5x each time to increase chance of non_fallback values
 
         cached_suffix = "_c"
         generated_suffix = "_g"
@@ -311,21 +298,20 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             left=generated_df,
             right=cache_df,
             how="left",
-            on=self.pred_time_uuid_col_name,
+            on=[self.pred_time_uuid_col_name, full_col_str],
             suffixes=(generated_suffix, cached_suffix),
             validate="1:1",
             indicator=True,
         )
 
-        # Check that all rows in generated_df are in cache_df
-        if not merged_df[full_col_str + generated_suffix].equals(
-            merged_df[full_col_str + cached_suffix],
-        ):
+        # Check that all rows in merged_df have the indicator == "both"
+        if not all(merged_df["_merge"] == "both"):
             self.msg.info(f"Cache miss, computed values didn't match {file_pattern}")
             return False
 
         # If all checks passed, return true
         msg.good(f"Cache hit for {full_col_str}")
+
         return True
 
     def _get_feature(self, kwargs_dict: dict) -> DataFrame:
@@ -347,8 +333,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
 
         file_pattern = f"{full_col_str}_{self.n_uuids}_uuids"
 
-        if hasattr(self, "feature_cache_dir"):
-
+        if self.feature_cache_dir:
             if self._cache_is_hit(
                 file_pattern=file_pattern,
                 full_col_str=full_col_str,
@@ -380,11 +365,15 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         )
 
         # Write df to cache if exists
-        if hasattr(self, "feature_cache_dir"):
+        if self.feature_cache_dir:
             cache_df = df[[self.pred_time_uuid_col_name, full_col_str]]
 
             # Drop rows containing fallback, since it's non-informative
-            cache_df = cache_df[cache_df[full_col_str] != kwargs_dict["fallback"]]
+            # Handle NA separately since it can never pass equality check
+            if np.isnan(kwargs_dict["fallback"]):
+                cache_df = cache_df[~cache_df[full_col_str].isna()]
+            else:
+                cache_df = cache_df[(cache_df[full_col_str] != kwargs_dict["fallback"])]
 
             # Write df to cache
             timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -512,14 +501,14 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
     def add_temporal_predictors_from_list_of_argument_dictionaries(  # pylint: disable=too-many-branches
         self,
         predictors: list[dict[str, str]],
-        predictor_dfs: dict[str, DataFrame] = None,
+        predictor_dfs: Optional[dict[str, DataFrame]] = None,
         resolve_multiple_fns: Optional[dict[str, Callable]] = None,
     ):
         """Add predictors to the flattened dataframe from a list.
 
         Args:
             predictors (list[dict[str, str]]): A list of dictionaries describing the prediction_features you'd like to generate.
-            predictor_dfs (dict[str, DataFrame], optional): If wanting to pass already resolved dataframes.
+            predictor_dfs (Optional[dict[str, DataFrame]]): If wanting to pass already resolved dataframes.
                 By default, you should add your dataframes to the @data_loaders registry.
                 Then the the predictor_df value in the predictor dict will map to a callable which returns the dataframe.
                 Optionally, you can map the string to a dataframe in predictor_dfs.
@@ -570,6 +559,13 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 resolve_multiple_fns=resolve_multiple_fns,
                 arg_dict=arg_dict,
             )
+
+            # Convert fallback to float64 if NaN to avoid type issues.
+            # If np.Nan is passed to a float64 column, its type changes from float to float64.
+            if isinstance(arg_dict["fallback"], float) and np.isnan(
+                arg_dict["fallback"],
+            ):
+                arg_dict["fallback"] = np.float64(np.nan)
 
             # Rename arguments for create_flattened_df_for_val
             arg_dict = self._set_kwargs_for_create_flattened_df_for_val(
@@ -951,7 +947,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         if not isinstance(values_df, DataFrame):
             raise ValueError("values_df is not a dataframe")
 
-        for col_name in [timestamp_col_name, id_col_name]:
+        for col_name in (timestamp_col_name, id_col_name):
             if col_name not in values_df.columns:
                 raise ValueError(
                     f"{col_name} does not exist in df_prediction_times, change the df or set another argument",

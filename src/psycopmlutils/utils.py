@@ -3,6 +3,7 @@
 utilities. If this file grows, consider splitting it up.
 """
 
+import os
 from pathlib import Path
 from typing import Optional, Union
 
@@ -81,6 +82,32 @@ def generate_feature_colname(
     if len(col_name) == 1:
         col_name = col_name[0]
     return col_name
+
+
+def load_most_recent_df_matching_pattern(
+    dir_path: Path,
+    file_pattern: str,
+) -> pd.DataFrame:
+    """Load most recent df matching pattern.
+
+    Args:
+        dir_path (Path): Directory to search
+        file_pattern (str): Pattern to match
+
+    Returns:
+        pd.DataFrame: DataFrame matching pattern
+
+    Raises:
+        FileNotFoundError: If no file matching pattern is found
+    """
+    files = list(dir_path.glob(f"*{file_pattern}*.csv"))
+
+    if len(files) == 0:
+        raise FileNotFoundError(f"No files matching pattern {file_pattern} found")
+
+    most_recent_file = max(files, key=os.path.getctime)
+
+    return pd.read_csv(most_recent_file)
 
 
 def df_contains_duplicates(df=pd.DataFrame, col_subset=list[str]):
