@@ -14,7 +14,6 @@ import pandas as pd
 from catalogue import Registry  # noqa # pylint: disable=unused-import
 from dask.diagnostics import ProgressBar
 from pandas import DataFrame
-from tqdm import tqdm
 from tqdm.dask import TqdmCallback
 from wasabi import Printer, msg
 
@@ -291,6 +290,25 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 self.msg.info(
                     f"{full_col_str}: Generated_df was all fallback values, regenerating",
                 )
+
+                n_to_generate = (
+                    n_to_generate**1.5
+                )  # Increase n_to_generate by 1.5x each time to increase chance of non_fallback values
+
+            cached_suffix = "_c"
+            generated_suffix = "_g"
+
+        # Merge cache_df onto generated_df
+        merged_df = pd.merge(
+            left=generated_df,
+            right=cache_df,
+            how="left",
+            on=[self.pred_time_uuid_col_name, full_col_str],
+            suffixes=(generated_suffix, cached_suffix),
+            validate="1:1",
+            indicator=True,
+        )
+
         msg.info("Merge complete")
 
         # Check that all rows in merged_df have the indicator == "both"
@@ -330,10 +348,6 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             ):
 
                 df = self._load_cached_df_and_expand_fallback(
-<<<<<<< Updated upstream
-=======
-                    prediction_times_with_uuid_df=self.df[self.pred_time_uuid_col_name],
->>>>>>> Stashed changes
                     file_pattern=file_pattern,
                     full_col_str=full_col_str,
                     fallback=kwargs_dict["fallback"],
@@ -383,20 +397,20 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         """Check if arg_dict has all required keys, and prune to only required
         keys.
 
-        Args:
-<<<<<<< Updated upstream
-            processed_arg_dicts (list[dict[str, str]]): list of processed arg dicts.
-            arg_dict (dict[str, str]): Arg dict to check and prune.
-=======
-            file_pattern (str): File pattern to search for
-            fallback (Any): Fallback value
-            prediction_times_with_uuid_df (pd.DataFrame): Prediction times with uuids
-            full_col_str (str): Full column name for values
-            dir (Path): Directory to search for files in
->>>>>>> Stashed changes
+                Args:
+        <<<<<<< Updated upstream
+                    processed_arg_dicts (list[dict[str, str]]): list of processed arg dicts.
+                    arg_dict (dict[str, str]): Arg dict to check and prune.
+        =======
+                    file_pattern (str): File pattern to search for
+                    fallback (Any): Fallback value
+                    prediction_times_with_uuid_df (pd.DataFrame): Prediction times with uuids
+                    full_col_str (str): Full column name for values
+                    dir (Path): Directory to search for files in
+        >>>>>>> Stashed changes
 
-        Returns:
-            dict[str, str]: Pruned arg dict.
+                Returns:
+                    dict[str, str]: Pruned arg dict.
         """
 
         required_keys = [
@@ -580,15 +594,24 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 arg_dict=arg_dict,
             )
 
-            n_to_generate = (
-                n_to_generate**1.5
-            )  # Increase n_to_generate by 1.5x each time to increase chance of non_fallback values
+            self._check_and_prune_to_required_arg_dict_keys(
+                processed_arg_dicts=processed_arg_dicts,
+                arg_dict=arg_dict,
+            )
+
+            # Validate dicts before starting pool, saves time if errors!
+            self._validate_processed_arg_dicts(processed_arg_dicts)
+
+        with Pool(self.n_workers) as p:
+            flattened_predictor_dfs = p.map(
+                self._get_feature,
+                processed_arg_dicts,
+            )
 
         flattened_predictor_dfs = [
             dd.from_pandas(df.set_index(self.pred_time_uuid_col_name), npartitions=3)
             for df in flattened_predictor_dfs
         ]
-
 
         msg.info("Feature generation complete, concatenating")
         with TqdmCallback(desc="compute"):

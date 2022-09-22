@@ -74,11 +74,6 @@ def save_feature_set_description_to_disk(
         out_dir=out_dir,
     )
 
-    PREDICTOR_SPEC_LIST = (
-        DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
-    )  # + MEDICATION_PREDICTORS
-    PREDICTOR_COMBINATIONS = create_feature_combinations(PREDICTOR_SPEC_LIST)
-
 
 def create_save_dir_path(
     proj_path: Path,
