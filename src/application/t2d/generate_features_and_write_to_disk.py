@@ -13,12 +13,12 @@ import numpy as np
 import pandas as pd
 import psutil
 import wandb
-from wasabi import Printer
-
-import psycopmlutils.loaders.raw  # noqa
 from features_blood_samples import get_lab_feature_spec
 from features_diagnoses import get_diagnosis_feature_spec
 from features_medications import get_medication_feature_spec
+from wasabi import Printer
+
+import psycopmlutils.loaders.raw  # noqa
 from psycopmlutils.data_checks.flattened.data_integrity import (
     save_feature_set_integrity_from_dir,
 )
@@ -161,42 +161,42 @@ def split_and_save_to_disk(
 def add_metadata(
     outcome_loader_str: str,
     pre_loaded_dfs: dict[str, pd.DataFrame],
-    flattened_df: FlattenedDataset,
+    flattened_dataset: FlattenedDataset,
 ) -> FlattenedDataset:
     """Add metadata.
 
     Args:
         outcome_loader_str (str): String to lookup in catalogue to load outcome.
         pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
-        flattened_df (FlattenedDataset): Flattened dataset.
+        flattened_dataset (FlattenedDataset): Flattened dataset.
 
     Returns:
         FlattenedDataset: Flattened dataset.
     """
 
     # Add timestamp from outcomes
-    flattened_df.add_static_info(
+    flattened_dataset.add_static_info(
         info_df=pre_loaded_dfs[outcome_loader_str],
         prefix="",
         input_col_name="timestamp",
         output_col_name="timestamp_first_t2d",
     )
 
-    return flattened_df
+    return flattened_dataset
 
 
 def add_outcomes(
     outcome_loader_str: str,
     pre_loaded_dfs: dict[str, pd.DataFrame],
-    flattened_df: FlattenedDataset,
+    flattened_dataset: FlattenedDataset,
     lookahead_years: list[Union[int, float]],
 ) -> FlattenedDataset:
-    """Add outcome.
+    """Add outcomes.
 
     Args:
         outcome_loader_str (str): String to lookup in catalogue to load outcome.
         pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
-        flattened_df (FlattenedDataset): Flattened dataset.
+        flattened_dataset (FlattenedDataset): Flattened dataset.
         lookahead_years (list[Union[int, float]]): List of lookahead years.
 
     Returns:
@@ -209,7 +209,7 @@ def add_outcomes(
     for i in lookahead_years:
         lookahead_days = int(i * 365)
         msg.info(f"Adding outcome with {lookahead_days} days of lookahead")
-        flattened_df.add_temporal_outcome(
+        flattened_dataset.add_temporal_outcome(
             outcome_df=pre_loaded_dfs[outcome_loader_str],
             lookahead_days=lookahead_days,
             resolve_multiple="max",
@@ -221,30 +221,35 @@ def add_outcomes(
 
     msg.good("Finished adding outcome")
 
-    return flattened_df
+    return flattened_dataset
 
 
-def add_predictors(pre_loaded_dfs, predictor_combinations, flattened_df):
+def add_predictors(
+    pre_loaded_dfs: dict[str, pd.DataFrame],
+    predictor_combinations: list[dict[str, dict[str, Any]]],
+    flattened_dataset: FlattenedDataset,
+):
     """Add predictors.
 
     Args:
         pre_loaded_dfs (dict[str, pd.DataFrame]): Dictionary of pre-loaded dataframes.
         predictor_combinations (list[dict[str, dict[str, Any]]]): List of predictor combinations.
-        flattened_df (FlattenedDataset): Flattened dataset.
+        flattened_dataset (FlattenedDataset): Flattened dataset.
     """
 
     msg = Printer(timestamp=True)
 
     msg.info("Adding static predictors")
-    flattened_df.add_static_info(
-        info_df=pre_loaded_dfs["sex_female"], input_col_name="sex_female"
+    flattened_dataset.add_static_info(
+        info_df=pre_loaded_dfs["sex_female"],
+        input_col_name="sex_female",
     )
-    flattened_df.add_age(pre_loaded_dfs["birthdays"])
+    flattened_dataset.add_age(pre_loaded_dfs["birthdays"])
 
     start_time = time.time()
 
     msg.info("Adding temporal predictors")
-    flattened_df.add_temporal_predictors_from_list_of_argument_dictionaries(
+    flattened_dataset.add_temporal_predictors_from_list_of_argument_dictionaries(
         predictors=predictor_combinations,
         predictor_dfs=pre_loaded_dfs,
     )
@@ -256,7 +261,7 @@ def add_predictors(pre_loaded_dfs, predictor_combinations, flattened_df):
         f"Finished adding {len(predictor_combinations)} predictors, took {round((end_time - start_time)/60, 1)} minutes",
     )
 
-    return flattened_df
+    return flattened_dataset
 
 
 def create_full_flattened_dataset(
@@ -290,8 +295,8 @@ def create_full_flattened_dataset(
         prediction_times_df=pre_loaded_dfs[prediction_time_loader_str],
         n_workers=min(
             len(predictor_combinations),
-            psutil.cpu_count(logical=False) * 3,
-        ),  # * 3 since dataframe loading is IO intensive, cores are likely to wait for a lot of them.
+            psutil.cpu_count(logical=False),
+        ),
         feature_cache_dir=proj_path / "feature_cache",
     )
 
@@ -299,20 +304,20 @@ def create_full_flattened_dataset(
     flattened_dataset = add_outcomes(
         pre_loaded_dfs=pre_loaded_dfs,
         outcome_loader_str=outcome_loader_str,
-        flattened_df=flattened_dataset,
+        flattened_dataset=flattened_dataset,
         lookahead_years=lookahead_years,
     )
 
     flattened_dataset = add_predictors(
         pre_loaded_dfs=pre_loaded_dfs,
         predictor_combinations=predictor_combinations,
-        flattened_df=flattened_dataset,
+        flattened_dataset=flattened_dataset,
     )
 
     flattened_dataset = add_metadata(
         pre_loaded_dfs=pre_loaded_dfs,
         outcome_loader_str=outcome_loader_str,
-        flattened_df=flattened_dataset,
+        flattened_dataset=flattened_dataset,
     )
 
     msg.info(

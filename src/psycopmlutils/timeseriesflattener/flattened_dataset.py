@@ -614,11 +614,13 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             )
 
         flattened_predictor_dfs = [
-            dd.from_pandas(df.set_index(self.pred_time_uuid_col_name), npartitions=3)
+            dd.from_pandas(df.set_index(self.pred_time_uuid_col_name), npartitions=200)
             for df in flattened_predictor_dfs
         ]
 
-        msg.info("Feature generation complete, concatenating")
+        msg.info(
+            f"Feature generation complete, concatenating {len(flattened_predictor_dfs)} dataframes",
+        )
         with TqdmCallback(desc="compute"):
             concatenated_dfs = dd.concat(
                 flattened_predictor_dfs,
@@ -706,10 +708,12 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Raises:
             ValueError: If input_col_name does not match a column in info_df.
         """
-
-        value_col_names: list[str] = [
-            col for col in info_df.columns if col not in self.id_col_name
-        ]
+        if input_col_name is None:
+            value_col_names: list[str] = [
+                col for col in info_df.columns if col not in self.id_col_name
+            ]
+        else:
+            value_col_names = [input_col_name]
 
         if len(value_col_names) > 1:
             raise ValueError("info_df must contain only id_col_name and value_col_name")
@@ -958,6 +962,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Returns:
             DataFrame
         """
+        msg = Printer(timestamp=True)
 
         # Rename column
         if new_col_name is None:
