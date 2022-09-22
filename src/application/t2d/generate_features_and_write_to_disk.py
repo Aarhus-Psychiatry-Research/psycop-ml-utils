@@ -16,9 +16,9 @@ import wandb
 from wasabi import Printer
 
 import psycopmlutils.loaders.raw  # noqa
-from application.t2d.features_blood_samples import get_lab_feature_spec
-from application.t2d.features_diagnoses import get_diagnosis_feature_spec
-from application.t2d.features_medications import get_medication_feature_spec
+from features_blood_samples import get_lab_feature_spec
+from features_diagnoses import get_diagnosis_feature_spec
+from features_medications import get_medication_feature_spec
 from psycopmlutils.data_checks.flattened.data_integrity import (
     save_feature_set_integrity_from_dir,
 )
@@ -236,7 +236,9 @@ def add_predictors(pre_loaded_dfs, predictor_combinations, flattened_df):
     msg = Printer(timestamp=True)
 
     msg.info("Adding static predictors")
-    flattened_df.add_static_info(pre_loaded_dfs["sex_female"])
+    flattened_df.add_static_info(
+        info_df=pre_loaded_dfs["sex_female"], input_col_name="sex_female"
+    )
     flattened_df.add_age(pre_loaded_dfs["birthdays"])
 
     start_time = time.time()

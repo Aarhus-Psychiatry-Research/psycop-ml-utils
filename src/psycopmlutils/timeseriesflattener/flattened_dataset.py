@@ -711,7 +711,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             col for col in info_df.columns if col not in self.id_col_name
         ]
 
-        if len(value_col_names) > 0:
+        if len(value_col_names) > 1:
             raise ValueError("info_df must contain only id_col_name and value_col_name")
 
         value_col_name = value_col_names[0]

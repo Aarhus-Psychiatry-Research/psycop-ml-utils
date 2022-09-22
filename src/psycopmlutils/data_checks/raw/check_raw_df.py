@@ -1,6 +1,6 @@
 """Check that any raw df conforms to the required format."""
 
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -8,7 +8,7 @@ import pandas as pd
 def check_for_duplicates(
     df: pd.DataFrame,
     subset_duplicates_columns: list[str],
-) -> list[str]:
+) -> tuple[pd.Series, list[str]]:
     """Check for duplicates in the dataframe.
 
     Args:
@@ -16,7 +16,7 @@ def check_for_duplicates(
         subset_duplicates_columns (list[str]): list of columns to subset on when checking for duplicates.
 
     Returns:
-        list[str]: list of errors.
+        tuple(pd.Series, list[str]): duplicates and list of errors.
     """
 
     source_failures = []
@@ -36,7 +36,7 @@ def get_column_dtype_failures(
     df: pd.DataFrame,
     expected_val_dtypes: list[str],
     col: str,
-) -> str:
+) -> Union[str, None]:
     """Check that the column is of the correct dtype.
 
     Args:
@@ -56,6 +56,8 @@ def get_column_dtype_failures(
         # Check that column has a valid numeric format
         if df[col].dtype not in expected_val_dtypes:
             return f"{col}: dtype {df[col].dtype}, expected {expected_val_dtypes}"
+    else:
+        return None
 
 
 def get_na_prop_failures(
@@ -160,10 +162,17 @@ def check_raw_df(  # pylint: disable=too-many-branches
     source_failures = []
 
     if required_columns is None:
-        required_columns = ["dw_ek_borger", "timestamp", "value"]
+        if "value" in df.columns:
+            required_columns = ["dw_ek_borger", "timestamp", "value"]
+        elif "date_of_birth" in df.columns:
+            required_columns = ["dw_ek_borger", "date_of_birth"]
+        elif "sex_female" in df.columns:
+            required_columns = ["dw_ek_borger", "sex_female"]
+        else:
+            required_columns = ["dw_ek_borger", "timestamp"]
 
     if subset_duplicates_columns is None:
-        subset_duplicates_columns = ["dw_ek_borger", "timestamp", "value"]
+        subset_duplicates_columns = required_columns
 
     if expected_val_dtypes is None:
         expected_val_dtypes = ["float64", "int64"]
