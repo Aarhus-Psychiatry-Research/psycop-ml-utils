@@ -54,7 +54,9 @@ def generate_feature_colname(
     fallback: str,
     loader_kwargs: Optional[dict] = None,
 ) -> Union[str, list[str]]:
-    """Generates standardized column name from feature collapse information.
+    """Generates standardized column name from feature collapse information. If
+    passed a string, generates a single column name. If passed a list of
+    strings, generates a list of column names.
 
     Args:
         prefix (str): Prefix (typically either "pred" or "outc")
@@ -80,8 +82,10 @@ def generate_feature_colname(
         col_name = [
             f"{col}_{format_dict_for_printing(loader_kwargs)}" for col in col_name
         ]
+
     if len(col_name) == 1:
         col_name = col_name[0]
+
     return col_name
 
 
@@ -111,7 +115,7 @@ def load_most_recent_df_matching_pattern(
     return pd.read_csv(most_recent_file)
 
 
-def df_contains_duplicates(df=pd.DataFrame, col_subset=list[str]):
+def df_contains_duplicates(df: pd.DataFrame, col_subset: list[str]):
     """Check if a dataframe contains duplicates.
 
     Args:

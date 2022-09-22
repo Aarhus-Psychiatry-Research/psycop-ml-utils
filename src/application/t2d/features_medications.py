@@ -1,17 +1,20 @@
 """Loaders for T2D medication feature spec."""
 
 
+from typing import Any, Optional
+
+
 def get_medication_feature_spec(  # pylint: disable=dangerous-default-value
-    lookbehind_days: int = None,
-    resolve_multiple: str = None,
-    fallback=0,
-):
+    lookbehind_days: Optional[list[int]] = None,
+    resolve_multiple: Optional[list[str]] = None,
+    fallback: Any = 0,
+) -> list:
     """Get feature specification for T2D medications.
 
     Args:
-        lookbehind_days (int, optional): Defaults to None.
-        resolve_multiple (str, optional): Defaults to None.
-        fallback (int, optional): Defaults to 0.
+        lookbehind_days (list[int], optional): Defaults to None.
+        resolve_multiple (list[str], optional): Defaults to None.
+        fallback (Any, optional): Defaults to 0.
 
     Returns:
         list: Feature specification.

@@ -1,7 +1,7 @@
 """Pre-load dataframes to avoid duplicate loading."""
 
 from multiprocessing import Pool
-from typing import Union
+from typing import Any, Union
 
 import pandas as pd
 from wasabi import Printer
@@ -10,7 +10,7 @@ from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 from psycopmlutils.utils import data_loaders
 
 
-def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
+def load_df(predictor_df: str, values_to_load: Union[str, None] = None) -> pd.DataFrame:
     """Load a dataframe from a SQL database.
 
     Args:
@@ -21,6 +21,8 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
         pd.DataFrame: The loaded dataframe.
     """
     msg = Printer(timestamp=True)
+
+    df = pd.DataFrame()
 
     msg.info(f"Loading {predictor_df}")
 
@@ -35,23 +37,29 @@ def load_df(predictor_df: str, values_to_load: str = None) -> pd.DataFrame:
         else:
             df = loader_fns[predictor_df]()
 
+    # Check that df is a dataframe
+    if df.shape[0] == 0:
+        raise ValueError(f"Loaded dataframe {predictor_df} is empty.")
+
     msg.info(f"Loaded {predictor_df} with {len(df)} rows")
-    return {predictor_df: df}
+    return df
 
 
-def load_df_wrapper(predictor_dict: dict[str, Union[str, float, int]]) -> pd.DataFrame:
+def load_df_wrapper(predictor_dict: dict[str, Any]) -> dict[str, pd.DataFrame]:
     """Wrapper to load a dataframe from a dictionary.
 
     Args:
-        predictor_dict (dict[str, Union[str, float, int]]): dictionary where the key predictor_df maps to an SQL database.
+        predictor_dict (dict[str, Any]): dictionary where the key predictor_df maps to an SQL database.
 
     Returns:
         pd.DataFrame: The loaded dataframe.
     """
-    return load_df(
-        predictor_df=predictor_dict["predictor_df"],
-        values_to_load=predictor_dict.get("values_to_load"),
-    )
+    return {
+        predictor_dict["predictor_df"]: load_df(
+            predictor_df=predictor_dict["predictor_df"],
+            values_to_load=predictor_dict.get("values_to_load"),
+        ),
+    }
 
 
 def error_check_dfs(pre_loaded_dfs: list[dict[str, pd.DataFrame]]) -> None:
@@ -81,7 +89,7 @@ def error_check_dfs(pre_loaded_dfs: list[dict[str, pd.DataFrame]]) -> None:
 
 
 def pre_load_unique_dfs(
-    unique_predictor_dict_list: list[dict[str, Union[str, float, int]]],
+    unique_predictor_dict_list: list[dict[str, Any]],
 ) -> dict[str, pd.DataFrame]:
     """Pre-load unique dataframes to avoid duplicate loading.
 
@@ -106,6 +114,6 @@ def pre_load_unique_dfs(
         error_check_dfs(pre_loaded_dfs=pre_loaded_dfs)
 
         # Combined pre_loaded dfs into one dictionary
-        pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}
+        pre_loaded_dfs = {k: v for d in pre_loaded_dfs for k, v in d.items()}  # type: ignore
 
-    return pre_loaded_dfs
+    return pre_loaded_dfs  # type: ignore

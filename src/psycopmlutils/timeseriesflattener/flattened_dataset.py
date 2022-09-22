@@ -12,7 +12,7 @@ import dask.dataframe as dd
 import numpy as np
 import pandas as pd
 from catalogue import Registry  # noqa # pylint: disable=unused-import
-from dask.diagnostics import ProgressBar
+from dask.diagnostics.progress import ProgressBar
 from pandas import DataFrame
 from tqdm.dask import TqdmCallback
 from wasabi import Printer, msg
@@ -52,12 +52,12 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
     def __init__(  # pylint: disable=too-many-arguments
         self,
         prediction_times_df: DataFrame,
-        id_col_name: Optional[str] = "dw_ek_borger",
-        timestamp_col_name: Optional[str] = "timestamp",
+        id_col_name: str = "dw_ek_borger",
+        timestamp_col_name: str = "timestamp",
         min_date: Optional[pd.Timestamp] = None,
-        n_workers: Optional[int] = 60,
-        predictor_col_name_prefix: Optional[str] = "pred",
-        outcome_col_name_prefix: Optional[str] = "outc",
+        n_workers: int = 60,
+        predictor_col_name_prefix: str = "pred",
+        outcome_col_name_prefix: str = "outc",
         feature_cache_dir: Optional[Path] = None,
     ):
         """Class containing a time-series, flattened.
@@ -107,7 +107,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         self.min_date = min_date
         self.feature_cache_dir = feature_cache_dir
 
-        if feature_cache_dir:
+        if self.feature_cache_dir:
             if not self.feature_cache_dir.exists():
                 self.feature_cache_dir.mkdir()
 
@@ -115,13 +115,13 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
 
         self.msg = Printer(timestamp=True)
 
-        self.df = prediction_times_df
+        self.df: pd.DataFrame = prediction_times_df
 
         self.check_init_df_for_errors()
 
         # Drop prediction times before min_date
         if min_date is not None:
-            self.df = self.df[self.df[self.timestamp_col_name] > self.min_date]
+            self.df = self.df[self.df[self.timestamp_col_name] > self.min_date]  # type: ignore
 
         # Create pred_time_uuid_columne
         self.df[self.pred_time_uuid_col_name] = self.df[self.id_col_name].astype(
@@ -176,7 +176,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         warnings = []
 
         for d in arg_dicts:
-            if not isinstance(d["values_df"], (DataFrame, Callable)):
+            if not isinstance(d["values_df"], (DataFrame, Callable)):  # type: ignore
                 warnings.append(
                     f"values_df resolves to neither a Callable nor a DataFrame in {d}",
                 )
@@ -210,7 +210,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             DataFrame: DataFrame with fallback column expanded
         """
         df = load_most_recent_df_matching_pattern(
-            dir_path=self.feature_cache_dir,
+            dir_path=self.feature_cache_dir,  # type: ignore
             file_pattern=file_pattern,
         )
 
@@ -245,6 +245,11 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             bool: True if cache is hit, False otherwise
         """
         # Check that file exists
+        if self.feature_cache_dir is None:
+            raise ValueError(
+                "feature_cache_dir is None",
+            )
+
         file_pattern_hits = list(self.feature_cache_dir.glob(f"*{file_pattern}*.csv"))
 
         if len(file_pattern_hits) == 0:
@@ -560,9 +565,9 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Raises:
             ValueError: If predictor_df is not in the data_loaders registry or predictor_dfs.
         """
-        processed_arg_dicts = []
+        processed_arg_dicts: list = []
 
-        dicts_found_in_predictor_dfs = []
+        dicts_found_in_predictor_dfs: list = []
 
         # Replace strings with objects as relevant
         for arg_dict in predictors:
@@ -702,9 +707,18 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             ValueError: If input_col_name does not match a column in info_df.
         """
 
-        value_col_name = [col for col in info_df.columns if col not in self.id_col_name]
+        value_col_names: list[str] = [
+            col for col in info_df.columns if col not in self.id_col_name
+        ]
+
+        if len(value_col_names) > 0:
+            raise ValueError("info_df must contain only id_col_name and value_col_name")
+
+        value_col_name = value_col_names[0]
 
         # Try to infer value col name if not provided
+        if input_col_name:
+            value_col_name = input_col_name
         if input_col_name is None:
             if len(value_col_name) == 1:
                 value_col_name = value_col_name[0]
@@ -714,8 +728,6 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 )
             elif len(value_col_name) == 0:
                 raise ValueError("No value column found in info_df, please check.")
-        else:
-            value_col_name = input_col_name
 
         # Find output_col_name
         if prefix == "self.predictor_col_name_prefix":
@@ -746,10 +758,10 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         self,
         outcome_df: DataFrame,
         lookahead_days: float,
-        resolve_multiple: Union[Callable, str],
+        resolve_multiple: Callable,
         fallback: float,
         incident: Optional[bool] = False,
-        new_col_name: Optional[Union[str, list]] = "value",
+        new_col_name: Union[str, list] = "value",
         dichotomous: Optional[bool] = False,
     ):
         """Add an outcome-column to the dataset.
@@ -757,7 +769,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Args:
             outcome_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.
             lookahead_days (float): How far ahead to look for an outcome in days. If none found, use fallback.
-            resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
+            resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
             new_col_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
@@ -814,9 +826,9 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         self,
         predictor_df: DataFrame,
         lookbehind_days: float,
-        resolve_multiple: Union[Callable, str],
+        resolve_multiple: Callable,
         fallback: float,
-        new_col_name: str = None,
+        new_col_name: str,
     ):
         """Add a column with predictor values to the flattened dataset (e.g.
         "average value of bloodsample within n days").
@@ -839,12 +851,12 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
 
     def add_temporal_col_to_flattened_dataset(
         self,
-        values_df: Union[DataFrame, str],
+        values_df: DataFrame,
         direction: str,
         interval_days: float,
-        resolve_multiple: Union[Callable, str],
+        resolve_multiple: Callable,
         fallback: float,
-        new_col_name: Optional[Union[str, list]] = None,
+        new_col_name: Union[str, list],
     ):
         """Add a column to the dataset (either predictor or outcome depending
         on the value of "direction").
@@ -855,9 +867,10 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
-            new_col_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            new_col_name (Union[str, list]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
         """
-        timestamp_col_type = type(values_df[self.timestamp_col_name][0]).__name__
+
+        timestamp_col_type = type(values_df[self.timestamp_col_name].iloc[0]).__name__
 
         if timestamp_col_type not in ["Timestamp"]:
             raise ValueError(
@@ -903,7 +916,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         values_df: Union[Callable, DataFrame],
         direction: str,
         interval_days: float,
-        resolve_multiple: Union[Callable, str],
+        resolve_multiple: Callable,
         fallback: Union[float, str],
         id_col_name: str,
         timestamp_col_name: str,
@@ -960,7 +973,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         )
 
         # Resolve values_df if not already a dataframe.
-        if isinstance(values_df, Callable):
+        if callable(values_df):
             if loader_kwargs:
                 values_df = values_df(**loader_kwargs)
             else:
@@ -1090,7 +1103,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         if isinstance(resolve_multiple, str):
             resolve_multiple = resolve_fns.get(resolve_multiple)
 
-        if isinstance(resolve_multiple, Callable):
+        if callable(resolve_multiple):
             df = resolve_multiple(df).reset_index()
         else:
             raise ValueError("resolve_multiple must be or resolve to a Callable")

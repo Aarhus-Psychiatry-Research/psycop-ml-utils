@@ -52,6 +52,7 @@ pyodbc = "^4.0.34"
 tqdm = "^4.64.1"
 dask = "^2022.9.0"
 transformers = "^4.22.0"
+mypy = "^0.971"
 
 [tool.coverage.run]
 omit = [

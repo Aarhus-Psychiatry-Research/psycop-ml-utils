@@ -50,14 +50,14 @@ def log_to_wandb(wandb_project_name, predictor_combinations, save_dir):
 def save_feature_set_description_to_disk(
     predictor_combinations: list,
     flattened_csv_dir: Path,
-    out_dir: Optional[Path] = None,
+    out_dir: Path,
 ):
     """Describe output.
 
     Args:
         predictor_combinations (list): List of predictor specs.
         flattened_csv_dir (Path): Path to flattened csv dir.
-        out_dir (Optional[Path], optional): Path to output dir. Defaults to None.
+        out_dir (Path): Path to output dir.
     """
 
     # Create data integrity report
@@ -100,32 +100,26 @@ def create_save_dir_path(
 
 
 def split_and_save_to_disk(
-    flattened_df: Union[FlattenedDataset, pd.DataFrame],
+    flattened_df: pd.DataFrame,
     out_dir: Path,
     file_prefix: str,
     split_ids_dict: Optional[dict[str, pd.Series]] = None,
     splits: Optional[list[str]] = None,
-) -> tuple[Path, str]:
+):
     """Split and save to disk.
 
     Args:
-        flattened_df (Union[FlattenedDataset, pd.DataFrame]): Flattened dataset.
+        flattened_df (pd.DataFrame): Flattened dataframe.
         out_dir (Path): Path to output directory.
         file_prefix (str): File prefix.
         split_ids_dict (Optional[dict[str, list[str]]]): Dictionary of split ids, like {"train": pd.Series with ids}.
         splits (list, optional): Which splits to create. Defaults to ["train", "val", "test"].
-
-    Returns:
-        tuple[Path, str]: Path to sub directory and file prefix.
     """
 
     if splits is None:
         splits = ["train", "val", "test"]
 
     msg = Printer(timestamp=True)
-
-    if isinstance(flattened_df, FlattenedDataset):
-        flattened_df = flattened_df.df
 
     flattened_df_ids = flattened_df["dw_ek_borger"].unique()
 
@@ -162,8 +156,6 @@ def split_and_save_to_disk(
         split_df.to_csv(file_path, index=False)
 
         msg.good(f"{dataset_name}: Succesfully saved to {file_path}")
-
-    return file_prefix
 
 
 def add_metadata(
@@ -272,7 +264,7 @@ def create_full_flattened_dataset(
     predictor_combinations: list[dict[str, dict[str, Any]]],
     proj_path: Path,
     lookahead_years: list[Union[int, float]],
-):
+) -> pd.DataFrame:
     """Create flattened dataset.
 
     Args:
@@ -292,7 +284,7 @@ def create_full_flattened_dataset(
 
     msg.info("Initialising flattened dataset")
 
-    flattened_df = FlattenedDataset(
+    flattened_dataset = FlattenedDataset(
         prediction_times_df=pre_loaded_dfs[prediction_time_loader_str],
         n_workers=min(
             len(predictor_combinations),
@@ -302,37 +294,37 @@ def create_full_flattened_dataset(
     )
 
     # Outcome
-    flattened_df = add_outcomes(
+    flattened_dataset = add_outcomes(
         pre_loaded_dfs=pre_loaded_dfs,
         outcome_loader_str=outcome_loader_str,
-        flattened_df=flattened_df,
+        flattened_df=flattened_dataset,
         lookahead_years=lookahead_years,
     )
 
-    flattened_df = add_predictors(
+    flattened_dataset = add_predictors(
         pre_loaded_dfs=pre_loaded_dfs,
         predictor_combinations=predictor_combinations,
-        flattened_df=flattened_df,
+        flattened_df=flattened_dataset,
     )
 
-    flattened_df = add_metadata(
+    flattened_dataset = add_metadata(
         pre_loaded_dfs=pre_loaded_dfs,
         outcome_loader_str=outcome_loader_str,
-        flattened_df=flattened_df,
+        flattened_df=flattened_dataset,
     )
 
     msg.info(
-        f"Dataframe size is {int(flattened_df.df.memory_usage(index=True, deep=True).sum() / 1024 / 1024)} MiB",
+        f"Dataframe size is {int(flattened_dataset.df.memory_usage(index=True, deep=True).sum() / 1024 / 1024)} MiB",  # type: ignore
     )
 
-    return flattened_df
+    return flattened_dataset.df
 
 
 def setup_for_main(
     predictor_spec_list: list[dict[str, dict[str, Any]]],
     feature_sets_path: Path,
     proj_name: str,
-) -> tuple[Path, list[dict[str, dict[str, Any]]]]:
+) -> tuple[list[dict[str, dict[str, Any]]], Path, str]:
     """Setup for main.
 
     Args:
@@ -343,7 +335,7 @@ def setup_for_main(
     Returns:
         tuple[list[dict[str, dict[str, Any]]], dict[str, pd.DataFrame], Path]: Tuple of predictor combinations, pre-loaded dataframes, and project path.
     """
-    predictor_combinations = create_feature_combinations(predictor_spec_list)
+    predictor_combinations = create_feature_combinations(arg_sets=predictor_spec_list)
 
     # Some predictors take way longer to complete. Shuffling ensures that e.g. the ones that take the longest aren't all
     # at the end of the list.
@@ -362,7 +354,7 @@ def setup_for_main(
 
 
 def pre_load_project_dfs(
-    predictor_spec_list: list[dict[str, dict[str, Any]]],
+    predictor_spec_list: list[dict[str, Any]],
     outcome_loader_str: str,
     prediction_time_loader_str: str,
 ) -> dict[str, pd.DataFrame]:
@@ -377,13 +369,12 @@ def pre_load_project_dfs(
         dict[str, pd.DataFrame]: Dictionary of pre-loaded dataframes.
     """
 
-    dfs_to_preload = (
-        predictor_spec_list
-        + {"predictor_df": outcome_loader_str}
-        + {"predictor_df": prediction_time_loader_str}
-        + {"predictor_df": "birthdays"}
-        + {"predictor_df": "sex_female"}
-    )
+    dfs_to_preload = predictor_spec_list + [
+        {"predictor_df": outcome_loader_str},
+        {"predictor_df": prediction_time_loader_str},
+        {"predictor_df": "birthdays"},
+        {"predictor_df": "sex_female"},
+    ]
 
     # Many features will use the same dataframes, so we can load them once and reuse them.
     pre_loaded_dfs = pre_load_unique_dfs(
