@@ -49,6 +49,8 @@ docformatter = "1.4"
 darglint = "^1.8.1"
 SQLAlchemy = "^1.4.40"
 pyodbc = "^4.0.34"
+tqdm = "^4.64.1"
+dask = "^2022.9.0"
 transformers = "^4.22.0"
 
 [tool.coverage.run]
