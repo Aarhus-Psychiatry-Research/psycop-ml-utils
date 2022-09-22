@@ -12,7 +12,7 @@ import pytest
 from psycopmlutils.loaders.synth.raw.load_synth_data import (
     load_synth_outcome,
     load_synth_prediction_times,
-    synth_predictor,
+    synth_predictor_float,
 )
 from psycopmlutils.timeseriesflattener.flattened_dataset import FlattenedDataset
 from src.application.t2d.generate_features_and_write_to_disk import (
@@ -28,26 +28,40 @@ def synth_prediction_times():
     return load_synth_prediction_times()
 
 
-@pytest.fixture(scope="function")
-def base_predictor_combinations():
-    """Basic predictor combinations."""
+base_float_predictor_combinations = [
+    {
+        "predictor_df": "synth_predictor_float",
+        "lookbehind_days": 365,
+        "resolve_multiple": "max",
+        "fallback": np.NaN,
+        "allowed_nan_value_prop": 0.0,
+    },
+    {
+        "predictor_df": "synth_predictor_float",
+        "lookbehind_days": 730,
+        "resolve_multiple": "max",
+        "fallback": np.NaN,
+        "allowed_nan_value_prop": 0.0,
+    },
+]
 
-    return [
-        {
-            "predictor_df": "synth_predictor",
-            "lookbehind_days": 365,
-            "resolve_multiple": "max",
-            "fallback": np.NaN,
-            "allowed_nan_value_prop": 0.0,
-        },
-        {
-            "predictor_df": "synth_predictor",
-            "lookbehind_days": 730,
-            "resolve_multiple": "max",
-            "fallback": np.NaN,
-            "allowed_nan_value_prop": 0.0,
-        },
-    ]
+
+base_binary_predictor_combinations = [
+    {
+        "predictor_df": "synth_predictor_float",
+        "lookbehind_days": 365,
+        "resolve_multiple": "max",
+        "fallback": np.NaN,
+        "allowed_nan_value_prop": 0.0,
+    },
+    {
+        "predictor_df": "synth_predictor_float",
+        "lookbehind_days": 730,
+        "resolve_multiple": "max",
+        "fallback": np.NaN,
+        "allowed_nan_value_prop": 0.0,
+    },
+]
 
 
 def check_dfs_have_same_contents_by_column(df1, df2):
@@ -137,30 +151,37 @@ def init_temp_dir(tmp_path):
     return tmp_path
 
 
+@pytest.mark.parametrize(
+    "predictor_combinations",
+    [base_float_predictor_combinations, base_binary_predictor_combinations],
+)
 def test_cache_hitting(
     tmp_path,
     synth_prediction_times,
-    base_predictor_combinations,
+    predictor_combinations,
 ):
     """Test that the cache is hit when the same data is requested twice."""
+
+    if callable(predictor_combinations):
+        predictor_combinations = predictor_combinations()
 
     # Create the cache
     first_df = create_flattened_df(
         cache_dir=tmp_path,
-        predictor_combinations=base_predictor_combinations,
+        predictor_combinations=predictor_combinations,
         prediction_times_df=synth_prediction_times,
     )
 
     # Load the cache
     cache_df = create_flattened_df(
         cache_dir=tmp_path,
-        predictor_combinations=base_predictor_combinations,
+        predictor_combinations=predictor_combinations,
         prediction_times_df=synth_prediction_times,
     )
 
     # If cache_df doesn't hit the cache, it creates its own files
     # Thus, number of files is an indicator of whether the cache was hit
-    assert len(list(tmp_path.glob("*"))) == len(base_predictor_combinations)
+    assert len(list(tmp_path.glob("*"))) == len(predictor_combinations)
 
     # Assert that each column has the same contents
     check_dfs_have_same_contents_by_column(first_df, cache_df)
