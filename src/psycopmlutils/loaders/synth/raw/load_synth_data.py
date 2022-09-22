@@ -30,8 +30,8 @@ def load_raw_test_csv(filename: str, n_rows: Optional[int] = None) -> pd.DataFra
     return df
 
 
-@data_loaders.register("synth_predictor")
-def synth_predictor(
+@data_loaders.register("synth_predictor_float")
+def synth_predictor_float(
     n_rows: Optional[int] = None,
 ) -> pd.DataFrame:
     """Load synth predictor data.".
@@ -43,6 +43,21 @@ def synth_predictor(
         pd.DataFrame
     """
     return load_raw_test_csv("synth_raw_float_1.csv", n_rows=n_rows)
+
+
+@data_loaders.register("synth_predictor_binary")
+def synth_predictor_binary(
+    n_rows: Optional[int] = None,
+) -> pd.DataFrame:
+    """Load synth predictor data.".
+
+    Args:
+        n_rows: Number of rows to return. Defaults to None which returns entire coercion data view.
+
+    Returns:
+        pd.DataFrame
+    """
+    return load_raw_test_csv("synth_raw_binary_1.csv", n_rows=n_rows)
 
 
 @data_loaders.register("synth_outcome")
