@@ -9,8 +9,6 @@ from wasabi import Printer
 from psycopmlutils.data_checks.raw.check_raw_df import check_raw_df
 from psycopmlutils.utils import data_loaders
 
-from tqdm import tqdm
-
 
 def load_df(predictor_df: str, values_to_load: Union[str, None] = None) -> pd.DataFrame:
     """Load a dataframe from a SQL database.

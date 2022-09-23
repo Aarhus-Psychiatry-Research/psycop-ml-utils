@@ -127,7 +127,7 @@ def get_failed_check_names(result: SuiteResult) -> list[str]:
 
 def check_train_data_integrity(
     feature_set_csv_dir: Path,
-    nrows: int,
+    n_rows: int,
     out_dir: Path,
     train_outcomes_df: pd.DataFrame,
     outcome_checks_dir: Path,
@@ -136,7 +136,7 @@ def check_train_data_integrity(
 
     Args:
         feature_set_csv_dir (Path): Path to a directory containing train/val/test files
-        nrows (int): Whether to only load a subset of the data.
+        n_rows (int): Whether to only load a subset of the data.
             Should only be used for debugging.
         out_dir (Path): Path to the directory where the reports should be saved
         train_outcomes_df (pd.DataFrame): The train outcomes dataframe
@@ -157,7 +157,7 @@ def check_train_data_integrity(
         feature_set_csv_dir=feature_set_csv_dir,
         split="train",
         include_id=True,
-        nrows=nrows,
+        nrows=n_rows,
     )
 
     data_s = Dataset(
@@ -208,7 +208,7 @@ def get_suite_results_for_split_pair_and_save_to_disk(
     out_dir: Path,
     deepchecks_suite: Any,
     split_dicts: dict[str, dict[str, Any]],
-    split_pair: tuple[str],
+    split_pair: tuple[str, str],
     file_suffix: str = "",
 ) -> SuiteResult:
     """Runs a Deepchecks suite on a given split and saves the results to a
@@ -218,7 +218,7 @@ def get_suite_results_for_split_pair_and_save_to_disk(
         out_dir (Path): Path to the directory where the results should be saved
         deepchecks_suite (Any): Deepchecks suite to run
         split_dicts (dict[str, dict[str, Any]]): Dictionary containing the splits.
-        split_pair (tuple[str]): Splits to run the suite on
+        split_pair (tuple[str, str]): Splits to run the suite on
         file_suffix (str, optional): Suffix to add to the file name. Defaults to "".
 
     Returns:
@@ -285,7 +285,7 @@ def run_validation_requiring_split_comparison(
     n_rows: int,
     out_dir: Path,
     train_outcome_df: pd.DataFrame,
-) -> dict:
+):
     """Runs Deepcheck data validation checks for the train/val/test splits.
 
     Args:
@@ -369,8 +369,8 @@ def run_validation_requiring_split_comparison(
 
 def save_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statements
     feature_set_csv_dir: Path,
+    n_rows: int,
     split_names: Optional[list[str]] = None,
-    n_rows: Optional[int] = None,
     out_dir: Optional[Path] = None,
 ) -> None:
     """Runs Deepcheck data integrity and train/val/test checks for a given
@@ -381,9 +381,9 @@ def save_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statem
 
     Args:
         feature_set_csv_dir (Path): Path to a directory containing train/val/test files
-        split_names (list[str]): list of splits to check (train, val, test)
-        n_rows (Optional[int]): Whether to only load a subset of the data.
+        n_rows (int): Whether to only load a subset of the data.
             Should only be used for debugging.
+        split_names (list[str]): list of splits to check (train, val, test)
         out_dir (Optional[Path]): Path to the directory where the reports should be saved
     """
     if split_names is None:
@@ -427,7 +427,7 @@ def save_feature_set_integrity_from_dir(  # noqa pylint: disable=too-many-statem
     if "train" in split_names:
         failures = check_train_data_integrity(
             feature_set_csv_dir=feature_set_csv_dir,
-            nrows=n_rows,
+            n_rows=n_rows,
             out_dir=out_dir,
             outcome_checks_dir=outcome_checks_dir,
             train_outcomes_df=train_outcomes_df,

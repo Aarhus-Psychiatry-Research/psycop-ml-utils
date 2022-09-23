@@ -962,7 +962,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Returns:
             DataFrame
         """
-        msg = Printer(timestamp=True)
+        msg = Printer(timestamp=True)  # pylint: disable=redefined-outer-name
 
         # Rename column
         if new_col_name is None:
