@@ -215,17 +215,19 @@
 <span class="sd">describing values.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">import</span> <span class="nn">dask.dataframe</span> <span class="k">as</span> <span class="nn">dd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">catalogue</span> <span class="kn">import</span> <span class="n">Registry</span>  <span class="c1"># noqa # pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">dask.diagnostics.progress</span> <span class="kn">import</span> <span class="n">ProgressBar</span>
 <span class="kn">from</span> <span class="nn">pandas</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">tqdm.dask</span> <span class="kn">import</span> <span class="n">TqdmCallback</span>
 <span class="kn">from</span> <span class="nn">wasabi</span> <span class="kn">import</span> <span class="n">Printer</span><span class="p">,</span> <span class="n">msg</span>
 
 <span class="kn">from</span> <span class="nn">psycopmlutils.timeseriesflattener.resolve_multiple_functions</span> <span class="kn">import</span> <span class="n">resolve_fns</span>
@@ -233,7 +235,10 @@
     <span class="n">data_loaders</span><span class="p">,</span>
     <span class="n">df_contains_duplicates</span><span class="p">,</span>
     <span class="n">generate_feature_colname</span><span class="p">,</span>
+    <span class="n">load_most_recent_csv_matching_pattern_as_df</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">ProgressBar</span><span class="p">()</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="select_and_assert_keys"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.select_and_assert_keys">[docs]</a><span class="k">def</span> <span class="nf">select_and_assert_keys</span><span class="p">(</span><span class="n">dictionary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">key_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
@@ -260,12 +265,12 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># pylint: disable=too-many-arguments</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">prediction_times_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
-        <span class="n">id_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dw_ek_borger&quot;</span><span class="p">,</span>
-        <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+        <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;dw_ek_borger&quot;</span><span class="p">,</span>
+        <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
         <span class="n">min_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">n_workers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
-        <span class="n">predictor_col_name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;pred&quot;</span><span class="p">,</span>
-        <span class="n">outcome_col_name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;outc&quot;</span><span class="p">,</span>
+        <span class="n">n_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="n">predictor_col_name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pred&quot;</span><span class="p">,</span>
+        <span class="n">outcome_col_name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;outc&quot;</span><span class="p">,</span>
         <span class="n">feature_cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Class containing a time-series, flattened.</span>
@@ -313,9 +318,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">predictor_col_name_prefix</span> <span class="o">=</span> <span class="n">predictor_col_name_prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span> <span class="o">=</span> <span class="n">outcome_col_name_prefix</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span> <span class="o">=</span> <span class="n">min_date</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span> <span class="o">=</span> <span class="n">feature_cache_dir</span>
 
-        <span class="k">if</span> <span class="n">feature_cache_dir</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span> <span class="o">=</span> <span class="n">feature_cache_dir</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
 
@@ -329,7 +334,7 @@
 
         <span class="c1"># Drop prediction times before min_date</span>
         <span class="k">if</span> <span class="n">min_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_date</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
 
         <span class="c1"># Create pred_time_uuid_columne</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
@@ -374,7 +379,7 @@
         <span class="sd">&quot;&quot;&quot;Check that the required columns are present in the initial</span>
 <span class="sd">        dataframe.&quot;&quot;&quot;</span>
 
-        <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">col_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2"> does not exist in prediction_times_df, change the df or set another argument&quot;</span><span class="p">,</span>
@@ -384,7 +389,7 @@
         <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">arg_dicts</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;values_df&quot;</span><span class="p">],</span> <span class="p">(</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Callable</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;values_df&quot;</span><span class="p">],</span> <span class="n">DataFrame</span><span class="p">)</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;values_df&quot;</span><span class="p">])):</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;values_df resolves to neither a Callable nor a DataFrame in </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -399,32 +404,6 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Didn&#39;t generate any features because: </span><span class="si">{</span><span class="n">warnings</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_load_most_recent_df_matching_pattern</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">dir_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-        <span class="n">file_pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Load most recent df matching pattern.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            dir (Path): Directory to search</span>
-<span class="sd">            file_pattern (str): Pattern to match</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            DataFrame: DataFrame matching pattern</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            FileNotFoundError: If no file matching pattern is found</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dir_path</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">*.csv&quot;</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No files matching pattern </span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2"> found&quot;</span><span class="p">)</span>
-
-        <span class="n">most_recent_file</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getctime</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">most_recent_file</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_load_cached_df_and_expand_fallback</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -443,8 +422,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame: DataFrame with fallback column expanded</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_most_recent_df_matching_pattern</span><span class="p">(</span>
-            <span class="n">dir_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">,</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">load_most_recent_csv_matching_pattern_as_df</span><span class="p">(</span>
+            <span class="n">dir_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
             <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -479,6 +458,11 @@
 <span class="sd">            bool: True if cache is hit, False otherwise</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check that file exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;feature_cache_dir is None&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="n">file_pattern_hits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">*.csv&quot;</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_pattern_hits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -486,7 +470,7 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="c1"># Check that file contents match expected</span>
-        <span class="n">cache_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_most_recent_df_matching_pattern</span><span class="p">(</span>
+        <span class="n">cache_df</span> <span class="o">=</span> <span class="n">load_most_recent_csv_matching_pattern_as_df</span><span class="p">(</span>
             <span class="n">dir_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">,</span>
             <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
         <span class="p">)</span>
@@ -496,13 +480,9 @@
         <span class="c1"># Check that some values in generated_df differ from fallback</span>
         <span class="c1"># Otherwise, comparison to cache is meaningless</span>
         <span class="n">n_to_generate</span> <span class="o">=</span> <span class="mi">1_000</span>
-
         <span class="k">while</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
             <span class="n">generated_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">: Generated_df was all fallback values, regenerating&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
 
             <span class="n">generated_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatten_temporal_values_to_df</span><span class="p">(</span>
                 <span class="n">prediction_times_with_uuid_df</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_to_generate</span><span class="p">),</span>
@@ -512,33 +492,51 @@
                 <span class="o">**</span><span class="n">kwargs_dict</span><span class="p">,</span>
             <span class="p">)</span>
 
-            <span class="n">n_to_generate</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">n_to_generate</span><span class="o">**</span><span class="mf">1.5</span>
-            <span class="p">)</span>  <span class="c1"># Increase n_to_generate by 1.5x each time to increase chance of non_fallback values</span>
+            <span class="c1"># Keep only values in generated_df which are not the fallback</span>
+            <span class="n">generated_df</span> <span class="o">=</span> <span class="n">generated_df</span><span class="p">[</span><span class="n">generated_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()]</span>
 
-        <span class="n">cached_suffix</span> <span class="o">=</span> <span class="s2">&quot;_c&quot;</span>
-        <span class="n">generated_suffix</span> <span class="o">=</span> <span class="s2">&quot;_g&quot;</span>
+            <span class="c1"># Saving to csv rounds floats, so we need to round here too</span>
+            <span class="c1"># to avoid false negatives. Otherwise, it thinks the .csv</span>
+            <span class="c1"># file has different values from the generated_df, simply because</span>
+            <span class="c1"># generated_df has more decimal places.</span>
+            <span class="n">generated_df</span> <span class="o">=</span> <span class="n">generated_df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+            <span class="n">cache_df</span> <span class="o">=</span> <span class="n">cache_df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="n">generated_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">: Generated_df was all fallback values, regenerating&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+
+                <span class="n">n_to_generate</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">n_to_generate</span><span class="o">**</span><span class="mf">1.5</span>
+                <span class="p">)</span>  <span class="c1"># Increase n_to_generate by 1.5x each time to increase chance of non_fallback values</span>
+
+            <span class="n">cached_suffix</span> <span class="o">=</span> <span class="s2">&quot;_c&quot;</span>
+            <span class="n">generated_suffix</span> <span class="o">=</span> <span class="s2">&quot;_g&quot;</span>
 
         <span class="c1"># Merge cache_df onto generated_df</span>
         <span class="n">merged_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
             <span class="n">left</span><span class="o">=</span><span class="n">generated_df</span><span class="p">,</span>
             <span class="n">right</span><span class="o">=</span><span class="n">cache_df</span><span class="p">,</span>
             <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
-            <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
+            <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span> <span class="n">full_col_str</span><span class="p">],</span>
             <span class="n">suffixes</span><span class="o">=</span><span class="p">(</span><span class="n">generated_suffix</span><span class="p">,</span> <span class="n">cached_suffix</span><span class="p">),</span>
             <span class="n">validate</span><span class="o">=</span><span class="s2">&quot;1:1&quot;</span><span class="p">,</span>
             <span class="n">indicator</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># Check that all rows in generated_df are in cache_df</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">merged_df</span><span class="p">[</span><span class="n">full_col_str</span> <span class="o">+</span> <span class="n">generated_suffix</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span>
-            <span class="n">merged_df</span><span class="p">[</span><span class="n">full_col_str</span> <span class="o">+</span> <span class="n">cached_suffix</span><span class="p">],</span>
-        <span class="p">):</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Merge complete&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check that all rows in merged_df have the indicator == &quot;both&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">merged_df</span><span class="p">[</span><span class="s2">&quot;_merge&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache miss, computed values didn&#39;t match </span><span class="si">{</span><span class="n">file_pattern</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="c1"># If all checks passed, return true</span>
         <span class="n">msg</span><span class="o">.</span><span class="n">good</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache hit for </span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_get_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kwargs_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
@@ -560,8 +558,7 @@
 
         <span class="n">file_pattern</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">full_col_str</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_uuids</span><span class="si">}</span><span class="s2">_uuids&quot;</span>
 
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;feature_cache_dir&quot;</span><span class="p">):</span>
-
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_is_hit</span><span class="p">(</span>
                 <span class="n">file_pattern</span><span class="o">=</span><span class="n">file_pattern</span><span class="p">,</span>
                 <span class="n">full_col_str</span><span class="o">=</span><span class="n">full_col_str</span><span class="p">,</span>
@@ -593,11 +590,15 @@
         <span class="p">)</span>
 
         <span class="c1"># Write df to cache if exists</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;feature_cache_dir&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_cache_dir</span><span class="p">:</span>
             <span class="n">cache_df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span> <span class="n">full_col_str</span><span class="p">]]</span>
 
             <span class="c1"># Drop rows containing fallback, since it&#39;s non-informative</span>
-            <span class="n">cache_df</span> <span class="o">=</span> <span class="n">cache_df</span><span class="p">[</span><span class="n">cache_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">]]</span>
+            <span class="c1"># Handle NA separately since it can never pass equality check</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">]):</span>
+                <span class="n">cache_df</span> <span class="o">=</span> <span class="n">cache_df</span><span class="p">[</span><span class="o">~</span><span class="n">cache_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cache_df</span> <span class="o">=</span> <span class="n">cache_df</span><span class="p">[(</span><span class="n">cache_df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">!=</span> <span class="n">kwargs_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">])]</span>
 
             <span class="c1"># Write df to cache</span>
             <span class="n">timestamp</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
@@ -725,14 +726,14 @@
 <div class="viewcode-block" id="FlattenedDataset.add_temporal_predictors_from_list_of_argument_dictionaries"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictors_from_list_of_argument_dictionaries">[docs]</a>    <span class="k">def</span> <span class="nf">add_temporal_predictors_from_list_of_argument_dictionaries</span><span class="p">(</span>  <span class="c1"># pylint: disable=too-many-branches</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">predictors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
-        <span class="n">predictor_dfs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">predictor_dfs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">resolve_multiple_fns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add predictors to the flattened dataframe from a list.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            predictors (list[dict[str, str]]): A list of dictionaries describing the prediction_features you&#39;d like to generate.</span>
-<span class="sd">            predictor_dfs (dict[str, DataFrame], optional): If wanting to pass already resolved dataframes.</span>
+<span class="sd">            predictor_dfs (Optional[dict[str, DataFrame]]): If wanting to pass already resolved dataframes.</span>
 <span class="sd">                By default, you should add your dataframes to the @data_loaders registry.</span>
 <span class="sd">                Then the the predictor_df value in the predictor dict will map to a callable which returns the dataframe.</span>
 <span class="sd">                Optionally, you can map the string to a dataframe in predictor_dfs.</span>
@@ -769,9 +770,9 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: If predictor_df is not in the data_loaders registry or predictor_dfs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">processed_arg_dicts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">processed_arg_dicts</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
 
-        <span class="n">dicts_found_in_predictor_dfs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">dicts_found_in_predictor_dfs</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="c1"># Replace strings with objects as relevant</span>
         <span class="k">for</span> <span class="n">arg_dict</span> <span class="ow">in</span> <span class="n">predictors</span><span class="p">:</span>
@@ -783,6 +784,13 @@
                 <span class="n">resolve_multiple_fns</span><span class="o">=</span><span class="n">resolve_multiple_fns</span><span class="p">,</span>
                 <span class="n">arg_dict</span><span class="o">=</span><span class="n">arg_dict</span><span class="p">,</span>
             <span class="p">)</span>
+
+            <span class="c1"># Convert fallback to float64 if NaN to avoid type issues.</span>
+            <span class="c1"># If np.Nan is passed to a float64 column, its type changes from float to float64.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span>
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">],</span>
+            <span class="p">):</span>
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s2">&quot;fallback&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
 
             <span class="c1"># Rename arguments for create_flattened_df_for_val</span>
             <span class="n">arg_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_kwargs_for_create_flattened_df_for_val</span><span class="p">(</span>
@@ -801,8 +809,8 @@
                 <span class="n">arg_dict</span><span class="o">=</span><span class="n">arg_dict</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="c1"># Validate dicts before starting pool, saves time if errors!</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_processed_arg_dicts</span><span class="p">(</span><span class="n">processed_arg_dicts</span><span class="p">)</span>
+            <span class="c1"># Validate dicts before starting pool, saves time if errors!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_processed_arg_dicts</span><span class="p">(</span><span class="n">processed_arg_dicts</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">Pool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
             <span class="n">flattened_predictor_dfs</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
@@ -811,14 +819,23 @@
             <span class="p">)</span>
 
         <span class="n">flattened_predictor_dfs</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">flattened_predictor_dfs</span>
+            <span class="n">dd</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">),</span> <span class="n">npartitions</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">flattened_predictor_dfs</span>
         <span class="p">]</span>
 
-        <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Feature generation complete, concatenating&quot;</span><span class="p">)</span>
-        <span class="n">concatenated_dfs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
-            <span class="n">flattened_predictor_dfs</span><span class="p">,</span>
-            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Feature generation complete, concatenating </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">flattened_predictor_dfs</span><span class="p">)</span><span class="si">}</span><span class="s2"> dataframes&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="n">TqdmCallback</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="s2">&quot;compute&quot;</span><span class="p">):</span>
+            <span class="n">concatenated_dfs</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+                <span class="n">flattened_predictor_dfs</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">interleave_partitions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+        <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Concatenation complete, resetting index&quot;</span><span class="p">)</span>
+
+        <span class="n">msg</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting merge with self.df&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
@@ -896,21 +913,17 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            ValueError: If input_col_name does not match a column in info_df.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">value_col_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">info_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">]</span>
-
-        <span class="c1"># Try to infer value col name if not provided</span>
         <span class="k">if</span> <span class="n">input_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">value_col_name</span> <span class="o">=</span> <span class="n">value_col_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Only one value column can be added to static info, found multiple: </span><span class="si">{</span><span class="n">value_col_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_name</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No value column found in info_df, please check.&quot;</span><span class="p">)</span>
+            <span class="n">value_col_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">info_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span>
+            <span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">value_col_name</span> <span class="o">=</span> <span class="n">input_col_name</span>
+            <span class="n">value_col_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">input_col_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value_col_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;info_df must contain only id_col_name and value_col_name&quot;</span><span class="p">)</span>
+
+        <span class="n">value_col_name</span> <span class="o">=</span> <span class="n">value_col_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># Find output_col_name</span>
         <span class="k">if</span> <span class="n">prefix</span> <span class="o">==</span> <span class="s2">&quot;self.predictor_col_name_prefix&quot;</span><span class="p">:</span>
@@ -941,10 +954,10 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outcome_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">lookahead_days</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="n">incident</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="n">pred_name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
         <span class="n">dichotomous</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add an outcome-column to the dataset.</span>
@@ -952,10 +965,10 @@
 <span class="sd">        Args:</span>
 <span class="sd">            outcome_df (DataFrame): A table in wide format. Required columns: patient_id, timestamp, value.</span>
 <span class="sd">            lookahead_days (float): How far ahead to look for an outcome in days. If none found, use fallback.</span>
-<span class="sd">            resolve_multiple (Callable, str): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</span>
+<span class="sd">            resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</span>
 <span class="sd">            fallback (float): What to do if no value within the lookahead.</span>
 <span class="sd">            incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.</span>
-<span class="sd">            new_col_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;. Defaults to &quot;value&quot;.</span>
+<span class="sd">            pred_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as &#39;{pred_name}_within_{lookahead_days}_days&#39;. Defaults to &quot;value&quot;.</span>
 <span class="sd">            dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">prediction_timestamp_col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="si">}</span><span class="s2">_prediction&quot;</span>
@@ -977,7 +990,7 @@
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">dichotomous</span><span class="p">:</span>
-                <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span><span class="si">}</span><span class="s2">_dichotomous_</span><span class="si">{</span><span class="n">new_col_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">lookahead_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">full_col_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">outcome_col_name_prefix</span><span class="si">}</span><span class="s2">_dichotomous_</span><span class="si">{</span><span class="n">pred_name</span><span class="si">}</span><span class="s2">_within_</span><span class="si">{</span><span class="n">lookahead_days</span><span class="si">}</span><span class="s2">_days_</span><span class="si">{</span><span class="n">resolve_multiple</span><span class="si">}</span><span class="s2">_fallback_</span><span class="si">{</span><span class="n">fallback</span><span class="si">}</span><span class="s2">&quot;</span>
 
                 <span class="n">df</span><span class="p">[</span><span class="n">full_col_str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="n">df</span><span class="p">[</span><span class="n">prediction_timestamp_col_name</span><span class="p">]</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">lookahead_days</span><span class="p">)</span>
@@ -1002,16 +1015,16 @@
                 <span class="n">interval_days</span><span class="o">=</span><span class="n">lookahead_days</span><span class="p">,</span>
                 <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
                 <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-                <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
+                <span class="n">pred_name</span><span class="o">=</span><span class="n">pred_name</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="FlattenedDataset.add_temporal_predictor"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_predictor">[docs]</a>    <span class="k">def</span> <span class="nf">add_temporal_predictor</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">predictor_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">lookbehind_days</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pred_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a column with predictor values to the flattened dataset (e.g.</span>
 <span class="sd">        &quot;average value of bloodsample within n days&quot;).</span>
@@ -1021,7 +1034,7 @@
 <span class="sd">            lookbehind_days (float): How far behind to look for a predictor value in days. If none found, use fallback.</span>
 <span class="sd">            resolve_multiple (Callable, str): How to handle multiple values within the lookbehind window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</span>
 <span class="sd">            fallback (float): What to do if no value within the lookahead.</span>
-<span class="sd">            new_col_name (str): Name to use for new col. Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;.</span>
+<span class="sd">            pred_name (Optional[str]): Name to use for new col. Automatically generated as &#39;{pred_name}_within_{lookahead_days}_days&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_temporal_col_to_flattened_dataset</span><span class="p">(</span>
             <span class="n">values_df</span><span class="o">=</span><span class="n">predictor_df</span><span class="p">,</span>
@@ -1029,17 +1042,17 @@
             <span class="n">interval_days</span><span class="o">=</span><span class="n">lookbehind_days</span><span class="p">,</span>
             <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
             <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-            <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
+            <span class="n">pred_name</span><span class="o">=</span><span class="n">pred_name</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="FlattenedDataset.add_temporal_col_to_flattened_dataset"><a class="viewcode-back" href="../../../api.timeseriesflattener.html#psycopmlutils.timeseriesflattener.flattened_dataset.FlattenedDataset.add_temporal_col_to_flattened_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">add_temporal_col_to_flattened_dataset</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">values_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">values_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span>
         <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">interval_days</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">fallback</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pred_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a column to the dataset (either predictor or outcome depending</span>
 <span class="sd">        on the value of &quot;direction&quot;).</span>
@@ -1050,9 +1063,10 @@
 <span class="sd">            interval_days (float): How far to look in direction.</span>
 <span class="sd">            resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.</span>
 <span class="sd">            fallback (float): What to do if no value within the lookahead.</span>
-<span class="sd">            new_col_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as &#39;{new_col_name}_within_{lookahead_days}_days&#39;.</span>
+<span class="sd">            pred_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as &#39;{pred_name}_within_{lookahead_days}_days&#39;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">timestamp_col_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">values_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">timestamp_col_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">values_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="vm">__name__</span>
 
         <span class="k">if</span> <span class="n">timestamp_col_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Timestamp&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1077,7 +1091,7 @@
             <span class="n">interval_days</span><span class="o">=</span><span class="n">interval_days</span><span class="p">,</span>
             <span class="n">resolve_multiple</span><span class="o">=</span><span class="n">resolve_multiple</span><span class="p">,</span>
             <span class="n">fallback</span><span class="o">=</span><span class="n">fallback</span><span class="p">,</span>
-            <span class="n">new_col_name</span><span class="o">=</span><span class="n">new_col_name</span><span class="p">,</span>
+            <span class="n">new_col_name</span><span class="o">=</span><span class="n">pred_name</span><span class="p">,</span>
             <span class="n">id_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">id_col_name</span><span class="p">,</span>
             <span class="n">timestamp_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col_name</span><span class="p">,</span>
             <span class="n">pred_time_uuid_col_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pred_time_uuid_col_name</span><span class="p">,</span>
@@ -1098,12 +1112,12 @@
         <span class="n">values_df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">],</span>
         <span class="n">direction</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">interval_days</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">resolve_multiple</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">fallback</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">id_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">timestamp_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">pred_time_uuid_col_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+        <span class="n">new_col_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">new_col_name_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">loader_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
@@ -1131,8 +1145,7 @@
 <span class="sd">                static method.</span>
 <span class="sd">            pred_time_uuid_col_name (str): Name of uuid column in</span>
 <span class="sd">                prediction_times_with_uuid_df. Required because this is a static method.</span>
-<span class="sd">            new_col_name (Union[str, list]): Name of new column(s) in returned</span>
-<span class="sd">                dataframe.</span>
+<span class="sd">            new_col_name (Union[str, list]): Name of the predictor to generate column(s) for.</span>
 <span class="sd">            new_col_name_prefix (str, optional): Prefix to use for new column name.</span>
 <span class="sd">            loader_kwargs (dict, optional): Keyword arguments to pass to the loader</span>
 
@@ -1140,6 +1153,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            DataFrame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">Printer</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># pylint: disable=redefined-outer-name</span>
 
         <span class="c1"># Rename column</span>
         <span class="k">if</span> <span class="n">new_col_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1155,7 +1169,7 @@
         <span class="p">)</span>
 
         <span class="c1"># Resolve values_df if not already a dataframe.</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values_df</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">values_df</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">loader_kwargs</span><span class="p">:</span>
                 <span class="n">values_df</span> <span class="o">=</span> <span class="n">values_df</span><span class="p">(</span><span class="o">**</span><span class="n">loader_kwargs</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1164,7 +1178,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values_df</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;values_df is not a dataframe&quot;</span><span class="p">)</span>
 
-        <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">timestamp_col_name</span><span class="p">,</span> <span class="n">id_col_name</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">timestamp_col_name</span><span class="p">,</span> <span class="n">id_col_name</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">col_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">col_name</span><span class="si">}</span><span class="s2"> does not exist in df_prediction_times, change the df or set another argument&quot;</span><span class="p">,</span>
@@ -1285,7 +1299,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resolve_multiple</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">resolve_multiple</span> <span class="o">=</span> <span class="n">resolve_fns</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">resolve_multiple</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resolve_multiple</span><span class="p">,</span> <span class="n">Callable</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">resolve_multiple</span><span class="p">):</span>
             <span class="n">df</span> <span class="o">=</span> <span class="n">resolve_multiple</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;resolve_multiple must be or resolve to a Callable&quot;</span><span class="p">)</span>
@@ -1338,12 +1352,6 @@
             <span class="p">[</span><span class="s2">&quot;is_in_interval&quot;</span><span class="p">,</span> <span class="s2">&quot;time_from_pred_to_val_in_days&quot;</span><span class="p">],</span>
             <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span></div></div>
-
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;FlattenedDataset&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;select_and_assert_keys&quot;</span><span class="p">,</span>
-<span class="p">]</span>
 </pre></div>
         </article>
       </div>

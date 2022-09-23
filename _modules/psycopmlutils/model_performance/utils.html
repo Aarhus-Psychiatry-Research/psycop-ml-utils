@@ -365,16 +365,6 @@
     <span class="n">meta_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">meta_dict</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_df</span><span class="p">)</span></div>
-
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">&quot;add_metadata_cols&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;aggregate_predictions&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;idx_to_class&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;labels_to_int&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;scores_to_probs&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;select_metadata_cols&quot;</span><span class="p">,</span>
-<span class="p">]</span>
 </pre></div>
         </article>
       </div>
