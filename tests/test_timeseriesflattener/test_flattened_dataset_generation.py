@@ -123,21 +123,6 @@ def create_flattened_df(cache_dir, predictor_combinations, prediction_times_df):
     return first_df.df
 
 
-def load_cache(temp_dir, predictor_combinations, prediction_times_df):
-    """Create a new dataset which should hit the cache."""
-    cache_df = FlattenedDataset(
-        prediction_times_df=prediction_times_df,
-        n_workers=4,
-        feature_cache_dir=temp_dir,
-    )
-
-    cache_df.add_temporal_predictors_from_list_of_argument_dictionaries(
-        predictor_combinations,
-    )
-
-    return cache_df
-
-
 def init_temp_dir(tmp_path):
     """Create a temp dir for testing."""
     # Delete temp dir

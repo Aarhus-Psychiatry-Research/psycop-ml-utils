@@ -8,7 +8,7 @@ from psycopmlutils.synth_data_generator.synth_col_generators import (
 
 if __name__ == "__main__":
     # Get project root directory
-    project_root = Path(__file__).resolve().parents[3]
+    project_root = Path()
 
     column_specs = {
         "dw_ek_borger": {

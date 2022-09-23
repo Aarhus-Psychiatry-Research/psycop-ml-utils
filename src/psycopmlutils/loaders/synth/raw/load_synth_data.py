@@ -16,7 +16,7 @@ def load_raw_test_csv(filename: str, n_rows: Optional[int] = None) -> pd.DataFra
         n_rows (int, optional): Number of rows to load. Defaults to None.
     """
     # Get project root dir
-    project_root = Path(__file__).resolve().parents[5]
+    project_root = Path()
 
     df = pd.read_csv(
         project_root / "tests" / "test_data" / "raw" / filename,

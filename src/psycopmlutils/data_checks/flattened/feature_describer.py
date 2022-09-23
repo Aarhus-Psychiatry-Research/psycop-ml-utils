@@ -161,7 +161,7 @@ def save_feature_description_from_dir(
     predictor_dicts: list[dict[str, str]],
     splits: Optional[list[str]] = None,
     out_dir: Path = None,
-) -> pd.DataFrame:
+):
     """Write a csv with feature descriptions in the directory.
 
     Args:

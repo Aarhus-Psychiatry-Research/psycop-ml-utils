@@ -22,7 +22,7 @@ from psycopmlutils.utils import (
     data_loaders,
     df_contains_duplicates,
     generate_feature_colname,
-    load_most_recent_df_matching_pattern,
+    load_most_recent_csv_matching_pattern_as_df,
 )
 
 ProgressBar().register()
@@ -115,7 +115,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
 
         self.msg = Printer(timestamp=True)
 
-        self.df: pd.DataFrame = prediction_times_df
+        self.df = prediction_times_df
 
         self.check_init_df_for_errors()
 
@@ -176,7 +176,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         warnings = []
 
         for d in arg_dicts:
-            if not isinstance(d["values_df"], (DataFrame, Callable)):  # type: ignore
+            if not (isinstance(d["values_df"], DataFrame) or callable(d["values_df"])):
                 warnings.append(
                     f"values_df resolves to neither a Callable nor a DataFrame in {d}",
                 )
@@ -209,7 +209,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         Returns:
             DataFrame: DataFrame with fallback column expanded
         """
-        df = load_most_recent_df_matching_pattern(
+        df = load_most_recent_csv_matching_pattern_as_df(
             dir_path=self.feature_cache_dir,  # type: ignore
             file_pattern=file_pattern,
         )
@@ -257,7 +257,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             return False
 
         # Check that file contents match expected
-        cache_df = load_most_recent_df_matching_pattern(
+        cache_df = load_most_recent_csv_matching_pattern_as_df(
             dir_path=self.feature_cache_dir,
             file_pattern=file_pattern,
         )
@@ -279,7 +279,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 **kwargs_dict,
             )
 
-            # Keep only values in generated_df which are not NaN
+            # Keep only values in generated_df which are not the fallback
             generated_df = generated_df[generated_df[full_col_str].notna()]
 
             # Saving to csv rounds floats, so we need to round here too
@@ -402,20 +402,12 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         """Check if arg_dict has all required keys, and prune to only required
         keys.
 
-                Args:
-        <<<<<<< Updated upstream
-                    processed_arg_dicts (list[dict[str, str]]): list of processed arg dicts.
-                    arg_dict (dict[str, str]): Arg dict to check and prune.
-        =======
-                    file_pattern (str): File pattern to search for
-                    fallback (Any): Fallback value
-                    prediction_times_with_uuid_df (pd.DataFrame): Prediction times with uuids
-                    full_col_str (str): Full column name for values
-                    dir (Path): Directory to search for files in
-        >>>>>>> Stashed changes
+        Args:
+            processed_arg_dicts (list[dict[str, str]]): list of processed arg dicts.
+            arg_dict (dict[str, str]): Arg dict to check and prune.
 
-                Returns:
-                    dict[str, str]: Pruned arg dict.
+        Returns:
+            dict[str, str]: Pruned arg dict.
         """
 
         required_keys = [
@@ -709,7 +701,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             ValueError: If input_col_name does not match a column in info_df.
         """
         if input_col_name is None:
-            value_col_names: list[str] = [
+            value_col_names = [
                 col for col in info_df.columns if col not in self.id_col_name
             ]
         else:

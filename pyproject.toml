@@ -32,7 +32,7 @@ wandb = ">=0.12.21,<0.13.0"
 deepchecks = "^0.8.3"
 psutil = "5.9.1"
 dill = "^0.3.5"
-pytest-xdist = "^2.5.0"
+
 
 [tool.poetry.dev-dependencies]
 black = "22.3.*"
@@ -53,6 +53,7 @@ tqdm = "^4.64.1"
 dask = "^2022.9.0"
 transformers = "^4.22.0"
 mypy = "^0.971"
+pytest-xdist = "^2.5.0"
 
 [tool.coverage.run]
 omit = [
@@ -94,6 +95,6 @@ known_third_party = ["wandb"]
 [tool.pylint]
 load-plugins = "pylint.extensions.docparams,pylint.extensions.code_style,pylint.extensions.for_any_all,pylint.extensions.typing"
 good-names = "df,p,f,d,e,n,k,i,v"
-disable = "too-many-lines,line-too-long,missing-raises-doc,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments"
+disable = "too-many-lines,line-too-long,missing-raises-doc,no-self-argument,unused-wildcard-import,wildcard-import,no-else-return,too-many-arguments,redefined-outer-name"
 
-[tool.pyright]
+[tool.pyright] # Added because of weird pylance error, issue here: https://github.com/microsoft/pylance-release/issues/3366

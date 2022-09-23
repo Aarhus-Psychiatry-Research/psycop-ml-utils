@@ -84,12 +84,12 @@ def generate_feature_colname(
         ]
 
     if len(col_name) == 1:
-        col_name = col_name[0]
+        col_name = col_name[0]  # type: ignore
 
     return col_name
 
 
-def load_most_recent_df_matching_pattern(
+def load_most_recent_csv_matching_pattern_as_df(
     dir_path: Path,
     file_pattern: str,
 ) -> pd.DataFrame:

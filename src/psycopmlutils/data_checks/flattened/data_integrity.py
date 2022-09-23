@@ -282,19 +282,19 @@ def get_split_as_ds_dict(
 def run_validation_requiring_split_comparison(
     feature_set_csv_dir: Path,
     split_names: list[str],
-    n_rows: int,
     out_dir: Path,
     train_outcome_df: pd.DataFrame,
+    n_rows: Optional[int] = None,
 ):
     """Runs Deepcheck data validation checks for the train/val/test splits.
 
     Args:
         feature_set_csv_dir (Path): Path to a directory containing train/val/test files
         split_names (list[str]): list of splits to check (train, val, test)
-        n_rows (int): Whether to only load a subset of the data.
-            Should only be used for debugging.
         out_dir (Path): Path to the directory where the reports should be saved
         train_outcome_df (pd.DataFrame): The train outcomes.
+        n_rows (int): Whether to only load a subset of the data.
+            Should only be used for debugging.
     """
     msg = Printer(timestamp=True)
 
