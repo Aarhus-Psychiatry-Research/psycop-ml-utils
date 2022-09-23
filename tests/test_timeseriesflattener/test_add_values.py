@@ -487,7 +487,7 @@ def test_add_temporal_incident_binary_outcome():
         dichotomous=True,
         resolve_multiple="max",
         fallback=0,
-        new_col_name="t2d",
+        pred_name="t2d",
     )
 
     outcome_df = flattened_dataset.df

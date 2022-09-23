@@ -187,16 +187,20 @@ def test_cache_hitting(
     check_dfs_have_same_contents_by_column(first_df, cache_df)
 
 
+@pytest.mark.parametrize(
+    "predictor_combinations",
+    [base_float_predictor_combinations, base_binary_predictor_combinations],
+)
 def test_all_non_online_elements_in_pipeline(
     tmp_path,
     synth_prediction_times,
-    base_predictor_combinations,
+    predictor_combinations,
 ):
     """Test that the splitting and saving to disk works as expected."""
 
     flattened_df = create_flattened_df(
         cache_dir=None,
-        predictor_combinations=base_predictor_combinations,
+        predictor_combinations=predictor_combinations,
         prediction_times_df=synth_prediction_times,
     )
 
@@ -227,7 +231,7 @@ def test_all_non_online_elements_in_pipeline(
     )
 
     save_feature_set_description_to_disk(
-        predictor_combinations=base_predictor_combinations,
+        predictor_combinations=predictor_combinations,
         flattened_csv_dir=tmp_path,
         out_dir=tmp_path,
     )

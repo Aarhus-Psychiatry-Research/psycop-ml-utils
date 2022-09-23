@@ -121,7 +121,7 @@ def assert_flattened_values_as_expected(
             lookbehind_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            new_col_name=values_colname,
+            pred_name=values_colname,
         )
     elif direction == "ahead":
         new_col_name_prefix = "outc"
@@ -130,7 +130,7 @@ def assert_flattened_values_as_expected(
             lookahead_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            new_col_name=values_colname,
+            pred_name=values_colname,
         )
     else:
         raise ValueError("direction only takes look ahead or behind")

@@ -720,19 +720,6 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
 
         value_col_name = value_col_names[0]
 
-        # Try to infer value col name if not provided
-        if input_col_name:
-            value_col_name = input_col_name
-        if input_col_name is None:
-            if len(value_col_name) == 1:
-                value_col_name = value_col_name[0]
-            elif len(value_col_name) > 1:
-                raise ValueError(
-                    f"Only one value column can be added to static info, found multiple: {value_col_name}",
-                )
-            elif len(value_col_name) == 0:
-                raise ValueError("No value column found in info_df, please check.")
-
         # Find output_col_name
         if prefix == "self.predictor_col_name_prefix":
             prefix = self.predictor_col_name_prefix
@@ -765,7 +752,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         resolve_multiple: Callable,
         fallback: float,
         incident: Optional[bool] = False,
-        new_col_name: Union[str, list] = "value",
+        pred_name: Union[str, list] = "value",
         dichotomous: Optional[bool] = False,
     ):
         """Add an outcome-column to the dataset.
@@ -776,7 +763,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             resolve_multiple (Callable): How to handle multiple values within the lookahead window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
             incident (Optional[bool], optional): Whether looking for an incident outcome. If true, removes all prediction times after the outcome time. Defaults to false.
-            new_col_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'. Defaults to "value".
+            pred_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as '{pred_name}_within_{lookahead_days}_days'. Defaults to "value".
             dichotomous (bool, optional): Whether the outcome is dichotomous. Allows computational shortcuts, making adding an outcome _much_ faster. Defaults to False.
         """
         prediction_timestamp_col_name = f"{self.timestamp_col_name}_prediction"
@@ -798,7 +785,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             )
 
             if dichotomous:
-                full_col_str = f"{self.outcome_col_name_prefix}_dichotomous_{new_col_name}_within_{lookahead_days}_days_{resolve_multiple}_fallback_{fallback}"
+                full_col_str = f"{self.outcome_col_name_prefix}_dichotomous_{pred_name}_within_{lookahead_days}_days_{resolve_multiple}_fallback_{fallback}"
 
                 df[full_col_str] = (
                     df[prediction_timestamp_col_name] + timedelta(days=lookahead_days)
@@ -823,7 +810,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 interval_days=lookahead_days,
                 resolve_multiple=resolve_multiple,
                 fallback=fallback,
-                new_col_name=new_col_name,
+                pred_name=pred_name,
             )
 
     def add_temporal_predictor(
@@ -832,7 +819,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         lookbehind_days: float,
         resolve_multiple: Callable,
         fallback: float,
-        new_col_name: str,
+        pred_name: str,
     ):
         """Add a column with predictor values to the flattened dataset (e.g.
         "average value of bloodsample within n days").
@@ -842,7 +829,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             lookbehind_days (float): How far behind to look for a predictor value in days. If none found, use fallback.
             resolve_multiple (Callable, str): How to handle multiple values within the lookbehind window. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
-            new_col_name (str): Name to use for new col. Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            pred_name (Optional[str]): Name to use for new col. Automatically generated as '{pred_name}_within_{lookahead_days}_days'.
         """
         self.add_temporal_col_to_flattened_dataset(
             values_df=predictor_df,
@@ -850,7 +837,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             interval_days=lookbehind_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            new_col_name=new_col_name,
+            pred_name=pred_name,
         )
 
     def add_temporal_col_to_flattened_dataset(
@@ -860,7 +847,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         interval_days: float,
         resolve_multiple: Callable,
         fallback: float,
-        new_col_name: Union[str, list],
+        pred_name: Optional[Union[str, list]] = None,
     ):
         """Add a column to the dataset (either predictor or outcome depending
         on the value of "direction").
@@ -871,7 +858,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             interval_days (float): How far to look in direction.
             resolve_multiple (Callable, str): How to handle multiple values within interval_days. Takes either i) a function that takes a list as an argument and returns a float, or ii) a str mapping to a callable from the resolve_multiple_fn catalogue.
             fallback (float): What to do if no value within the lookahead.
-            new_col_name (Union[str, list]): Name to use for new column(s). Automatically generated as '{new_col_name}_within_{lookahead_days}_days'.
+            pred_name (Optional[Union[str, list]]): Name to use for new column(s). Automatically generated as '{pred_name}_within_{lookahead_days}_days'.
         """
 
         timestamp_col_type = type(values_df[self.timestamp_col_name].iloc[0]).__name__
@@ -899,7 +886,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
             interval_days=interval_days,
             resolve_multiple=resolve_multiple,
             fallback=fallback,
-            new_col_name=new_col_name,
+            new_col_name=pred_name,
             id_col_name=self.id_col_name,
             timestamp_col_name=self.timestamp_col_name,
             pred_time_uuid_col_name=self.pred_time_uuid_col_name,
@@ -925,7 +912,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
         id_col_name: str,
         timestamp_col_name: str,
         pred_time_uuid_col_name: str,
-        new_col_name: Union[str, list],
+        new_col_name: Optional[Union[str, list]] = None,
         new_col_name_prefix: Optional[str] = None,
         loader_kwargs: Optional[dict] = None,
     ) -> DataFrame:
@@ -953,8 +940,7 @@ class FlattenedDataset:  # pylint: disable=too-many-instance-attributes
                 static method.
             pred_time_uuid_col_name (str): Name of uuid column in
                 prediction_times_with_uuid_df. Required because this is a static method.
-            new_col_name (Union[str, list]): Name of new column(s) in returned
-                dataframe.
+            new_col_name (Union[str, list]): Name of the predictor to generate column(s) for.
             new_col_name_prefix (str, optional): Prefix to use for new column name.
             loader_kwargs (dict, optional): Keyword arguments to pass to the loader
 

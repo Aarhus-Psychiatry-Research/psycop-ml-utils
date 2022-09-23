@@ -13,12 +13,12 @@ import numpy as np
 import pandas as pd
 import psutil
 import wandb
-from features_blood_samples import get_lab_feature_spec
-from features_diagnoses import get_diagnosis_feature_spec
-from features_medications import get_medication_feature_spec
 from wasabi import Printer
 
 import psycopmlutils.loaders.raw  # noqa
+from application.t2d.features_blood_samples import get_lab_feature_spec
+from application.t2d.features_diagnoses import get_diagnosis_feature_spec
+from application.t2d.features_medications import get_medication_feature_spec
 from psycopmlutils.data_checks.flattened.data_integrity import (
     save_feature_set_integrity_from_dir,
 )
@@ -214,7 +214,7 @@ def add_outcomes(
             lookahead_days=lookahead_days,
             resolve_multiple="max",
             fallback=0,
-            new_col_name="t2d",
+            pred_name="t2d",
             incident=True,
             dichotomous=True,
         )
