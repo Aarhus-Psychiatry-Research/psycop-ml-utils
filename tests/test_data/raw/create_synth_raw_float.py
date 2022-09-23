@@ -1,14 +1,12 @@
 """Generate raw float dataframe."""
 
-from pathlib import Path
-
 from psycopmlutils.synth_data_generator.synth_col_generators import (
     generate_data_columns,
 )
+from psycopmlutils.utils import PROJECT_ROOT
 
 if __name__ == "__main__":
     # Get project root directory
-    project_root = Path(__file__).resolve().parents[3]
 
     column_specs = {
         "dw_ek_borger": {
@@ -31,6 +29,6 @@ if __name__ == "__main__":
         )
 
         df.to_csv(
-            project_root / "tests" / "test_data" / "raw" / f"synth_raw_float_{i}.csv",
+            PROJECT_ROOT / "tests" / "test_data" / "raw" / f"synth_raw_float_{i}.csv",
             index=False,
         )

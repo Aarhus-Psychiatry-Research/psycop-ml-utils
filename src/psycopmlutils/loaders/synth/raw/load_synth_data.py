@@ -1,11 +1,10 @@
 """Loaders for synth data."""
 
-from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 
-from psycopmlutils.utils import data_loaders
+from psycopmlutils.utils import PROJECT_ROOT, data_loaders
 
 
 def load_raw_test_csv(filename: str, n_rows: Optional[int] = None) -> pd.DataFrame:
@@ -15,11 +14,8 @@ def load_raw_test_csv(filename: str, n_rows: Optional[int] = None) -> pd.DataFra
         filename (str): Name of the file to load.
         n_rows (int, optional): Number of rows to load. Defaults to None.
     """
-    # Get project root dir
-    project_root = Path(__file__).resolve().parents[5]
-
     df = pd.read_csv(
-        project_root / "tests" / "test_data" / "raw" / filename,
+        PROJECT_ROOT / "tests" / "test_data" / "raw" / filename,
         nrows=n_rows,
     )
 

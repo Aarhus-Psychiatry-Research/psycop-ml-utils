@@ -1,13 +1,13 @@
 """Column generators for synthetic data."""
-
 from collections.abc import Iterable
-from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
+from psycopmlutils.utils import PROJECT_ROOT
 
 
 def create_outcome_values(
@@ -234,8 +234,6 @@ def generate_data_columns(
 
 if __name__ == "__main__":
     # Get project root directory
-    project_root = Path(__file__).resolve().parents[3]
-
     column_specs = [
         {
             "dw_ek_borger": {
@@ -250,4 +248,4 @@ if __name__ == "__main__":
         n_samples=10_000,
     )
 
-    df.to_csv(project_root / "tests" / "test_data" / "synth_raw.csv", index=False)
+    df.to_csv(PROJECT_ROOT / "tests" / "test_data" / "synth_raw.csv", index=False)
