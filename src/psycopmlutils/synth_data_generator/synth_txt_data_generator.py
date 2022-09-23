@@ -67,11 +67,3 @@ if __name__ == "__main__":
 
     save_path = Path(__file__).parent.parent.parent.parent
     out_df.to_csv(save_path / "tests" / "test_data" / "synth_txt_data.csv")
-
-
-__all__ = [
-    "column_specifications",
-    "generate_synth_txt_data",
-    "out_df",
-    "save_path",
-]

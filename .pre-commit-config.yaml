@@ -17,6 +17,7 @@ repos:
     rev: 1208357bcc569b86a4a0dc69b108cbe28f190f54
     hooks:
     - id: pybetter
+      args: [--select, "B002,B007"]
 
   - repo: https://github.com/bwhmather/ssort
     rev: v0.11.6

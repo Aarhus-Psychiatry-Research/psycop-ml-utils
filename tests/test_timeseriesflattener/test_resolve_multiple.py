@@ -325,23 +325,3 @@ def test_resolve_multiple_mean_of_multiple_columns():
         fallback=99999,
         values_colname=["val1", "val2"],
     )
-
-
-__all__ = [
-    "test_resolve_multiple_avg",
-    "test_resolve_multiple_bool",
-    "test_resolve_multiple_catalogue",
-    "test_resolve_multiple_change_per_day",
-    "test_resolve_multiple_change_per_day_negative",
-    "test_resolve_multiple_change_per_day_too_few_datapoints",
-    "test_resolve_multiple_change_per_day_unordered",
-    "test_resolve_multiple_count",
-    "test_resolve_multiple_earliest",
-    "test_resolve_multiple_latest",
-    "test_resolve_multiple_latest_no_values",
-    "test_resolve_multiple_latest_one_vlaue",
-    "test_resolve_multiple_max",
-    "test_resolve_multiple_mean_of_multiple_columns",
-    "test_resolve_multiple_min",
-    "test_resolve_multiple_sum",
-]

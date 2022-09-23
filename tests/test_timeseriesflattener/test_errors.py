@@ -48,6 +48,7 @@ def test_col_does_not_exist():
             lookbehind_days=2,
             resolve_multiple="max",
             fallback=2,
+            pred_name="val",
         )
 
 
@@ -61,10 +62,3 @@ def test_duplicate_prediction_times():
         FlattenedDataset(
             prediction_times_df=str_to_df(prediction_times_df_str),
         )
-
-
-__all__ = [
-    "test_col_does_not_exist",
-    "test_col_does_not_exist_in_prediction_times",
-    "test_duplicate_prediction_times",
-]

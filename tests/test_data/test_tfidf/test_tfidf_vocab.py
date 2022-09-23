@@ -26,10 +26,3 @@ if __name__ == "__main__":
         tfidf = pkl.load(f)
 
     print(tfidf.get_feature_names())
-
-
-__all__ = [
-    "TEST_TFIDF_VOCAB",
-    "p",
-    "tfidf",
-]

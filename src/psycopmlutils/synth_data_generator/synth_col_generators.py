@@ -1,5 +1,4 @@
 """Column generators for synthetic data."""
-
 from collections.abc import Iterable
 from typing import Any, Optional
 
@@ -8,13 +7,15 @@ import pandas as pd
 from scipy import stats
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
+from psycopmlutils.utils import PROJECT_ROOT
+
 
 def create_outcome_values(
-    df: pd.DataFrame,
+    df: pd.DataFrame,  # pylint: disable=redefined-outer-name
     n_samples: int,
     logistic_outcome_model: str,
-    intercept: Optional[float] = 0,
-    noise_mean_sd: Optional[tuple[float, float]] = (0, 1),
+    intercept: float = 0,
+    noise_mean_sd: tuple[float, float] = (0, 1),
 ):
     """Create outcome values for a column.
 
@@ -100,14 +101,14 @@ def generate_col_from_specs(
     column_type: str,
     n_samples: int,
     col_specs: dict,
-    sequence: str,
+    sequence: Optional[str],
     tokenizer: Optional[Any] = None,
     model: Optional[Any] = None,
 ) -> Iterable:
     """Generate a column of data.
 
     Args:
-        column_type (str): Type of column to generate. Either uniform_int, text, or datetime_uniform.
+        column_type (str): Type of column to generate. Either uniform_int, text, id or datetime_uniform.
         n_samples (int): Number of rows to generate.
         col_specs (dict): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         sequence (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
@@ -122,6 +123,8 @@ def generate_col_from_specs(
     """
 
     if column_type == "text":
+        if sequence is None:
+            raise ValueError("If column_type is text, sequence must be specified.")
         generated_texts = generate_text_data(
             n_samples=n_samples,
             sequence=sequence,
@@ -130,7 +133,8 @@ def generate_col_from_specs(
         )
 
         return generated_texts
-
+    elif column_type == "id":
+        return -np.arange(n_samples)
     elif column_type == "uniform_int":
         return np.random.randint(
             low=col_specs["min"],
@@ -165,7 +169,7 @@ def generate_col_from_specs(
 def generate_data_columns(
     predictors: Iterable[dict],
     n_samples: int,
-    df: pd.DataFrame,
+    df: Optional[pd.DataFrame] = None,  # pylint: disable=redefined-outer-name
     text_prompt: Optional[str] = None,
 ) -> pd.DataFrame:
     """Generate a dataframe with columns from the predictors iterable.
@@ -173,7 +177,7 @@ def generate_data_columns(
     Args:
         predictors (iter[dict]): A dict representing each column. Key is col_name (str), values is a dict with column_type (str), min (int) and max(int).
         n_samples (int): Number of rows to generate.
-        df (pd.DataFrame): Dataframe to append to
+        df (pd.DataFrame): Dataframe to append to.
         text_prompt (str): Text prompt to use for generating text data. Defaults to "The quick brown fox jumps over the lazy dog".
 
     Raises:
@@ -198,35 +202,50 @@ def generate_data_columns(
     """
     sequence = text_prompt if text_prompt else None
 
-    for col_name, col_props in predictors.items():
-        # np.nan objects turn into "nan" strings in the real life dataframe.
-        # imitate this in the synthetic data as well.
-        if "nan" in col_name:
-            df = df.rename({col_name: col_name.replace("np.nan", "nan")}, axis=1)
-            col_name = col_name.replace("np.nan", "nan")
+    if df is None:
+        df = pd.DataFrame()
 
-        column_type = col_props["column_type"]
+    for predictor_spec in predictors:
+        for col_name, col_props in predictor_spec.items():
+            # np.nan objects turn into "nan" strings in the real life dataframe.
+            # imitate this in the synthetic data as well.
+            if "nan" in col_name:
+                df = df.rename({col_name: col_name.replace("np.nan", "nan")}, axis=1)
+                col_name = col_name.replace("np.nan", "nan")
 
-        df[col_name] = generate_col_from_specs(
-            column_type=column_type,
-            n_samples=n_samples,
-            sequence=sequence,
-            col_specs=col_props,
-        )
+            column_type = col_props["column_type"]
 
-        # If column has min and/or max, floor and ceil appropriately
-        if df[col_name].dtype not in ["datetime64[ns]"]:
-            if "min" in col_props:
-                df[col_name] = df[col_name].clip(lower=col_props["min"])
-            if "max" in col_props:
-                df[col_name] = df[col_name].clip(upper=col_props["max"])
+            df[col_name] = generate_col_from_specs(
+                column_type=column_type,
+                n_samples=n_samples,
+                sequence=sequence,
+                col_specs=col_props,
+            )
+
+            # If column has min and/or max, floor and ceil appropriately
+            if df[col_name].dtype not in ["datetime64[ns]"]:
+                if "min" in col_props:
+                    df[col_name] = df[col_name].clip(lower=col_props["min"])
+                if "max" in col_props:
+                    df[col_name] = df[col_name].clip(upper=col_props["max"])
 
     return df
 
 
-__all__ = [
-    "create_outcome_values",
-    "generate_col_from_specs",
-    "generate_data_columns",
-    "generate_text_data",
-]
+if __name__ == "__main__":
+    # Get project root directory
+    column_specs = [
+        {
+            "dw_ek_borger": {
+                "column_type": "id",
+            },
+            "raw_predictor": {"column_type": "uniform_float", "min": 0, "max": 10},
+        },
+    ]
+
+    df = generate_data_columns(
+        predictors=column_specs,
+        n_samples=10_000,
+    )
+
+    df.to_csv(PROJECT_ROOT / "tests" / "test_data" / "synth_raw.csv", index=False)

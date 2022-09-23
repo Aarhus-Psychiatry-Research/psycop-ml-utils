@@ -314,27 +314,3 @@ def af_legemlig_lidelse(n_rows: Optional[int] = None) -> pd.DataFrame:
         coercion_type="Af legemlig lidelse",
         n_rows=n_rows,
     )
-
-
-__all__ = [
-    "af_helbredsmaessige_grunde",
-    "anden_begrundelse",
-    "beroligende_medicin",
-    "baelte",
-    "coercion_duration",
-    "ect",
-    "ernaering",
-    "af_legemlig_lidelse",
-    "farlighed",
-    "fastholden",
-    "skema_1",
-    "handsker",
-    "skema_3",
-    "medicinering",
-    "naerliggende_fare",
-    "remme",
-    "skema_3",
-    "tvangsindlaeggelse",
-    "tvangstilbageholdelse",
-    "urolig_tilstand",
-]

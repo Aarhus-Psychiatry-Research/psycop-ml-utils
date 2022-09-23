@@ -323,7 +323,7 @@ def load_synth_notes(featurizer: str) -> pd.DataFrame:
         pd.DataFrame: (Featurized) synthetic notes
     """
     p = Path("tests") / "test_data"
-    df = pd.read_csv(p / "synth_txt_data.csv")
+    df = pd.read_csv(p / "raw" / "synth_txt_data.csv")
     df = df.dropna()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
@@ -334,13 +334,3 @@ def load_synth_notes(featurizer: str) -> pd.DataFrame:
         )
 
     raise ValueError("Only tfidf featurizer supported for synth notes")
-
-
-__all__ = [
-    "get_all_valid_note_types",
-    "load_aktuel_psykisk",
-    "load_all_notes",
-    "load_and_featurize_notes",
-    "load_arbitrary_notes",
-    "load_synth_notes",
-]

@@ -4,8 +4,3 @@ import psycopmlutils.loaders.raw.load_medications as m
 
 if __name__ == "__main__":
     df = m.antipsychotics()
-
-
-__all__ = [
-    "df",
-]

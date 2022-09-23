@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from psycopmlutils.data_checks.flattened.feature_describer import (
-    create_feature_description_from_dir,
+    save_feature_description_from_dir,
 )
 from src.application.t2d.features_blood_samples import get_lab_feature_spec
 from src.application.t2d.features_diagnoses import get_diagnosis_feature_spec
@@ -42,20 +42,7 @@ if __name__ == "__main__":
 
     PREDICTOR_LIST = MEDICATION_PREDICTORS + DIAGNOSIS_PREDICTORS + LAB_PREDICTORS
 
-    create_feature_description_from_dir(
-        path=feature_set_dir,
+    save_feature_description_from_dir(
+        feature_set_csv_dir=feature_set_dir,
         predictor_dicts=PREDICTOR_LIST,
     )
-
-
-__all__ = [
-    "DIAGNOSIS_PREDICTORS",
-    "LAB_PREDICTORS",
-    "MEDICATION_PREDICTORS",
-    "PREDICTOR_LIST",
-    "feature_set_dir",
-    "feature_set_path",
-    "lookbehind_days",
-    "out_dir",
-    "resolve_multiple",
-]

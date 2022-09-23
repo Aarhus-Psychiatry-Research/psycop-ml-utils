@@ -2,12 +2,12 @@
 are lists, and then creating each possible permutation."""
 
 import itertools
-from typing import Union
+from typing import Any
 
 
 def create_feature_combinations_from_dict(
-    d: dict[str, Union[str, list]],
-) -> list[dict[str, Union[str, float, int]]]:
+    d: dict[str, Any],
+) -> list[dict[str, Any]]:
     """Create feature combinations from a dictionary of feature specifications.
     Only unpacks the top level of lists.
 
@@ -23,12 +23,13 @@ def create_feature_combinations_from_dict(
     keys, values = zip(*d.items())
     # Create all combinations of top level elements
     permutations_dicts = [dict(zip(keys, v)) for v in itertools.product(*values)]
+
     return permutations_dicts
 
 
 def create_feature_combinations(
-    arg_sets: Union[list[dict[str, Union[str, list]]], dict[str, Union[str, list]]],
-) -> list[dict[str, Union[str, float, int]]]:
+    arg_sets: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Create feature combinations from a dictionary or list of dictionaries of
     feature specifications.
 
@@ -74,9 +75,3 @@ def create_feature_combinations(
     for arg_set in arg_sets:
         feature_combinations.extend(create_feature_combinations_from_dict(arg_set))
     return feature_combinations
-
-
-__all__ = [
-    "create_feature_combinations",
-    "create_feature_combinations_from_dict",
-]

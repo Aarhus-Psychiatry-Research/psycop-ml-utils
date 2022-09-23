@@ -1,19 +1,21 @@
 """Feature specificatin for T2D blood samples."""
 
+from typing import Optional
+
 import numpy as np
 
 
 def get_lab_feature_spec(  # pylint: disable=dangerous-default-value
     # Not a problem since the function is only called once.
-    lookbehind_days: int = None,
-    resolve_multiple: str = None,
+    lookbehind_days: Optional[list[int]] = None,
+    resolve_multiple: Optional[list[str]] = None,
     values_to_load="all",
 ) -> list:
     """Get feature specification for T2D blood samples.
 
     Args:
-        lookbehind_days (int, optional): Defaults to None.
-        resolve_multiple (str, optional): Defaults to None.
+        lookbehind_days (list[int], optional): Defaults to None.
+        resolve_multiple (list[str], optional): Defaults to None.
         values_to_load (str, optional): Defaults to "all".
 
     Returns:
@@ -57,8 +59,3 @@ def get_lab_feature_spec(  # pylint: disable=dangerous-default-value
         }
         for df in dfs
     ]
-
-
-__all__ = [
-    "get_lab_feature_spec",
-]

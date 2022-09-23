@@ -14,9 +14,3 @@ if __name__ == "__main__":
         predictor_dict_list=input_dict,
         n_rows=100,
     )
-
-
-__all__ = [
-    "df",
-    "input_dict",
-]

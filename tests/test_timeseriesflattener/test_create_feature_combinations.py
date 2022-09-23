@@ -213,12 +213,3 @@ def test_create_multiple_feature_combinations_from_multiple_columns():
     ]
 
     assert create_feature_combinations(arg_sets=predictor_dict) == expected_output
-
-
-__all__ = [
-    "test_create_feature_combinations",
-    "test_create_multiple_feature_combinations",
-    "test_create_multiple_feature_combinations_from_multiple_columns",
-    "test_skip_all_if_no_need_to_process",
-    "test_skip_one_if_no_need_to_process",
-]

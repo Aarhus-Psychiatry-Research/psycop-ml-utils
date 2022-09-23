@@ -45,9 +45,3 @@ def sex_female(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
     return df.reset_index(drop=True)
-
-
-__all__ = [
-    "birthdays",
-    "sex_female",
-]

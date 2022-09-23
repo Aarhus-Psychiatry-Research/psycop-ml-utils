@@ -100,18 +100,3 @@ if __name__ == "__main__":
 
         with open(save_dir / "tfidf_10.pkl", "wb") as f:
             pkl.dump(vectorizer, f)
-
-
-__all__ = [
-    "OVERTACI",
-    "SYNTHETIC",
-    "create_tfidf_vectorizer",
-    "msg",
-    "save_dir",
-    "test_path",
-    "text",
-    "train_ids",
-    "vectorizer",
-    "vocab",
-    "whitespace_tokenizer",
-]

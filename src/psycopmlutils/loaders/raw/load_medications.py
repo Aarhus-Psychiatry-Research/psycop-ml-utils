@@ -547,30 +547,3 @@ def various_medications(n_rows: Optional[int] = None) -> pd.DataFrame:
         wildcard_icd_code=True,
         n_rows=n_rows,
     )
-
-
-__all__ = [
-    "alimentary_medications",
-    "anti_epileptics",
-    "antidepressives",
-    "antiinfectives",
-    "antineoplastic",
-    "antiparasitic",
-    "antipsychotics",
-    "anxiolytics",
-    "blood_medications",
-    "cardiovascular_medications",
-    "concat_medications",
-    "dementia_medications",
-    "dermatological_medications",
-    "genito_sex_medications",
-    "hormonal_medications",
-    "hyperactive_disorders_medications",
-    "hypnotics",
-    "load",
-    "musculoskeletal_medications",
-    "nervous_system_medications",
-    "respiratory_medications",
-    "sensory_medications",
-    "various_medications",
-]

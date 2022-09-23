@@ -94,10 +94,3 @@ def write_df_to_sql(
 
     conn.close()
     engine.dispose()
-
-
-__all__ = [
-    "chunker",
-    "insert_with_progress",
-    "write_df_to_sql",
-]

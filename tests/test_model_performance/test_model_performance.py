@@ -159,18 +159,3 @@ def test_transform_folder():
     dfs = pd.concat(dfs)
     assert len(dfs.columns) == 9
     assert len(dfs["model_name"]) > 1
-
-
-__all__ = [
-    "binary_df",
-    "binary_float_df",
-    "binary_score_mapping",
-    "multiclass_df",
-    "multiclass_score_mapping",
-    "test_binary_transform_from_dataframe",
-    "test_binary_transform_from_dataframe_wide_by_id",
-    "test_binary_transform_from_dataframe_with_float",
-    "test_binary_transform_from_dataframe_with_float_wide",
-    "test_multiclass_transform_from_dataframe",
-    "test_transform_folder",
-]
