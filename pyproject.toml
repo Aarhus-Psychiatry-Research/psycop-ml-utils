@@ -30,6 +30,7 @@ wandb = ">=0.12.21,<0.13.0"
 SQLAlchemy = "^1.4.40"
 pyodbc = "^4.0.34"
 transformers = "^4.22.0"
+sklearn = "^0.0"
 
 
 [tool.poetry.dev-dependencies]
