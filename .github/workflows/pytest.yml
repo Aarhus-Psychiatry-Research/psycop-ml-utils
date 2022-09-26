@@ -33,7 +33,7 @@ jobs:
       uses: actions/cache@v2.1.6
       with:
         path: ~/.local
-        key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/pytest.yml') }}
+        key: dotlocal-${{ runner.os }}-${{ hashFiles('.github/workflows/pytest.yml') }}-${{ hashFiles('.github/workflows/cache_version') }}
 
     - name: Install Poetry
       uses: snok/install-poetry@v1
