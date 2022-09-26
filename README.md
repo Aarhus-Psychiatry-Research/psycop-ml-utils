@@ -1,5 +1,6 @@
 <a href="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils"><img src="https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/blob/main/docs/_static/icon_with_title.png?raw=true" width="220" align="right" /></a>
-# PSYCOP Machine Learning Utilities
+# Misc. PSYCOP utilities
+If you're looking for feature generation, see [here](https://github.com/Aarhus-Psychiatry-Research/psycop-feature-generation).
 
 Current priorities are on the [Board 🎬](https://github.com/orgs/Aarhus-Psychiatry-Research/projects/4/views/1).
 
