@@ -1,0 +1,28 @@
+# GitHub action to automerge dependabot PRs. Only merges if tests pass due to branch protections in the repo.
+
+name: automerge-dependabot-prs
+
+on:
+  pull_request
+
+jobs:
+  dependabot:
+    - name: Enable automerge for Dependabot PRs
+      runs-on: ubuntu-latest
+      if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}} # Detect that the PR author is dependabot
+      steps:
+        - name: Enable auto-merge for Dependabot PRs
+          run: gh pr merge --auto --merge "$PR_URL" # Use Github CLI to merge automatically the PR
+          env:
+            PR_URL: ${{github.event.pull_request.html_url}}
+            GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Auto approve dependabot PRs
+      jobs:
+        auto-approve:
+          runs-on: ubuntu-latest
+          permissions:
+            pull-requests: write
+          if: github.actor == 'dependabot[bot]'
+          steps:
+            - uses: hmarr/auto-approve-action@v2
