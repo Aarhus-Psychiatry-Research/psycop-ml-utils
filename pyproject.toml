@@ -35,7 +35,7 @@ SQLAlchemy = ">=1.4.40, <1.4.42"
 pyodbc = ">=4.0.34, <=4.1.0"
 
 [tool.poetry.dev-dependencies]
-black = "22.3.*"
+black = "22.8.*"
 pytest = "7.1.*"
 pytest-cov = "3.0.*"
 Sphinx = "5.0.*"
