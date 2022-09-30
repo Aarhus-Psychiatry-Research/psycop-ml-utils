@@ -18,13 +18,13 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
-        token: ${{ secrets.MANBER_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Enable auto-merge for Dependabot PRs
       run: gh pr merge --auto --merge "$PR_URL" # Use Github CLI to merge automatically the PR
       env:
         PR_URL: ${{github.event.pull_request.html_url}}
-        GITHUB_TOKEN: ${{ secrets.MANBER_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Auto approve dependabot PRs
       if: github.actor == 'dependabot[bot]'
