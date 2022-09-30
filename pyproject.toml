@@ -65,6 +65,15 @@ build-backend = "poetry.core.masonry.api"
 [tool.isort]
 known_third_party = ["wandb"]
 
+[tool.semantic_release]
+branch = "main"
+version_variable = [
+    "pyproject.toml:version"
+]
+upload_to_pypi = false
+upload_to_release = true
+build_command = "pip install poetry && poetry build"
+
 [tool.pylint]
 load-plugins = "pylint.extensions.docparams,pylint.extensions.code_style,pylint.extensions.for_any_all,pylint.extensions.typing"
 good-names = "df,p,f,d,e,n,k,i,v"
