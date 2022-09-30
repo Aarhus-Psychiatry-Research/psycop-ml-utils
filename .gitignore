@@ -161,3 +161,4 @@ pytest-coverage.txt
 wandb
 poetry.lock
 *.html
+dist*
