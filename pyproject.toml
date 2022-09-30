@@ -37,7 +37,7 @@ pyodbc = ">=4.0.34, <=4.1.0"
 [tool.poetry.dev-dependencies]
 black = "22.8.*"
 pytest = "7.1.*"
-pytest-cov = "3.0.*"
+pytest-cov = "4.0.*"
 Sphinx = "5.0.*"
 furo = ">=2022.6.4, <2022.9.16"
 sphinx-copybutton = "0.5.*"
