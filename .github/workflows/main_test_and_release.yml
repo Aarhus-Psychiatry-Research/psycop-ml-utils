@@ -28,14 +28,11 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
           cache-version: ${{ matrix.cache-version }}
 
-      - name: Print github ref
-        run: echo "${{ github.ref }}, equals main ${{ github.ref == 'refs/head/main' }}"
-
   release:
     runs-on: ubuntu-latest
     concurrency: release
     needs: test
-    if: ${{ github.ref == 'refs/head/main' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
     # Checkout action is required for token to persist
     - uses: actions/checkout@v2
