@@ -28,6 +28,9 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
           cache-version: ${{ matrix.cache-version }}
 
+      - name: Print github ref
+        run: echo "${{ github.ref }}, equals main ${{ github.ref == 'refs/head/main' }}"
+
   release:
     runs-on: ubuntu-latest
     concurrency: release
