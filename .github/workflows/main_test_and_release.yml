@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: release
     needs: test
-    if: github.ref == 'refs/head/main'
+    if: ${{ github.ref == 'refs/head/main' }}
     steps:
     # Checkout action is required for token to persist
     - uses: actions/checkout@v2
