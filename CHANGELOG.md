@@ -2,6 +2,16 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.0 (2022-10-03)
+### Feature
+* Add test action ([`2aa6fd5`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/2aa6fd5da9bc82b5cdeb4190a8d835878b4ae96e))
+* Another attempt at first automatic release! ([`b5d8439`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/b5d84390b4e72fc65a15f7656036a08f782e65e7))
+
+### Fix
+* Type in release if ([`cf70d45`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/cf70d4548af8b27aee0a596131ba158382daa36c))
+* Run release, incorrect syntax ([`3500419`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/350041976006ce9ec5b5136899d6cd53b9a27c8a))
+* Test and release in one ([`f6efc79`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/f6efc79ad05432542a281a9dbeb74196ddf9100f))
+
 ## v0.1.0 (2022-09-30)
 ### Feature
 * First automataic release ([`7d3c39f`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/7d3c39f639dd1a97dabdb2baa7f170bf8f7eafe5))
