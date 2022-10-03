@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.4 (2022-10-03)
+### Fix
+* Publish to pypi ([`9121ead`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/9121ead6479662209975e7c65b40ea55b128f556))
+
 ## v0.2.3 (2022-10-03)
 ### Fix
 * Release on pypi ([`7d6a87c`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/7d6a87c8c540009ee16e2dfada133d2435d01aff))
