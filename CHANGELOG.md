@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.2 (2022-10-03)
+### Fix
+* First automatic release ([`7483f22`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/7483f22add584e8fc7048b399df01305c73706f4))
+
 ## v0.2.1 (2022-10-03)
 ### Fix
 * Incorrect version in toml ([`98b5918`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/98b59181587957b36976b6a82f6fe7dc36f8348d))
