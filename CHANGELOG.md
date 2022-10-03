@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.1 (2022-10-03)
+### Fix
+* Incorrect version in toml ([`98b5918`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/98b59181587957b36976b6a82f6fe7dc36f8348d))
+
 ## v0.2.0 (2022-10-03)
 ### Feature
 * Add test action ([`2aa6fd5`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/2aa6fd5da9bc82b5cdeb4190a8d835878b4ae96e))
