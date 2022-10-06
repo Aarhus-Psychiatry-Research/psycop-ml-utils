@@ -9,13 +9,14 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    env:
+      poetry-version: 1.1.15
+      cache-version: 0.0.2
+      python-version: 3.9
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
-        python-version: [3.9]
-        poetry-version: [1.1.15]
-        cache-version: [0.0.2] # Change this number if you want to manually invalidate all caches
+        os: [ubuntu-latest]
 
     steps:
       - name: Checkout repo
@@ -24,9 +25,9 @@ jobs:
       - name: Run tests
         uses: ./.github/actions/test
         with:
-          python-version: ${{ matrix.python-version }}
-          poetry-version: ${{ matrix.poetry-version }}
-          cache-version: ${{ matrix.cache-version }}
+          python-version: ${{ env.python-version }}
+          poetry-version: ${{ env.poetry-version }}
+          cache-version: ${{ env.cache-version }}
 
   release:
     runs-on: ubuntu-latest
@@ -50,5 +51,5 @@ jobs:
         # 1) Set upload_to_pypi to true in pyproject.toml and
         # 2) Set the pypi_token in the repo
         # 3) Uncomment the two lines below
-        repository_username: __token__
-        repository_password: ${{ secrets.PYPI_API_TOKEN }}
+        # repository_username: __token__
+        # repository_password: ${{ secrets.PYPI_TOKEN }}
