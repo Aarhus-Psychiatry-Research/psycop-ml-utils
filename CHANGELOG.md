@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.5 (2022-10-14)
+### Fix
+* Errors in synth data generation and add as test ([#258](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/issues/258)) ([`5337313`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/5337313ab12e7e122c62ed3f340315c22cd6befb))
+
 ## v0.2.4 (2022-10-03)
 ### Fix
 * Publish to pypi ([`9121ead`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/9121ead6479662209975e7c65b40ea55b128f556))
