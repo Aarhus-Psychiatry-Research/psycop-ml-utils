@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.7 (2022-10-14)
+### Fix
+* Move transformers to dependency ([`5e40386`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/5e40386a4ae36a5ba1599ea25dccb28618c82750))
+* Move transformer import outside of top-level ([`b6f7394`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/b6f7394526b32d81f1e2f454936967ee38d3b4d5))
+
 ## v0.2.6 (2022-10-14)
 ### Fix
 * Correctly address pypi token ([`9fc5b67`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/9fc5b67ea061ffa507b48962cd2015da2ab96272))
