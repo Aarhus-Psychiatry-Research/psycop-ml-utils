@@ -69,4 +69,4 @@ def generate_synth_data(
     if na_prob:
         df = replace_vals_with_na(na_prob=na_prob, na_ignore_cols=na_ignore_cols, df=df)
 
-    return df
+    return df.reset_index(drop=True)
