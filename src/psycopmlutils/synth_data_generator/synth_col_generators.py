@@ -5,7 +5,6 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 from scipy import stats
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 from psycopmlutils.utils import PROJECT_ROOT
 
@@ -67,6 +66,7 @@ def generate_text_data(
     Returns:
         list[str]: list of generated text data.
     """
+    from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
     tokenizer = (
         GPT2Tokenizer.from_pretrained("gpt2") if tokenizer is None else tokenizer
