@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.6 (2022-10-14)
+### Fix
+* Correctly address pypi token ([`9fc5b67`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/9fc5b67ea061ffa507b48962cd2015da2ab96272))
+
 ## v0.2.5 (2022-10-14)
 ### Fix
 * Errors in synth data generation and add as test ([#258](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/issues/258)) ([`5337313`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/5337313ab12e7e122c62ed3f340315c22cd6befb))
