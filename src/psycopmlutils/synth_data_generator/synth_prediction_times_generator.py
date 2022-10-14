@@ -1,4 +1,5 @@
 """Generator for synth prediction data."""
+from collections.abc import Iterable
 from typing import Optional
 
 import numpy as np
@@ -12,7 +13,7 @@ from psycopmlutils.synth_data_generator.utils import replace_vals_with_na
 
 
 def generate_synth_data(
-    predictors: dict,
+    predictors: Iterable[dict],
     outcome_column_name: str,
     n_samples: int,
     logistic_outcome_model: str,
@@ -25,7 +26,7 @@ def generate_synth_data(
     """Takes a dict and generates synth data from it.
 
     Args:
-        predictors (dict): A dict representing each column. Key is col_name (str), values are column_type (str), output_type (float|int), min (int), max(int).
+        predictors (Iterable[dict]): A dict representing each column. Key is col_name (str), values are column_type (str), output_type (float|int), min (int), max(int).
         outcome_column_name (str): Name of the outcome column.
         n_samples (int): Number of samples (rows) to generate.
         logistic_outcome_model (str): The statistical model used to generate outcome values, e.g. specified as'1*col_name+1*col_name2'.
@@ -41,8 +42,14 @@ def generate_synth_data(
         pd.DataFrame: The synthetic dataset
     """
 
+    cols_to_init = []
+
+    for pred_spec in predictors:
+        for col_name, _ in pred_spec.items():
+            cols_to_init.append(col_name)
+
     # Initialise dataframe
-    df = pd.DataFrame(columns=list(predictors.keys()))
+    df = pd.DataFrame(columns=list(cols_to_init))
 
     # Generate data
     df = generate_data_columns(predictors=predictors, n_samples=n_samples, df=df)
@@ -62,4 +69,4 @@ def generate_synth_data(
     if na_prob:
         df = replace_vals_with_na(na_prob=na_prob, na_ignore_cols=na_ignore_cols, df=df)
 
-    return df
+    return df.reset_index(drop=True)
