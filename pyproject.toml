@@ -46,7 +46,7 @@ sphinxext-opengraph = "0.7.*"
 myst-parser = "0.18.*"
 flake8 = "4.0.*"
 docformatter = ">=1.4.0,<1.5.1"
-mypy = ">=0.971,<0.991"
+mypy = ">=0.971,<0.992"
 pytest-xdist = "^3.0.2"
 pre-commit = ">=2.20.0, <2.21.0"
 
