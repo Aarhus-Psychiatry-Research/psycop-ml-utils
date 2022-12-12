@@ -36,7 +36,7 @@ pyodbc = ">=4.0.34, <=4.1.0"
 transformers = ">=4.22.0,<4.26.0"
 
 [tool.poetry.dev-dependencies]
-black = "22.10.*"
+black = "22.12.*"
 pytest = "7.2.*"
 pytest-cov = "4.0.*"
 Sphinx = "5.3.*"
