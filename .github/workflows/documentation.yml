@@ -3,7 +3,7 @@ name: Documentation
 on:
   push:
     branches:
-    - main
+    - master # change to main to reenable
 jobs:
   build:
     runs-on: ubuntu-latest
