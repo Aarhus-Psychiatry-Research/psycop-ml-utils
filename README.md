@@ -6,8 +6,7 @@ Current priorities are on the [Board 🎬](https://github.com/orgs/Aarhus-Psychi
 
 ![python versions](https://img.shields.io/badge/Python-%3E=3.10-blue)
 [![Code style: black](https://img.shields.io/badge/Code%20Style-Black-black)](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html)
-[![github actions pytest](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/pytest.yml/badge.svg)](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions)
-[![github actions docs](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/documentation.yml/badge.svg)](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/)
+[![github actions pytest](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions/workflows/main_test_and_release.yml/badge.svg)](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/actions)
 
 ## 🔧 Installation
 To get started using psycop-ml-utils simply install it using pip by running the following line in your terminal:
