@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2022-12-19)
+### Feature
+* Add wandb decorator ([#283](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/issues/283)) ([`de78724`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/de7872439f7e2dc6a0d41b3a16d32036eac12e18))
+
 ## v0.2.7 (2022-10-14)
 ### Fix
 * Move transformers to dependency ([`5e40386`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/5e40386a4ae36a5ba1599ea25dccb28618c82750))
