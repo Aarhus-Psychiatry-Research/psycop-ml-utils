@@ -158,7 +158,6 @@ pytest-coverage.txt
 
 #other
 *test_load_data.py
-wandb
 poetry.lock
 *.html
 dist*
