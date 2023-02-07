@@ -10,8 +10,6 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     env:
-      poetry-version: 1.1.15
-      cache-version: 0.0.2
       python-version: 3.9
 
     strategy:
@@ -26,8 +24,6 @@ jobs:
         uses: ./.github/actions/test
         with:
           python-version: ${{ env.python-version }}
-          poetry-version: ${{ env.poetry-version }}
-          cache-version: ${{ env.cache-version }}
 
   release:
     runs-on: ubuntu-latest
