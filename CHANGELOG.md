@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.1 (2023-02-07)
+### Fix
+* Add nan if specified ([#292](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/issues/292)) ([`973f6de`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/973f6deb0b9feccdad1f172ff5e10e9851690b93))
+
 ## v0.3.0 (2022-12-19)
 ### Feature
 * Add wandb decorator ([#283](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/issues/283)) ([`de78724`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/de7872439f7e2dc6a0d41b3a16d32036eac12e18))
