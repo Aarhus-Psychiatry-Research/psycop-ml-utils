@@ -26,7 +26,8 @@ def replace_vals_with_na(
 
     # For all columns in df.columns if column is not in na_ignore_cols
     for col in df.columns:
-        if na_ignore_cols and col not in na_ignore_cols:
-            df[col] = df_[col]
+        if na_ignore_cols and col in na_ignore_cols:
+            continue
+        df[col] = df_[col]
 
     return df

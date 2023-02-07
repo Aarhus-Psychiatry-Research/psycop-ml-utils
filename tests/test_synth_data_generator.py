@@ -47,11 +47,17 @@ def test_synth_data_generator():
         n_samples=n_samples,
         logistic_outcome_model="1*pred_hba1c_within_100_days_max_fallback_nan+1*pred_hdl_within_100_days_max_fallback_nan",
         prob_outcome=0.08,
+        na_prob=0.1,
     )
 
     synth_df.describe()
 
     assert synth_df.shape == (n_samples, len(column_specifications) + 1)
+
+    # Get proportion of all values in dataframe that are NA
+    na_prop = synth_df.isna().sum().sum() / synth_df.size
+
+    assert na_prop > 0.02 and na_prop < 0.2
 
     save_path = PROJECT_ROOT
     synth_df.to_csv(save_path / "tests" / "test_data" / "synth_prediction_data.csv")
