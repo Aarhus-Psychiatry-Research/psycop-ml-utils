@@ -2,14 +2,16 @@
 
 import numpy as np
 
-from psycopmlutils.synth_data_generator.synth_prediction_times_generator import (
+from psycop_ml_utils.synth_data_generator.synth_prediction_times_generator import (
     generate_synth_data,
 )
-from psycopmlutils.utils import PROJECT_ROOT
+from psycop_ml_utils.utils import PROJECT_ROOT
 
 
 def test_synth_data_generator():
     """Test synth data generator."""
+    WRITE_NEW_TO_DISK = False
+
     column_specifications = [
         {"citizen_ids": {"column_type": "uniform_int", "min": 0, "max": 1_200_001}},
         {"timestamp": {"column_type": "datetime_uniform", "min": 0, "max": 5 * 365}},
@@ -59,5 +61,6 @@ def test_synth_data_generator():
 
     assert na_prop > 0.02 and na_prop < 0.2
 
-    save_path = PROJECT_ROOT
-    synth_df.to_csv(save_path / "tests" / "test_data" / "synth_prediction_data.csv")
+    if WRITE_NEW_TO_DISK:
+        save_path = PROJECT_ROOT
+        synth_df.to_csv(save_path / "tests" / "test_data" / "synth_prediction_data.csv")

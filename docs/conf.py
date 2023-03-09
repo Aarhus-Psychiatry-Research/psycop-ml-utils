@@ -13,7 +13,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-from psycopmlutils import __version__
+from psycop_ml_utils import __version__
 
 # -- Project information -----------------------------------------------------
 

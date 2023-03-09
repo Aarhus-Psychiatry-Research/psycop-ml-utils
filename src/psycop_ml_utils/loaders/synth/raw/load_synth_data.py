@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-from psycopmlutils.utils import PROJECT_ROOT, data_loaders
+from psycop_ml_utils.utils import PROJECT_ROOT, data_loaders
 
 
 def load_raw_test_csv(filename: str, n_rows: Optional[int] = None) -> pd.DataFrame:
