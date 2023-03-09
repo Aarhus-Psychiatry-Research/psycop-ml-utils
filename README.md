@@ -12,13 +12,13 @@ Current priorities are on the [Board 🎬](https://github.com/orgs/Aarhus-Psychi
 To get started using psycop-ml-utils simply install it using pip by running the following line in your terminal:
 
 ```
-poetry add psycopmlutils
+poetry add psycop_ml_utils
 ```
 
 or using `pip`:
 
 ```
-pip install psycopmlutils
+pip install psycop_ml_utils
 ```
 
 For more detailed instructions on installation e.g. including installation for development, see the [installation instructions](https://Aarhus-Psychiatry-Research.github.io/psycop-ml-utils/installation).

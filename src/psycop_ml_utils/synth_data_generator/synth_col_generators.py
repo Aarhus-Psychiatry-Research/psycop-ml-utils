@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from psycopmlutils.utils import PROJECT_ROOT
+from psycop_ml_utils.utils import PROJECT_ROOT
 
 
 def create_outcome_values(
