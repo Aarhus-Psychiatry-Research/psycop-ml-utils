@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2023-03-09)
+### Feature
+* Move utils_for_testing_to_be_importable ([`323488a`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/323488abc82308b4cd5512b345e3b5cfd8fc793b))
+
+### Fix
+* Rename to psycop_ml_utils ([`e64c724`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/e64c724669c04f4adfb82eef54d48db88a8c2d98))
+
 ## v0.3.1 (2023-02-07)
 ### Fix
 * Add nan if specified ([#292](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/issues/292)) ([`973f6de`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/973f6deb0b9feccdad1f172ff5e10e9851690b93))
