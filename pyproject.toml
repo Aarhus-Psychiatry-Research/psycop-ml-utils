@@ -1,5 +1,5 @@
 [project]
-name = "psycop_ml_utils"
+name = "psycopmlutils"
 version = "0.5.0"
 description = "A collection of machine-learning utilities used across the psycop-projects."
 authors = [{name = "Martin Bernstorff", email = "martinbernstorff@gmail.com"},
