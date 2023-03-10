@@ -48,4 +48,4 @@ jobs:
           # 2) Set the pypi_token in the repo
           # 3) Uncomment the two lines below
           repository_username: __token__
-          repository_password: ${{ secrets.PYPI_TOKEN }}
+          repository_password: ${{ secrets.PYPI_API_TOKEN }}
