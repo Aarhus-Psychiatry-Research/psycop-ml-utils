@@ -2,7 +2,11 @@
 
 <!--next-version-placeholder-->
 
+<<<<<<< HEAD
 ## v0.9.0 (2023-03-10)
+=======
+## v0.8.2 (2023-03-10)
+>>>>>>> 213a049e48973cbf68897c1c08ed547d0924e9c0
 ### Fix
 * Update pypi_api_token ([`c2f4135`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/c2f4135bedbf923a028a9b24557dc9958c388f09))
 
