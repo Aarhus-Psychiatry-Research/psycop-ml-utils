@@ -2,6 +2,9 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.0 (2023-03-10)
+
+
 ## v0.4.0 (2023-03-09)
 ### Feature
 * Move utils_for_testing_to_be_importable ([`323488a`](https://github.com/Aarhus-Psychiatry-Research/psycop-ml-utils/commit/323488abc82308b4cd5512b345e3b5cfd8fc793b))
