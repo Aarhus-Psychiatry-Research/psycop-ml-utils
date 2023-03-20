@@ -12,7 +12,7 @@ updates:
       day: "monday"
       time: "01:00"
       timezone: "Europe/Copenhagen"
-    open-pull-requests-limit: 5 
+    open-pull-requests-limit: 15 
     commit-message:
       prefix: "fix:"
       include: "scope"
