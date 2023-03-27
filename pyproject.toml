@@ -53,7 +53,7 @@ dev = [
 ]
 
 text = [
-    "transformers>=4.22.0,<4.27.0",
+    "transformers>=4.22.0,<4.28.0",
 ]
 
 [tool.coverage.run]
