@@ -47,7 +47,7 @@ dev = [
     "myst-parser>=0.18.0",
     "flake8>=6.0.0",
     "docformatter>=1.4.0,<1.7.6",
-    "mypy>=0.971,<1.15",
+    "mypy>=0.971,<1.16",
     "pytest-xdist>=3.0.2",
     "pre-commit>=2.20.0,<4.2.0",
 ]
