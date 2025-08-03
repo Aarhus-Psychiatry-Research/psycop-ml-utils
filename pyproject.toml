@@ -30,7 +30,7 @@ dependencies = [
     "wandb>=0.17.4,<0.21.1",
     "psutil>=5.9.1, <8.0.0",
     "dill>=0.3.5,<0.4.1",
-    "SQLAlchemy>=1.4.40,<2.0.42",
+    "SQLAlchemy>=1.4.40,<2.0.43",
     "pyodbc>=4.0.34, <=5.2.0",
     "transformers>=4.42.3,<4.55.0",
 ]
